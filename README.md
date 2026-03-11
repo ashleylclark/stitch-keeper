@@ -1,2 +1,3 @@
-# hook-stash
-A personal crochet stash, pattern, and project tracker
+# Stitch Keeper
+
+A personal crochet/knitting stash, pattern, and project tracker
