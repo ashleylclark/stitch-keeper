@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { NavLink, Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom'
-import { HouseHeart, PackageOpen, BookMarked, Spool } from 'lucide-react'
+import { HouseHeart, PackageOpen, BookMarked, Spool, Menu, X } from 'lucide-react'
+import Home from './pages/Home'
+import Stash from './pages/Stash'
 
 type NavItem = {
   label: string
@@ -116,7 +118,7 @@ function AppShell() {
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#fffaf7_0%,#f7f1eb_100%)] text-stone-900">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl gap-6 px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl lg:max-w-[1500px] gap-6 px-4 py-4 sm:px-6 lg:px-8">
         <aside className="hidden w-80 shrink-0 overflow-hidden rounded-[2rem] border border-white/70 bg-rose-50/95 shadow-[0_30px_80px_-40px_rgba(41,37,36,0.4)] backdrop-blur lg:block">
           <Sidebar />
         </aside>
@@ -134,11 +136,7 @@ function AppShell() {
               onClick={() => setIsMobileMenuOpen(true)}
               className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-700 shadow-sm transition hover:border-rose-200 hover:text-stone-900 lg:hidden"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-                <path d="M4 7h16" />
-                <path d="M4 12h16" />
-                <path d="M4 17h16" />
-              </svg>
+              <Menu color="currentColor" size={20} />
             </button>
           </header>
 
@@ -164,10 +162,7 @@ function AppShell() {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-700 shadow-sm transition hover:border-rose-200 hover:text-stone-900"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-                  <path d="M6 6l12 12" />
-                  <path d="M18 6 6 18" />
-                </svg>
+                <X color="currentColor" size={20} />
               </button>
             </div>
             <Sidebar mobile onNavigate={() => setIsMobileMenuOpen(false)} />
@@ -185,21 +180,11 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: (
-          <Page
-            title="Home"
-            description="Start here with a clean overview of your yarn stash, saved patterns, and current crochet projects."
-          />
-        ),
+        element: <Home />,
       },
       {
         path: 'stash',
-        element: (
-          <Page
-            title="Stash"
-            description="Track yarn details, colors, fiber content, and quantities so your stash is easy to browse and use."
-          />
-        ),
+        element: <Stash />,
       },
       {
         path: 'patterns',
