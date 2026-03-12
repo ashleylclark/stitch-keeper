@@ -62,7 +62,13 @@ function DetailPill({ label }: { label: string }) {
 
 function StatusBadge({ status = 'in-stock' }: { status?: StashStatus }) {
   return (
-    <span className={['inline-flex rounded-full px-3 py-1 text-xs font-semibold', statusStyles[status]].join(' ')}>
+    <span
+      className={[
+        'inline-flex min-w-[5.75rem] justify-center rounded-full px-3 py-1 text-center text-xs font-semibold',
+        status === 'in-stock' ? 'whitespace-nowrap' : 'whitespace-normal',
+        statusStyles[status],
+      ].join(' ')}
+    >
       {statusLabels[status]}
     </span>
   )
@@ -81,7 +87,7 @@ function StashCard({ item }: StashCardProps) {
   return (
     <article className="rounded-[1.75rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold text-stone-900">{item.name}</h2>
             <p className="text-sm text-stone-500">
@@ -121,7 +127,7 @@ export default function Stash() {
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-3">
           <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500">Stitch Keeper</p>
           <h1 className="font-serif text-4xl tracking-tight text-stone-900 sm:text-5xl">Stash</h1>
@@ -132,10 +138,11 @@ export default function Stash() {
 
         <button
           type="button"
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-stone-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-800"
+          aria-label="Add item"
+          className="inline-flex self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 sm:gap-2 sm:px-5"
         >
           <Plus size={18} />
-          Add Item
+          <span className="hidden whitespace-nowrap md:inline">Add Item</span>
         </button>
       </div>
 

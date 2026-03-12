@@ -128,7 +128,7 @@ function StatCard({ label, value, helperText }: HomeStat) {
 
 function StatusBadge({ status, tone }: Pick<DashboardItem, 'status' | 'tone'>) {
   return (
-    <span className={['inline-flex rounded-full px-3 py-1 text-xs font-semibold justify-center', badgeClasses[tone]].join(' ')}>
+    <span className={['inline-flex rounded-full px-3 py-1 text-xs font-semibold text-center justify-center', badgeClasses[tone]].join(' ')}>
       {status}
     </span>
   )
