@@ -3,6 +3,10 @@ import { NavLink, Outlet, RouterProvider, createBrowserRouter } from 'react-rout
 import { HouseHeart, PackageOpen, BookMarked, Spool, Menu, X } from 'lucide-react'
 import Home from './pages/Home'
 import Stash from './pages/Stash'
+import Patterns from './pages/Patterns'
+import PatternDetail from './pages/PatternDetail'
+import Projects from './pages/Projects'
+import ProjectDetail from './pages/ProjectDetail'
 
 type NavItem = {
   label: string
@@ -41,34 +45,12 @@ const navItems: NavItem[] = [
   },
 ]
 
-type PageProps = {
-  title: string
-  description: string
-}
-
-function Page({ title, description }: PageProps) {
-  return (
-    <section className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <div className="space-y-3">
-        <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500">Stitch Keeper</p>
-        <h1 className="font-serif text-4xl tracking-tight text-stone-900 sm:text-5xl">{title}</h1>
-        <p className="max-w-2xl text-base leading-7 text-stone-600">{description}</p>
-      </div>
-      <div className="rounded-[2rem] border border-white/70 bg-white/80 p-8 shadow-[0_20px_70px_-35px_rgba(41,37,36,0.45)] backdrop-blur">
-        <div className="rounded-[1.5rem] border border-dashed border-rose-200 bg-rose-50/60 px-6 py-10 text-stone-600">
-          Content for this section will live here.
-        </div>
-      </div>
-    </section>
-  )
-}
-
 function Sidebar({ mobile = false, onNavigate }: { mobile?: boolean; onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="px-6 py-6">
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-rose-500">Stitch Keeper</p>
-        <h1 className="mt-3 font-serif text-2xl text-stone-900">Crochet HQ</h1>
+        <h1 className="mt-3 font-serif text-2xl text-stone-900">Fiber Arts HQ</h1>
         <p className="mt-2 text-sm leading-6 text-stone-600">
           Keep yarn, patterns, and works in progress in one place.
         </p>
@@ -127,7 +109,7 @@ function AppShell() {
           <header className="flex items-center justify-between border-b border-stone-200/70 px-5 py-4 sm:px-8 lg:px-10">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-rose-500">Workspace</p>
-              <p className="mt-1 text-sm text-stone-600">Organize your crochet world.</p>
+              <p className="mt-1 text-sm text-stone-600">Organize your fiber arts world.</p>
             </div>
             <button
               type="button"
@@ -188,21 +170,19 @@ const router = createBrowserRouter([
       },
       {
         path: 'patterns',
-        element: (
-          <Page
-            title="Patterns"
-            description="Keep your pattern library organized with one place for saved ideas, purchased files, and future makes."
-          />
-        ),
+        element: <Patterns />,
+      },
+      {
+        path: 'patterns/:patternId',
+        element: <PatternDetail />,
       },
       {
         path: 'projects',
-        element: (
-          <Page
-            title="Projects"
-            description="Manage works in progress and planned makes with room for notes, linked yarn, and next steps."
-          />
-        ),
+        element: <Projects />,
+      },
+      {
+        path: 'projects/:projectId',
+        element: <ProjectDetail />,
       },
     ],
   },
