@@ -30,6 +30,7 @@ type RequirementFormValues = {
 
 type PatternFormProps = {
   initialValues?: Partial<PatternFormValues>;
+  submitLabel?: string;
   onSubmit: (values: PatternFormValues) => void;
   onCancel?: () => void;
 };
@@ -48,6 +49,7 @@ const initialRequirementValues: RequirementFormValues = {
 
 export function PatternForm({
   initialValues,
+  submitLabel = "Save Pattern",
   onSubmit,
   onCancel,
 }: PatternFormProps) {
@@ -342,7 +344,7 @@ export function PatternForm({
         </FormField>
       </FormSection>
 
-      <FormActions submitLabel="Save Pattern" onCancel={onCancel} />
+      <FormActions submitLabel={submitLabel} onCancel={onCancel} />
     </form>
   );
 }

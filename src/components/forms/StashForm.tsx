@@ -22,6 +22,7 @@ export type StashFormValues = {
 
 type StashFormProps = {
   initialValues?: Partial<StashFormValues>;
+  submitLabel?: string;
   onSubmit: (values: StashFormValues) => void;
   onCancel?: () => void;
 };
@@ -39,6 +40,7 @@ const defaultUnits: Record<ItemCategory, string> = {
 
 export function StashForm({
   initialValues,
+  submitLabel = "Save Stash Item",
   onSubmit,
   onCancel,
 }: StashFormProps) {
@@ -239,7 +241,7 @@ export function StashForm({
         </FormSection>
       ) : null}
 
-      <FormActions submitLabel="Save Stash Item" onCancel={onCancel} />
+      <FormActions submitLabel={submitLabel} onCancel={onCancel} />
     </form>
   );
 }

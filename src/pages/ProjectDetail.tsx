@@ -1,7 +1,11 @@
-import { ArrowLeft } from 'lucide-react'
-import { Link, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Modal } from '../components/Modal'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { ProjectForm, type ProjectFormValues } from '../components/forms/ProjectForm'
 import { useAppData } from '../context/app-data'
-import type { Pattern, ProjectStatus } from '../types/models'
+import type { Pattern, Project, ProjectStatus } from '../types/models'
 
 const statusConfig: Record<
   ProjectStatus,
@@ -67,6 +71,34 @@ function DifficultyBadge({ difficulty }: { difficulty?: Pattern['difficulty'] })
   )
 }
 
+function ActionButton({
+  label,
+  tone = 'default',
+  onClick,
+  children,
+}: {
+  label: string
+  tone?: 'default' | 'danger'
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className={[
+        'inline-flex h-11 w-11 items-center justify-center rounded-2xl border bg-white transition',
+        tone === 'danger'
+          ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
+          : 'border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900',
+      ].join(' ')}
+    >
+      {children}
+    </button>
+  )
+}
+
 function NotFoundState() {
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -94,77 +126,139 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 export default function ProjectDetail() {
-  const { patterns, projects } = useAppData()
+  const navigate = useNavigate()
+  const { patterns, projects, updateProject, deleteProject } = useAppData()
   const { projectId } = useParams()
   const project = projects.find((item) => item.id === projectId)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
   if (!project) {
     return <NotFoundState />
   }
 
-  const linkedPattern = project.patternId ? patterns.find((pattern) => pattern.id === project.patternId) : undefined
+  const currentProject = project
+  const linkedPattern = currentProject.patternId
+    ? patterns.find((pattern) => pattern.id === currentProject.patternId)
+    : undefined
+
+  async function handleSubmit(values: ProjectFormValues) {
+    const nextProject: Project = {
+      ...currentProject,
+      name: values.name.trim(),
+      patternId: values.patternId,
+      status: values.status,
+      startDate: values.startDate || undefined,
+      endDate: values.endDate || undefined,
+      notes: values.notes.trim() || undefined,
+    }
+
+    await updateProject(nextProject)
+    setIsEditOpen(false)
+  }
+
+  async function handleDelete() {
+    await deleteProject(currentProject.id)
+    navigate('/projects')
+  }
 
   return (
-    <section className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-      <Link to="/projects" className="inline-flex w-fit items-center gap-2 text-sm font-medium text-stone-600 transition hover:text-stone-900">
-        <ArrowLeft size={16} />
-        Back to projects
-      </Link>
+    <>
+      <section className="mx-auto flex w-full max-w-5xl flex-col gap-8">
+        <Link to="/projects" className="inline-flex w-fit items-center gap-2 text-sm font-medium text-stone-600 transition hover:text-stone-900">
+          <ArrowLeft size={16} />
+          Back to projects
+        </Link>
 
-      <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur sm:p-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-3">
-            <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500">Stitch Keeper</p>
-            <h1 className="font-serif text-4xl tracking-tight text-stone-900 sm:text-5xl">{project.name}</h1>
-            <p className="max-w-3xl text-base leading-7 text-stone-600">
-              {project.notes ?? 'No notes have been added for this project yet.'}
-            </p>
-          </div>
-          <StatusBadge status={project.status} />
-        </div>
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          {project.startDate ? <DetailRow label="Started" value={formatDate(project.startDate)} /> : null}
-          {project.endDate ? <DetailRow label="Completed" value={formatDate(project.endDate)} /> : null}
-          <DetailRow label="Stash Items Linked" value={String(project.stashItemIds.length)} />
-        </div>
-      </section>
-
-      <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur sm:p-8">
-        <div className="space-y-2">
-          <h2 className="font-serif text-2xl text-stone-900">Linked Pattern</h2>
-          <p className="text-sm leading-6 text-stone-600">The pattern this project is based on.</p>
-        </div>
-
-        {linkedPattern ? (
-          <Link
-            to={`/patterns/${linkedPattern.id}`}
-            className="mt-6 block rounded-[1.5rem] border border-stone-200 bg-stone-50/80 p-5 transition hover:border-rose-200 hover:bg-rose-50/60"
-          >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-stone-900">{linkedPattern.name}</h3>
-                <div className="flex flex-wrap gap-2">
-                  {linkedPattern.category ? (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-stone-700 ring-1 ring-inset ring-stone-200">
-                      {titleCase(linkedPattern.category)}
-                    </span>
-                  ) : null}
-                  <DifficultyBadge difficulty={linkedPattern.difficulty} />
-                </div>
-                <p className="text-sm leading-6 text-stone-600">
-                  {linkedPattern.notes ?? 'No notes have been added for this pattern yet.'}
-                </p>
-              </div>
-              <span className="text-sm font-medium text-rose-600">View pattern</span>
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur sm:p-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-3">
+              <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500">Stitch Keeper</p>
+              <h1 className="font-serif text-4xl tracking-tight text-stone-900 sm:text-5xl">{currentProject.name}</h1>
+              <p className="max-w-3xl text-base leading-7 text-stone-600">
+                {currentProject.notes ?? 'No notes have been added for this project yet.'}
+              </p>
             </div>
-          </Link>
-        ) : (
-          <div className="mt-6 rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 px-5 py-5 text-sm leading-6 text-stone-600">
-            No linked pattern could be found for this project.
+            <div className="flex items-center gap-2">
+              <StatusBadge status={currentProject.status} />
+              <ActionButton label={`Edit ${currentProject.name}`} onClick={() => setIsEditOpen(true)}>
+                <Pencil size={16} />
+              </ActionButton>
+              <ActionButton label={`Delete ${currentProject.name}`} tone="danger" onClick={() => setIsDeleteOpen(true)}>
+                <Trash2 size={16} />
+              </ActionButton>
+            </div>
           </div>
-        )}
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {currentProject.startDate ? <DetailRow label="Started" value={formatDate(currentProject.startDate)} /> : null}
+            {currentProject.endDate ? <DetailRow label="Completed" value={formatDate(currentProject.endDate)} /> : null}
+            <DetailRow label="Stash Items Linked" value={String(currentProject.stashItemIds.length)} />
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur sm:p-8">
+          <div className="space-y-2">
+            <h2 className="font-serif text-2xl text-stone-900">Linked Pattern</h2>
+            <p className="text-sm leading-6 text-stone-600">The pattern this project is based on.</p>
+          </div>
+
+          {linkedPattern ? (
+            <Link
+              to={`/patterns/${linkedPattern.id}`}
+              className="mt-6 block rounded-[1.5rem] border border-stone-200 bg-stone-50/80 p-5 transition hover:border-rose-200 hover:bg-rose-50/60"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-stone-900">{linkedPattern.name}</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {linkedPattern.category ? (
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-stone-700 ring-1 ring-inset ring-stone-200">
+                        {titleCase(linkedPattern.category)}
+                      </span>
+                    ) : null}
+                    <DifficultyBadge difficulty={linkedPattern.difficulty} />
+                  </div>
+                  <p className="text-sm leading-6 text-stone-600">
+                    {linkedPattern.notes ?? 'No notes have been added for this pattern yet.'}
+                  </p>
+                </div>
+                <span className="text-sm font-medium text-rose-600">View pattern</span>
+              </div>
+            </Link>
+          ) : (
+            <div className="mt-6 rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 px-5 py-5 text-sm leading-6 text-stone-600">
+              No linked pattern could be found for this project.
+            </div>
+          )}
+        </section>
       </section>
-    </section>
+
+      <Modal title="Edit Project" isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} maxWidthClassName="max-w-3xl">
+        <ProjectForm
+          patternOptions={patterns.map((pattern) => ({ id: pattern.id, name: pattern.name }))}
+          initialValues={{
+            name: currentProject.name,
+            patternId: currentProject.patternId ?? '',
+            status: currentProject.status,
+            startDate: currentProject.startDate ?? '',
+            endDate: currentProject.endDate ?? '',
+            notes: currentProject.notes ?? '',
+          }}
+          submitLabel="Save Changes"
+          onSubmit={(values) => { void handleSubmit(values) }}
+          onCancel={() => setIsEditOpen(false)}
+        />
+      </Modal>
+
+      <ConfirmDialog
+        isOpen={isDeleteOpen}
+        title="Delete Project"
+        description={`Delete "${currentProject.name}"? This cannot be undone.`}
+        confirmLabel="Delete Project"
+        onConfirm={() => { void handleDelete() }}
+        onCancel={() => setIsDeleteOpen(false)}
+      />
+    </>
   )
 }

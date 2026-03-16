@@ -24,6 +24,7 @@ type PatternOption = {
 type ProjectFormProps = {
   patternOptions: PatternOption[];
   initialValues?: Partial<ProjectFormValues>;
+  submitLabel?: string;
   onSubmit: (values: ProjectFormValues) => void;
   onCancel?: () => void;
 };
@@ -33,6 +34,7 @@ type FormErrors = Partial<Record<"name" | "patternId" | "status", string>>;
 export function ProjectForm({
   patternOptions,
   initialValues,
+  submitLabel = "Save Project",
   onSubmit,
   onCancel,
 }: ProjectFormProps) {
@@ -151,7 +153,7 @@ export function ProjectForm({
         </FormField>
       </FormSection>
 
-      <FormActions submitLabel="Save Project" onCancel={onCancel} />
+      <FormActions submitLabel={submitLabel} onCancel={onCancel} />
     </form>
   );
 }

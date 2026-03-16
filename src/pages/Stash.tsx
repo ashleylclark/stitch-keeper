@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Modal } from "../components/Modal";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { StashForm, type StashFormValues } from "../components/forms/StashForm";
 import { useAppData } from "../context/app-data";
 import type { ItemCategory, StashItem, StashStatus, YarnWeight } from "../types/models";
@@ -12,6 +13,8 @@ type FilterOption<T extends string> = {
 
 type StashCardProps = {
   item: StashItem;
+  onEdit: (item: StashItem) => void;
+  onDelete: (item: StashItem) => void;
 };
 
 const categoryOptions: FilterOption<ItemCategory | "all">[] = [
@@ -80,7 +83,35 @@ function StatusBadge({ status = "in-stock" }: { status?: StashStatus }) {
   );
 }
 
-function StashCard({ item }: StashCardProps) {
+function ActionButton({
+  label,
+  tone = "default",
+  onClick,
+  children,
+}: {
+  label: string;
+  tone?: "default" | "danger";
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className={[
+        "inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white transition",
+        tone === "danger"
+          ? "border-rose-200 text-rose-600 hover:bg-rose-50"
+          : "border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900",
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
+function StashCard({ item, onEdit, onDelete }: StashCardProps) {
   const detailPills = [
     categoryLabels[item.category],
     item.weight ? item.weight.toUpperCase() : null,
@@ -93,14 +124,22 @@ function StashCard({ item }: StashCardProps) {
   return (
     <article className="rounded-[1.75rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold text-stone-900">{item.name}</h2>
             <p className="text-sm text-stone-500">
               {item.quantity} {item.unit ?? "items"}
             </p>
           </div>
-          <StatusBadge status={item.status} />
+          <div className="flex items-center gap-2 self-start">
+            <StatusBadge status={item.status} />
+            <ActionButton label={`Edit ${item.name}`} onClick={() => onEdit(item)}>
+              <Pencil size={16} />
+            </ActionButton>
+            <ActionButton label={`Delete ${item.name}`} tone="danger" onClick={() => onDelete(item)}>
+              <Trash2 size={16} />
+            </ActionButton>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -122,9 +161,11 @@ function FieldLabel({ label }: { label: string }) {
 }
 
 export default function Stash() {
-  const { stashItems, addStashItem } = useAppData();
+  const { stashItems, addStashItem, updateStashItem, deleteStashItem } = useAppData();
   const [selectedCategory, setSelectedCategory] = useState<ItemCategory | "all">("all");
   const [selectedWeight, setSelectedWeight] = useState<YarnWeight | "all">("all");
+  const [editingItem, setEditingItem] = useState<StashItem | null>(null);
+  const [itemPendingDelete, setItemPendingDelete] = useState<StashItem | null>(null);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
 
   const showWeightFilter = selectedCategory === "yarn";
@@ -139,15 +180,16 @@ export default function Stash() {
 
   function closeModal() {
     setIsAddItemOpen(false);
+    setEditingItem(null);
   }
 
-  function handleSubmit(values: StashFormValues) {
+  async function handleSubmit(values: StashFormValues) {
     const nextItem: StashItem = {
-      id: `stash-${Date.now()}`,
+      id: editingItem?.id ?? `stash-${Date.now()}`,
       category: values.category,
       name: values.name.trim(),
       quantity: Number(values.quantity),
-      status: "in-stock",
+      status: editingItem?.status ?? "in-stock",
       brand: values.brand.trim() || undefined,
       color: values.color.trim() || undefined,
       weight: values.weight || undefined,
@@ -157,8 +199,22 @@ export default function Stash() {
       notes: values.notes.trim() || undefined,
     };
 
-    addStashItem(nextItem);
+    if (editingItem) {
+      await updateStashItem(nextItem);
+    } else {
+      await addStashItem(nextItem);
+    }
+
     closeModal();
+  }
+
+  async function handleDeleteConfirm() {
+    if (!itemPendingDelete) {
+      return;
+    }
+
+    await deleteStashItem(itemPendingDelete.id);
+    setItemPendingDelete(null);
   }
 
   return (
@@ -237,14 +293,59 @@ export default function Stash() {
 
         <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
           {filteredItems.map((item) => (
-            <StashCard key={item.id} item={item} />
+            <StashCard
+              key={item.id}
+              item={item}
+              onEdit={(nextItem) => {
+                setEditingItem(nextItem);
+                setIsAddItemOpen(false);
+              }}
+              onDelete={setItemPendingDelete}
+            />
           ))}
         </div>
       </section>
 
-      <Modal title="Add To Stash" isOpen={isAddItemOpen} onClose={closeModal}>
-        <StashForm onSubmit={handleSubmit} onCancel={closeModal} />
+      <Modal
+        title={editingItem ? "Edit Stash Item" : "Add To Stash"}
+        isOpen={isAddItemOpen || Boolean(editingItem)}
+        onClose={closeModal}
+      >
+        <StashForm
+          initialValues={
+            editingItem
+              ? {
+                  category: editingItem.category,
+                  name: editingItem.name,
+                  quantity: editingItem.quantity,
+                  unit: editingItem.unit ?? "",
+                  brand: editingItem.brand ?? "",
+                  color: editingItem.color ?? "",
+                  weight: editingItem.weight ?? "",
+                  size: editingItem.size ?? "",
+                  material: editingItem.material ?? "",
+                  notes: editingItem.notes ?? "",
+                }
+              : undefined
+          }
+          submitLabel={editingItem ? "Save Changes" : "Save Stash Item"}
+          onSubmit={(values) => { void handleSubmit(values) }}
+          onCancel={closeModal}
+        />
       </Modal>
+
+      <ConfirmDialog
+        isOpen={Boolean(itemPendingDelete)}
+        title="Delete Stash Item"
+        description={
+          itemPendingDelete
+            ? `Delete "${itemPendingDelete.name}" from your stash? This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete Item"
+        onConfirm={() => { void handleDeleteConfirm() }}
+        onCancel={() => setItemPendingDelete(null)}
+      />
     </>
   );
 }

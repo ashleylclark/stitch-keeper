@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Modal } from "../components/Modal";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PatternForm, type PatternFormValues } from "../components/forms/PatternForm";
 import { useAppData } from "../context/app-data";
 import type { Pattern, PatternMatchStatus } from "../types/models";
@@ -88,12 +89,42 @@ function RequirementBadge({ status }: { status?: PatternMatchStatus }) {
   );
 }
 
+function ActionButton({
+  label,
+  tone = "default",
+  onClick,
+  children,
+}: {
+  label: string;
+  tone?: "default" | "danger";
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className={[
+        "inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white transition",
+        tone === "danger"
+          ? "border-rose-200 text-rose-600 hover:bg-rose-50"
+          : "border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900",
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function Patterns() {
-  const { patterns, addPattern, patternMatchById } = useAppData();
+  const { patterns, addPattern, updatePattern, deletePattern, patternMatchById } = useAppData();
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("all");
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyFilter>("all");
   const [selectedRequirement, setSelectedRequirement] = useState<RequirementFilter>("all");
   const [isAddPatternOpen, setIsAddPatternOpen] = useState(false);
+  const [editingPattern, setEditingPattern] = useState<Pattern | null>(null);
+  const [patternPendingDelete, setPatternPendingDelete] = useState<Pattern | null>(null);
 
   const filteredPatterns = patterns.filter((pattern) => {
     const summary = patternMatchById.get(pattern.id);
@@ -111,15 +142,15 @@ export default function Patterns() {
 
   function closePatternModal() {
     setIsAddPatternOpen(false);
+    setEditingPattern(null);
   }
 
-  function handlePatternSubmit(values: PatternFormValues) {
-    const nextPatternId = `pattern-${Date.now()}`;
-
+  async function handlePatternSubmit(values: PatternFormValues) {
     const nextPattern: Pattern = {
-      id: nextPatternId,
+      id: editingPattern?.id ?? `pattern-${Date.now()}`,
       name: values.name.trim(),
-      addedAt: new Date().toISOString().slice(0, 10),
+      addedAt: editingPattern?.addedAt ?? new Date().toISOString().slice(0, 10),
+      isPlanned: editingPattern?.isPlanned ?? false,
       category: values.category || undefined,
       difficulty: values.difficulty || undefined,
       source: values.source.trim() || undefined,
@@ -129,8 +160,22 @@ export default function Patterns() {
       requirements: values.requirements,
     };
 
-    addPattern(nextPattern);
+    if (editingPattern) {
+      await updatePattern(nextPattern);
+    } else {
+      await addPattern(nextPattern);
+    }
+
     closePatternModal();
+  }
+
+  async function handleDeleteConfirm() {
+    if (!patternPendingDelete) {
+      return;
+    }
+
+    await deletePattern(patternPendingDelete.id);
+    setPatternPendingDelete(null);
   }
 
   return (
@@ -225,6 +270,7 @@ export default function Patterns() {
                 <th className="px-5 py-4 text-left">Category</th>
                 <th className="px-5 py-4 text-left">Difficulty</th>
                 <th className="px-5 py-4 text-left">Status</th>
+                <th className="px-5 py-4 text-left">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
@@ -253,6 +299,20 @@ export default function Patterns() {
                     <td className="px-5 py-5 sm:px-6">
                       <RequirementBadge status={summary?.status} />
                     </td>
+                    <td className="px-5 py-5 sm:px-6">
+                      <div className="flex gap-2">
+                        <ActionButton label={`Edit ${pattern.name}`} onClick={() => setEditingPattern(pattern)}>
+                          <Pencil size={16} />
+                        </ActionButton>
+                        <ActionButton
+                          label={`Delete ${pattern.name}`}
+                          tone="danger"
+                          onClick={() => setPatternPendingDelete(pattern)}
+                        >
+                          <Trash2 size={16} />
+                        </ActionButton>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -262,13 +322,44 @@ export default function Patterns() {
       </section>
 
       <Modal
-        title="Add Pattern"
-        isOpen={isAddPatternOpen}
+        title={editingPattern ? "Edit Pattern" : "Add Pattern"}
+        isOpen={isAddPatternOpen || Boolean(editingPattern)}
         onClose={closePatternModal}
         maxWidthClassName="max-w-5xl"
       >
-        <PatternForm onSubmit={handlePatternSubmit} onCancel={closePatternModal} />
+        <PatternForm
+          initialValues={
+            editingPattern
+              ? {
+                  name: editingPattern.name,
+                  source: editingPattern.source ?? "",
+                  sourceUrl: editingPattern.sourceUrl ?? "",
+                  category: editingPattern.category ?? "",
+                  difficulty: editingPattern.difficulty ?? "",
+                  notes: editingPattern.notes ?? "",
+                  instructions: editingPattern.instructions,
+                  requirements: editingPattern.requirements,
+                }
+              : undefined
+          }
+          submitLabel={editingPattern ? "Save Changes" : "Save Pattern"}
+          onSubmit={(values) => { void handlePatternSubmit(values) }}
+          onCancel={closePatternModal}
+        />
       </Modal>
+
+      <ConfirmDialog
+        isOpen={Boolean(patternPendingDelete)}
+        title="Delete Pattern"
+        description={
+          patternPendingDelete
+            ? `Delete "${patternPendingDelete.name}" and all of its requirements? This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete Pattern"
+        onConfirm={() => { void handleDeleteConfirm() }}
+        onCancel={() => setPatternPendingDelete(null)}
+      />
     </>
   );
 }

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Modal } from "../components/Modal";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ProjectForm, type ProjectFormValues } from "../components/forms/ProjectForm";
 import { useAppData } from "../context/app-data";
 import type { Project, ProjectStatus } from "../types/models";
@@ -99,16 +100,52 @@ function getRelevantDate(project: Project) {
   return null;
 }
 
-function ProjectRow({ project }: { project: Project }) {
+function ActionButton({
+  label,
+  tone = "default",
+  onClick,
+  children,
+}: {
+  label: string;
+  tone?: "default" | "danger";
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className={[
+        "inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white transition",
+        tone === "danger"
+          ? "border-rose-200 text-rose-600 hover:bg-rose-50"
+          : "border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900",
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ProjectRow({
+  project,
+  onEdit,
+  onDelete,
+}: {
+  project: Project;
+  onEdit: (project: Project) => void;
+  onDelete: (project: Project) => void;
+}) {
   const relevantDate = getRelevantDate(project);
 
   return (
     <article className="px-5 py-5 sm:px-6">
-      <Link
-        to={`/projects/${project.id}`}
-        className="flex min-w-0 flex-1 flex-col gap-4 rounded-[1.25rem] transition hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 lg:flex-row lg:items-center lg:justify-between"
-      >
-        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 flex-col gap-4 rounded-[1.25rem] lg:flex-row lg:items-center lg:justify-between">
+        <Link
+          to={`/projects/${project.id}`}
+          className="flex min-w-0 flex-1 flex-col gap-3 transition hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
+        >
           <div className="space-y-1">
             <h3 className="text-base font-semibold text-stone-900">{project.name}</h3>
             {relevantDate ? (
@@ -118,17 +155,33 @@ function ProjectRow({ project }: { project: Project }) {
               </p>
             ) : null}
           </div>
+        </Link>
 
-          <div className="sm:pl-6">
-            <StatusBadge status={project.status} />
-          </div>
+        <div className="flex items-center gap-2">
+          <StatusBadge status={project.status} />
+          <ActionButton label={`Edit ${project.name}`} onClick={() => onEdit(project)}>
+            <Pencil size={16} />
+          </ActionButton>
+          <ActionButton label={`Delete ${project.name}`} tone="danger" onClick={() => onDelete(project)}>
+            <Trash2 size={16} />
+          </ActionButton>
         </div>
-      </Link>
+      </div>
     </article>
   );
 }
 
-function ProjectSection({ status, projects }: { status: ProjectStatus; projects: Project[] }) {
+function ProjectSection({
+  status,
+  projects,
+  onEdit,
+  onDelete,
+}: {
+  status: ProjectStatus;
+  projects: Project[];
+  onEdit: (project: Project) => void;
+  onDelete: (project: Project) => void;
+}) {
   return (
     <section className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
       <div className="border-b border-stone-200/70 px-5 py-4 sm:px-6">
@@ -144,7 +197,7 @@ function ProjectSection({ status, projects }: { status: ProjectStatus; projects:
 
       <div className="divide-y divide-stone-100">
         {projects.map((project) => (
-          <ProjectRow key={project.id} project={project} />
+          <ProjectRow key={project.id} project={project} onEdit={onEdit} onDelete={onDelete} />
         ))}
       </div>
     </section>
@@ -152,9 +205,11 @@ function ProjectSection({ status, projects }: { status: ProjectStatus; projects:
 }
 
 export default function Projects() {
-  const { projects, patterns, addProject } = useAppData();
+  const { projects, patterns, addProject, updateProject, deleteProject } = useAppData();
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("all");
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [projectPendingDelete, setProjectPendingDelete] = useState<Project | null>(null);
 
   const filteredProjects =
     selectedStatus === "all"
@@ -170,22 +225,37 @@ export default function Projects() {
 
   function closeProjectModal() {
     setIsAddProjectOpen(false);
+    setEditingProject(null);
   }
 
-  function handleProjectSubmit(values: ProjectFormValues) {
+  async function handleProjectSubmit(values: ProjectFormValues) {
     const nextProject: Project = {
-      id: `project-${Date.now()}`,
+      id: editingProject?.id ?? `project-${Date.now()}`,
       name: values.name.trim(),
       patternId: values.patternId,
       status: values.status,
       startDate: values.startDate || undefined,
       endDate: values.endDate || undefined,
       notes: values.notes.trim() || undefined,
-      stashItemIds: [],
+      stashItemIds: editingProject?.stashItemIds ?? [],
     };
 
-    addProject(nextProject);
+    if (editingProject) {
+      await updateProject(nextProject);
+    } else {
+      await addProject(nextProject);
+    }
+
     closeProjectModal();
+  }
+
+  async function handleDeleteConfirm() {
+    if (!projectPendingDelete) {
+      return;
+    }
+
+    await deleteProject(projectPendingDelete.id);
+    setProjectPendingDelete(null);
   }
 
   return (
@@ -241,23 +311,55 @@ export default function Projects() {
 
         <div className="grid gap-5">
           {groupedProjects.map((group) => (
-            <ProjectSection key={group.status} status={group.status} projects={group.projects} />
+            <ProjectSection
+              key={group.status}
+              status={group.status}
+              projects={group.projects}
+              onEdit={setEditingProject}
+              onDelete={setProjectPendingDelete}
+            />
           ))}
         </div>
       </section>
 
       <Modal
-        title="Add Project"
-        isOpen={isAddProjectOpen}
+        title={editingProject ? "Edit Project" : "Add Project"}
+        isOpen={isAddProjectOpen || Boolean(editingProject)}
         onClose={closeProjectModal}
         maxWidthClassName="max-w-3xl"
       >
         <ProjectForm
           patternOptions={patterns.map((pattern) => ({ id: pattern.id, name: pattern.name }))}
-          onSubmit={handleProjectSubmit}
+          initialValues={
+            editingProject
+              ? {
+                  name: editingProject.name,
+                  patternId: editingProject.patternId ?? "",
+                  status: editingProject.status,
+                  startDate: editingProject.startDate ?? "",
+                  endDate: editingProject.endDate ?? "",
+                  notes: editingProject.notes ?? "",
+                }
+              : undefined
+          }
+          submitLabel={editingProject ? "Save Changes" : "Save Project"}
+          onSubmit={(values) => { void handleProjectSubmit(values) }}
           onCancel={closeProjectModal}
         />
       </Modal>
+
+      <ConfirmDialog
+        isOpen={Boolean(projectPendingDelete)}
+        title="Delete Project"
+        description={
+          projectPendingDelete
+            ? `Delete "${projectPendingDelete.name}"? This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete Project"
+        onConfirm={() => { void handleDeleteConfirm() }}
+        onCancel={() => setProjectPendingDelete(null)}
+      />
     </>
   );
 }
