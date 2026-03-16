@@ -1,6 +1,6 @@
-import { mockPatternDashboardMeta, mockPatterns } from '../data/mock-patterns'
-import { mockProjects } from '../data/mock-projects'
-import type { PatternDashboardMeta, PatternStatus, ProjectStatus } from '../types/models'
+import { useAppData } from '../context/app-data'
+import type { PatternMatchStatus, ProjectStatus } from '../types/models'
+import { patternMatchLabels } from '../utils/patternMatching'
 
 type HomeStat = {
   label: string
@@ -33,78 +33,11 @@ const projectStatusConfig: Record<ProjectStatus, { label: string; tone: StatusTo
   'need-supplies': { label: 'Need More Supplies', tone: 'amber' },
 }
 
-const patternStatusConfig: Record<PatternStatus, { label: string; tone: StatusTone }> = {
-  planned: { label: 'Planned', tone: 'sky' },
+const patternStatusConfig: Record<PatternMatchStatus, { label: string; tone: StatusTone }> = {
   'ready-to-start': { label: 'Ready To Start', tone: 'emerald' },
   'review-supplies': { label: 'Review Supplies', tone: 'amber' },
   'need-supplies': { label: 'Need More Supplies', tone: 'amber' },
 }
-
-// MOCK DATA
-const patternMetaById = new Map(mockPatternDashboardMeta.map((item) => [item.patternId, item]))
-
-const activeProjects = mockProjects
-  .filter((project) => project.status !== 'completed' && project.status !== 'paused')
-  .map<DashboardItem>((project) => ({
-    id: project.id,
-    name: project.name,
-    detail: project.notes ?? 'No project notes yet.',
-    status: projectStatusConfig[project.status].label,
-    tone: projectStatusConfig[project.status].tone,
-  }))
-
-const readyPatterns = mockPatterns
-  .filter((pattern) => patternMetaById.get(pattern.id)?.status === 'ready-to-start')
-  .map<DashboardItem>((pattern) => {
-    const meta = patternMetaById.get(pattern.id) as PatternDashboardMeta
-
-    return {
-      id: pattern.id,
-      name: pattern.name,
-      detail: meta.detail,
-      status: patternStatusConfig[meta.status].label,
-      tone: patternStatusConfig[meta.status].tone,
-    }
-  })
-
-const recentPatterns = [...mockPatterns]
-  .filter((pattern) => pattern.addedAt)
-  .sort((left, right) => new Date(right.addedAt ?? '').getTime() - new Date(left.addedAt ?? '').getTime())
-  .slice(0, 3)
-  .map<DashboardItem>((pattern) => {
-    const meta = patternMetaById.get(pattern.id)
-
-    return {
-      id: pattern.id,
-      name: pattern.name,
-      detail: pattern.addedAt ? `Added ${formatDate(pattern.addedAt)}` : 'Recently added',
-      status: meta ? patternStatusConfig[meta.status].label : 'New',
-      tone: meta ? patternStatusConfig[meta.status].tone : 'rose',
-    }
-  })
-
-const homeStats: HomeStat[] = [
-  {
-    label: 'Active Projects',
-    value: activeProjects.length,
-    helperText: 'Projects currently in progress, planned, or waiting on supplies.',
-  },
-  {
-    label: 'Ready Patterns',
-    value: readyPatterns.length,
-    helperText: 'Patterns you can start now with what you already have.',
-  },
-  {
-    label: 'Recent Patterns',
-    value: recentPatterns.length,
-    helperText: 'Newly added patterns surfaced on the dashboard.',
-  },
-  {
-    label: 'Finished Makes',
-    value: mockProjects.filter((project) => project.status === 'completed').length,
-    helperText: 'Projects marked complete in your project history.',
-  },
-]
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat('en-US', {
@@ -171,6 +104,72 @@ function DashboardList({
 }
 
 export default function Home() {
+  const { patterns, patternMatchById, projects } = useAppData()
+
+  const activeProjects = projects
+    .filter((project) => project.status !== 'completed' && project.status !== 'paused')
+    .map<DashboardItem>((project) => ({
+      id: project.id,
+      name: project.name,
+      detail: project.notes ?? 'No project notes yet.',
+      status: projectStatusConfig[project.status].label,
+      tone: projectStatusConfig[project.status].tone,
+    }))
+
+  const readyPatterns = patterns
+    .filter((pattern) => patternMatchById.get(pattern.id)?.status === 'ready-to-start')
+    .map<DashboardItem>((pattern) => {
+      const summary = patternMatchById.get(pattern.id)
+      const status = summary?.status ?? 'review-supplies'
+
+      return {
+        id: pattern.id,
+        name: pattern.name,
+        detail: summary?.detail ?? 'Review the requirements against your stash.',
+        status: patternStatusConfig[status].label,
+        tone: patternStatusConfig[status].tone,
+      }
+    })
+
+  const recentPatterns = [...patterns]
+    .filter((pattern) => pattern.addedAt)
+    .sort((left, right) => new Date(right.addedAt ?? '').getTime() - new Date(left.addedAt ?? '').getTime())
+    .slice(0, 3)
+    .map<DashboardItem>((pattern) => {
+      const summary = patternMatchById.get(pattern.id)
+
+      return {
+        id: pattern.id,
+        name: pattern.name,
+        detail: pattern.addedAt ? `Added ${formatDate(pattern.addedAt)}` : 'Recently added',
+        status: summary ? patternMatchLabels[summary.status] : 'New',
+        tone: summary ? patternStatusConfig[summary.status].tone : 'rose',
+      }
+    })
+
+  const homeStats: HomeStat[] = [
+    {
+      label: 'Active Projects',
+      value: activeProjects.length,
+      helperText: 'Projects currently in progress, planned, or waiting on supplies.',
+    },
+    {
+      label: 'Ready Patterns',
+      value: readyPatterns.length,
+      helperText: 'Patterns you can start now with what you already have.',
+    },
+    {
+      label: 'Recent Patterns',
+      value: recentPatterns.length,
+      helperText: 'Newly added patterns surfaced on the dashboard.',
+    },
+    {
+      label: 'Finished Makes',
+      value: projects.filter((project) => project.status === 'completed').length,
+      helperText: 'Projects marked complete in your project history.',
+    },
+  ]
+
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-8">
       <div className="space-y-3">

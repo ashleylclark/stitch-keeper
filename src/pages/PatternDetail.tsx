@@ -1,28 +1,18 @@
 import { ArrowLeft } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { mockPatternDashboardMeta, mockPatterns } from '../data/mock-patterns'
-import type { Pattern, PatternStatus } from '../types/models'
-
-const patternMetaById = new Map(mockPatternDashboardMeta.map((item) => [item.patternId, item]))
+import { useAppData } from '../context/app-data'
+import type { Pattern, PatternMatchStatus, RequirementMatch } from '../types/models'
+import {
+  patternMatchBadgeClasses,
+  patternMatchLabels,
+  requirementMatchBadgeClasses,
+  requirementMatchLabels,
+} from '../utils/patternMatching'
 
 const difficultyStyles: Record<NonNullable<Pattern['difficulty']>, string> = {
   beginner: 'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200',
   intermediate: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
   advanced: 'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200',
-}
-
-const requirementStyles: Record<PatternStatus, string> = {
-  planned: 'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200',
-  'ready-to-start': 'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200',
-  'review-supplies': 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
-  'need-supplies': 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200',
-}
-
-const requirementLabels: Record<PatternStatus, string> = {
-  planned: 'Planned',
-  'ready-to-start': 'Meets Requirements',
-  'review-supplies': 'Needs Review',
-  'need-supplies': 'Missing Supplies',
 }
 
 function titleCase(value: string) {
@@ -41,14 +31,26 @@ function DifficultyBadge({ difficulty }: { difficulty?: Pattern['difficulty'] })
   )
 }
 
-function RequirementBadge({ status }: { status?: PatternStatus }) {
+function RequirementBadge({ status }: { status?: PatternMatchStatus }) {
   if (!status) {
     return <span className="rounded-full bg-stone-200 px-3 py-1 text-xs font-semibold text-stone-600">Unscored</span>
   }
 
   return (
-    <span className={['rounded-full px-3 py-1 text-xs font-semibold', requirementStyles[status]].join(' ')}>
-      {requirementLabels[status]}
+    <span className={['rounded-full px-3 py-1 text-xs font-semibold', patternMatchBadgeClasses[status]].join(' ')}>
+      {patternMatchLabels[status]}
+    </span>
+  )
+}
+
+function RequirementMatchBadge({ match }: { match?: RequirementMatch }) {
+  if (!match) {
+    return <span className="rounded-full bg-stone-200 px-3 py-1 text-xs font-semibold text-stone-600">Unmatched</span>
+  }
+
+  return (
+    <span className={['rounded-full px-3 py-1 text-xs font-semibold', requirementMatchBadgeClasses[match.status]].join(' ')}>
+      {requirementMatchLabels[match.status]}
     </span>
   )
 }
@@ -71,14 +73,18 @@ function NotFoundState() {
 }
 
 export default function PatternDetail() {
+  const { patternMatchById, patterns } = useAppData()
   const { patternId } = useParams()
-  const pattern = mockPatterns.find((item) => item.id === patternId)
+  const pattern = patterns.find((item) => item.id === patternId)
 
   if (!pattern) {
     return <NotFoundState />
   }
 
-  const patternMeta = patternMetaById.get(pattern.id)
+  const patternSummary = patternMatchById.get(pattern.id)
+  const requirementMatchesById = new Map(
+    patternSummary?.requirementMatches.map((match) => [match.requirementId, match]) ?? [],
+  )
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-8">
@@ -104,7 +110,7 @@ export default function PatternDetail() {
                 </span>
               ) : null}
               <DifficultyBadge difficulty={pattern.difficulty} />
-              <RequirementBadge status={patternMeta?.status} />
+              <RequirementBadge status={patternSummary?.status} />
             </div>
           </div>
         </div>
@@ -123,27 +129,38 @@ export default function PatternDetail() {
                 <th className="px-4 py-4">Item</th>
                 <th className="px-4 py-4">Category</th>
                 <th className="px-4 py-4">Details</th>
+                <th className="px-4 py-4">Match</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100 bg-white">
-              {pattern.requirements.map((requirement) => (
-                <tr key={requirement.id}>
-                  <td className="px-4 py-4">
-                    <div className="font-medium text-stone-900">{requirement.name}</div>
-                  </td>
-                  <td className="px-4 py-4 text-sm text-stone-700">{titleCase(requirement.category)}</td>
-                  <td className="px-4 py-4 text-sm leading-6 text-stone-600">
-                    {[
-                      requirement.weight ? titleCase(requirement.weight) : null,
-                      requirement.quantityNeeded ? `${requirement.quantityNeeded} ${requirement.unit ?? 'items'}` : null,
-                      requirement.size ?? null,
-                      requirement.notes ?? null,
-                    ]
-                      .filter(Boolean)
-                      .join(' • ') || 'No extra details'}
-                  </td>
-                </tr>
-              ))}
+              {pattern.requirements.map((requirement) => {
+                const match = requirementMatchesById.get(requirement.id)
+
+                return (
+                  <tr key={requirement.id}>
+                    <td className="px-4 py-4">
+                      <div className="font-medium text-stone-900">{requirement.name}</div>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-stone-700">{titleCase(requirement.category)}</td>
+                    <td className="px-4 py-4 text-sm leading-6 text-stone-600">
+                      {[
+                        requirement.weight ? titleCase(requirement.weight) : null,
+                        requirement.quantityNeeded ? `${requirement.quantityNeeded} ${requirement.unit ?? 'items'}` : null,
+                        requirement.size ?? null,
+                        requirement.notes ?? null,
+                      ]
+                        .filter(Boolean)
+                        .join(' • ') || 'No extra details'}
+                    </td>
+                    <td className="px-4 py-4 text-sm leading-6 text-stone-600">
+                      <div className="space-y-2">
+                        <RequirementMatchBadge match={match} />
+                        <p>{match?.reason ?? 'No match details yet.'}</p>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

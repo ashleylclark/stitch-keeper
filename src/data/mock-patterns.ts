@@ -1,4 +1,4 @@
-import type { Pattern, PatternDashboardMeta } from '../types/models'
+import type { Pattern } from '../types/models'
 
 export const mockPatterns: Pattern[] = [
   {
@@ -53,6 +53,7 @@ export const mockPatterns: Pattern[] = [
     id: '103',
     name: 'Market Tote',
     addedAt: '2026-03-08',
+    isPlanned: true,
     category: 'bag',
     difficulty: 'beginner',
     requirements: [
@@ -144,33 +145,5 @@ export const mockPatterns: Pattern[] = [
     ],
     notes: 'Small scrap project that works up fast.',
     instructions: 'Chain 20. Join with slip stitch to form a ring, being careful not to twist the chain. Round 1: Chain 2 (counts as first dc), double crochet in each chain around. Join with slip stitch to top of beginning chain-2. Round 2: Chain 2, double crochet in each stitch around. Join with slip stitch to top of beginning chain-2. Repeat Round 2 until coaster measures approximately 4 inches from the join, or desired size. Fasten off and weave in ends.'
-  },
-]
-
-export const mockPatternDashboardMeta: PatternDashboardMeta[] = [
-  {
-    patternId: '101',
-    status: 'ready-to-start',
-    detail: 'All yarn and hook sizes already match your stash.',
-  },
-  {
-    patternId: '103',
-    status: 'planned',
-    detail: 'Lined up as a gift project for next month.',
-  },
-  {
-    patternId: '104',
-    status: 'need-supplies',
-    detail: 'You still need a few more worsted skeins.',
-  },
-  {
-    patternId: '105',
-    status: 'ready-to-start',
-    detail: 'Everything needed is already on hand.',
-  },
-  {
-    patternId: '106',
-    status: 'review-supplies',
-    detail: 'Double-check scrap colors before you begin.',
   },
 ]

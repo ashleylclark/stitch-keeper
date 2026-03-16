@@ -1,7 +1,6 @@
 import { ArrowLeft } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { mockPatterns } from '../data/mock-patterns'
-import { mockProjects } from '../data/mock-projects'
+import { useAppData } from '../context/app-data'
 import type { Pattern, ProjectStatus } from '../types/models'
 
 const statusConfig: Record<
@@ -95,14 +94,15 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 export default function ProjectDetail() {
+  const { patterns, projects } = useAppData()
   const { projectId } = useParams()
-  const project = mockProjects.find((item) => item.id === projectId)
+  const project = projects.find((item) => item.id === projectId)
 
   if (!project) {
     return <NotFoundState />
   }
 
-  const linkedPattern = project.patternId ? mockPatterns.find((pattern) => pattern.id === project.patternId) : undefined
+  const linkedPattern = project.patternId ? patterns.find((pattern) => pattern.id === project.patternId) : undefined
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-8">

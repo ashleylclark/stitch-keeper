@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { NavLink, Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { HouseHeart, PackageOpen, BookMarked, Spool, Menu, X } from 'lucide-react'
+import { AppDataProvider } from './context/AppDataContext'
 import Home from './pages/Home'
 import Stash from './pages/Stash'
 import Patterns from './pages/Patterns'
@@ -189,7 +190,11 @@ const router = createBrowserRouter([
 ])
 
 function App() {
-  return <RouterProvider router={router} />
+  return (
+    <AppDataProvider>
+      <RouterProvider router={router} />
+    </AppDataProvider>
+  )
 }
 
 export default App

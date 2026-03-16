@@ -32,6 +32,7 @@ type Pattern = {
   id: string
   name: string
   addedAt?: string
+  isPlanned?: boolean
   source?: string
   sourceUrl?: string
   category?: string
@@ -45,19 +46,23 @@ type MatchStatus = 'owned' | 'missing' | 'partial'
 
 type RequirementMatch = {
   requirementId: string
-  stashItemId?: string
+  matchedItemIds: string[]
   status: MatchStatus
   quantityMatched?: number
+  reason?: string
 }
 
 type ProjectStatus = 'planned' | 'in-progress' | 'completed' | 'paused' | 'need-supplies'
 
-type PatternStatus = 'ready-to-start' | 'planned' | 'review-supplies' | 'need-supplies'
+type PatternMatchStatus = 'ready-to-start' | 'review-supplies' | 'need-supplies'
 
-type PatternDashboardMeta = {
+type PatternMatchSummary = {
   patternId: string
-  status: PatternStatus
+  status: PatternMatchStatus
   detail: string
+  matchedCount: number
+  totalCount: number
+  requirementMatches: RequirementMatch[]
 }
 
 type Project = {
@@ -75,9 +80,9 @@ export type {
   ItemCategory,
   MatchStatus,
   Pattern,
-  PatternDashboardMeta,
+  PatternMatchStatus,
+  PatternMatchSummary,
   PatternRequirement,
-  PatternStatus,
   Project,
   ProjectStatus,
   RequirementMatch,
