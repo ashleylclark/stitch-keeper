@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { NavLink, Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { HouseHeart, PackageOpen, BookMarked, Spool, Menu, X } from 'lucide-react'
 import { AppDataProvider } from './context/AppDataContext'
+import { useAppData } from './context/app-data'
 import Home from './pages/Home'
 import Stash from './pages/Stash'
 import Patterns from './pages/Patterns'
@@ -97,6 +98,7 @@ function Sidebar({ mobile = false, onNavigate }: { mobile?: boolean; onNavigate?
 }
 
 function AppShell() {
+  const { isLoading, error } = useAppData()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
@@ -124,7 +126,19 @@ function AppShell() {
           </header>
 
           <main className="flex-1 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-            <Outlet />
+            {isLoading ? (
+              <section className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+                <h1 className="font-serif text-3xl text-stone-900">Loading your fiber data...</h1>
+                <p className="text-base text-stone-600">Reading stash, patterns, and projects from the API.</p>
+              </section>
+            ) : error ? (
+              <section className="mx-auto flex w-full max-w-5xl flex-col gap-4 rounded-[2rem] border border-rose-200 bg-rose-50 p-6">
+                <h1 className="font-serif text-3xl text-stone-900">Could not load app data</h1>
+                <p className="text-base text-stone-700">{error}</p>
+              </section>
+            ) : (
+              <Outlet />
+            )}
           </main>
         </div>
       </div>
