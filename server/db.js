@@ -63,7 +63,8 @@ export function initializeDatabase() {
       start_date TEXT,
       end_date TEXT,
       status TEXT NOT NULL,
-      notes TEXT
+      notes TEXT,
+      stash_usage_applied_at TEXT
     );
 
     CREATE TABLE IF NOT EXISTS project_stash_items (
@@ -74,6 +75,9 @@ export function initializeDatabase() {
       FOREIGN KEY (stash_item_id) REFERENCES stash_items(id) ON DELETE CASCADE
     );
   `);
+
+  ensureColumn('projects', 'stash_usage_applied_at', 'TEXT');
+  ensureColumn('project_stash_items', 'quantity_used', 'INTEGER');
 
   seedDatabaseIfEmpty();
 }
@@ -178,11 +182,25 @@ function seedDatabaseIfEmpty() {
         endDate: project.endDate ?? null,
         status: project.status,
         notes: project.notes ?? null,
+        stashUsageAppliedAt: null,
       });
 
       for (const stashItemId of project.stashItemIds ?? []) {
-        insertProjectStashItem.run({ projectId: project.id, stashItemId });
+        insertProjectStashItem.run({
+          projectId: project.id,
+          stashItemId,
+          quantityUsed: null,
+        });
       }
     }
   })();
+}
+
+function ensureColumn(tableName, columnName, columnDefinition) {
+  const columns = db.prepare(`PRAGMA table_info(${tableName})`).all();
+  const hasColumn = columns.some((column) => column.name === columnName);
+
+  if (!hasColumn) {
+    db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
+  }
 }

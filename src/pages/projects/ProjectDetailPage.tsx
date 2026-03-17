@@ -161,7 +161,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 export default function ProjectDetail() {
   const navigate = useNavigate();
-  const { patterns, projects, updateProject, deleteProject } = useAppData();
+  const { stashItems, patterns, projects, updateProject, deleteProject } = useAppData();
   const { projectId } = useParams();
   const project = projects.find((item) => item.id === projectId);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -179,6 +179,9 @@ export default function ProjectDetail() {
   const linkedPattern = currentProject.patternId
     ? patterns.find((pattern) => pattern.id === currentProject.patternId)
     : undefined;
+  const linkedStashItems = stashItems.filter((item) =>
+    currentProject.stashItemIds.includes(item.id),
+  );
 
   async function handleSubmit(values: ProjectFormValues) {
     setSubmitError(null);
@@ -189,6 +192,8 @@ export default function ProjectDetail() {
         ...currentProject,
         name: values.name.trim(),
         patternId: values.patternId,
+        stashItemIds: values.stashItemIds,
+        stashUsages: values.stashUsages,
         status: values.status,
         startDate: values.startDate || undefined,
         endDate: values.endDate || undefined,
@@ -284,6 +289,46 @@ export default function ProjectDetail() {
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur sm:p-8">
           <div className="space-y-2">
             <h2 className="font-serif text-2xl text-stone-900">
+              Linked Stash Items
+            </h2>
+            <p className="text-sm leading-6 text-stone-600">
+              Supplies currently connected to this project.
+            </p>
+          </div>
+
+          {linkedStashItems.length > 0 ? (
+            <div className="mt-6 grid gap-3">
+              {linkedStashItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-[1.5rem] border border-stone-200 bg-stone-50/80 px-5 py-4"
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-base font-semibold text-stone-900">
+                        {item.name}
+                      </p>
+                      <p className="text-sm text-stone-600">
+                        {item.quantity} {item.unit ?? 'items'}
+                      </p>
+                    </div>
+                    <div className="text-sm text-stone-500">
+                      {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 px-5 py-5 text-sm leading-6 text-stone-600">
+              No stash items are linked to this project yet.
+            </div>
+          )}
+        </section>
+
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur sm:p-8">
+          <div className="space-y-2">
+            <h2 className="font-serif text-2xl text-stone-900">
               Linked Pattern
             </h2>
             <p className="text-sm leading-6 text-stone-600">
@@ -341,9 +386,18 @@ export default function ProjectDetail() {
             id: pattern.id,
             name: pattern.name,
           }))}
+          stashItemOptions={stashItems.map((item) => ({
+            id: item.id,
+            name: item.name,
+            category: item.category,
+            quantity: item.quantity,
+            unit: item.unit,
+          }))}
           initialValues={{
             name: currentProject.name,
             patternId: currentProject.patternId ?? '',
+            stashItemIds: currentProject.stashItemIds,
+            stashUsages: currentProject.stashUsages,
             status: currentProject.status,
             startDate: currentProject.startDate ?? '',
             endDate: currentProject.endDate ?? '',

@@ -243,7 +243,7 @@ function ProjectSection({
 }
 
 export default function Projects() {
-  const { projects, patterns, addProject, updateProject, deleteProject } =
+  const { stashItems, projects, patterns, addProject, updateProject, deleteProject } =
     useAppData();
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all');
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
@@ -282,11 +282,12 @@ export default function Projects() {
         id: editingProject?.id ?? `project-${Date.now()}`,
         name: values.name.trim(),
         patternId: values.patternId,
+        stashItemIds: values.stashItemIds,
+        stashUsages: values.stashUsages,
         status: values.status,
         startDate: values.startDate || undefined,
         endDate: values.endDate || undefined,
         notes: values.notes.trim() || undefined,
-        stashItemIds: editingProject?.stashItemIds ?? [],
       };
 
       if (editingProject) {
@@ -404,11 +405,20 @@ export default function Projects() {
             id: pattern.id,
             name: pattern.name,
           }))}
+          stashItemOptions={stashItems.map((item) => ({
+            id: item.id,
+            name: item.name,
+            category: item.category,
+            quantity: item.quantity,
+            unit: item.unit,
+          }))}
           initialValues={
             editingProject
               ? {
                   name: editingProject.name,
                   patternId: editingProject.patternId ?? '',
+                  stashItemIds: editingProject.stashItemIds,
+                  stashUsages: editingProject.stashUsages,
                   status: editingProject.status,
                   startDate: editingProject.startDate ?? '',
                   endDate: editingProject.endDate ?? '',

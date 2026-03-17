@@ -88,8 +88,14 @@ type Project = {
   startDate?: string;
   endDate?: string;
   stashItemIds: string[];
+  stashUsages: ProjectStashUsage[];
   status: ProjectStatus;
   notes?: string;
+};
+
+type ProjectStashUsage = {
+  stashItemId: string;
+  quantityUsed?: number;
 };
 
 export type {
@@ -100,6 +106,7 @@ export type {
   PatternMatchSummary,
   PatternRequirement,
   Project,
+  ProjectStashUsage,
   ProjectStatus,
   RequirementMatch,
   StashItem,
