@@ -1,15 +1,11 @@
 import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Ellipsis, Pencil, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Modal } from "../components/Modal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PatternForm, type PatternFormValues } from "../components/forms/PatternForm";
 import { useAppData } from "../context/app-data";
 import type { Pattern, PatternMatchStatus } from "../types/models";
-import {
-  patternMatchBadgeClasses,
-  patternMatchLabels,
-} from "../utils/patternMatching";
 
 type DifficultyFilter = NonNullable<Pattern["difficulty"]> | "all";
 type CategoryFilter = NonNullable<Pattern["category"]> | "all";
@@ -44,7 +40,19 @@ const difficultyStyles: Record<NonNullable<Pattern["difficulty"]>, string> = {
   advanced: "bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200",
 };
 
-function TitleCase({ value }: { value: string }) {
+const compactDifficultyLabels: Record<NonNullable<Pattern["difficulty"]>, string> = {
+  beginner: "Beg",
+  intermediate: "Int",
+  advanced: "Adv",
+};
+
+const compactStatusLabels: Record<PatternMatchStatus, string> = {
+  "ready-to-start": "Ready",
+  "review-supplies": "Review",
+  "need-supplies": "Missing",
+};
+
+function titleCase(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
@@ -52,27 +60,11 @@ function FieldLabel({ label }: { label: string }) {
   return <span className="text-sm font-medium text-stone-700">{label}</span>;
 }
 
-function DifficultyBadge({ difficulty }: { difficulty?: Pattern["difficulty"] }) {
+function TableDifficultyToken({ difficulty }: { difficulty?: Pattern["difficulty"] }) {
   if (!difficulty) {
     return (
-      <span className="rounded-full bg-stone-200 px-3 py-1 text-xs font-semibold text-stone-600">
-        Unknown
-      </span>
-    );
-  }
-
-  return (
-    <span className={["rounded-full px-3 py-1 text-xs font-semibold", difficultyStyles[difficulty]].join(" ")}>
-      <TitleCase value={difficulty} />
-    </span>
-  );
-}
-
-function RequirementBadge({ status }: { status?: PatternMatchStatus }) {
-  if (!status) {
-    return (
-      <span className="rounded-full bg-stone-200 px-3 py-1 text-xs font-semibold text-stone-600">
-        Unscored
+      <span className="inline-flex w-fit items-center rounded-full bg-stone-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500">
+        N/A
       </span>
     );
   }
@@ -80,40 +72,98 @@ function RequirementBadge({ status }: { status?: PatternMatchStatus }) {
   return (
     <span
       className={[
-        "rounded-full px-3 py-1 text-xs font-semibold",
-        patternMatchBadgeClasses[status],
+        "inline-flex w-fit items-center rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
+        difficultyStyles[difficulty],
       ].join(" ")}
+      title={titleCase(difficulty)}
     >
-      {patternMatchLabels[status]}
+      {compactDifficultyLabels[difficulty]}
     </span>
   );
 }
 
-function ActionButton({
-  label,
-  tone = "default",
-  onClick,
-  children,
+function TableStatusIndicator({ status }: { status?: PatternMatchStatus }) {
+  if (!status) {
+    return (
+      <span className="inline-flex items-center gap-2 text-xs font-medium text-stone-500">
+        <span className="h-2.5 w-2.5 rounded-full bg-stone-300" aria-hidden="true" />
+        Unscored
+      </span>
+    );
+  }
+
+  const dotClasses: Record<PatternMatchStatus, string> = {
+    "ready-to-start": "bg-emerald-500",
+    "review-supplies": "bg-amber-500",
+    "need-supplies": "bg-rose-500",
+  };
+
+  return (
+    <span className="inline-flex items-center gap-2 whitespace-nowrap text-xs font-semibold text-stone-700">
+      <span className={["h-2.5 w-2.5 rounded-full", dotClasses[status]].join(" ")} aria-hidden="true" />
+      {compactStatusLabels[status]}
+    </span>
+  );
+}
+
+function RowActions({
+  patternName,
+  isOpen,
+  onToggle,
+  onEdit,
+  onDelete,
 }: {
-  label: string;
-  tone?: "default" | "danger";
-  onClick: () => void;
-  children: React.ReactNode;
+  patternName: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      onClick={onClick}
-      className={[
-        "inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white transition",
-        tone === "danger"
-          ? "border-rose-200 text-rose-600 hover:bg-rose-50"
-          : "border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900",
-      ].join(" ")}
-    >
-      {children}
-    </button>
+    <div className="relative flex justify-end">
+      <button
+        type="button"
+        aria-label={`Open actions for ${patternName}`}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        onClick={onToggle}
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && isOpen) {
+            event.preventDefault();
+            onToggle();
+          }
+        }}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-rose-200 hover:text-stone-900"
+      >
+        <Ellipsis size={16} />
+      </button>
+
+      {isOpen ? (
+        <div
+          role="menu"
+          className="absolute right-0 top-12 z-10 min-w-36 rounded-2xl border border-stone-200 bg-white p-2 shadow-[0_18px_40px_-24px_rgba(41,37,36,0.45)]"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={onEdit}
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-stone-700 transition hover:bg-stone-100"
+          >
+            <Pencil size={15} />
+            Edit
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={onDelete}
+            className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+          >
+            <Trash2 size={15} />
+            Delete
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -125,6 +175,7 @@ export default function Patterns() {
   const [isAddPatternOpen, setIsAddPatternOpen] = useState(false);
   const [editingPattern, setEditingPattern] = useState<Pattern | null>(null);
   const [patternPendingDelete, setPatternPendingDelete] = useState<Pattern | null>(null);
+  const [openRowActionId, setOpenRowActionId] = useState<string | null>(null);
 
   const filteredPatterns = patterns.filter((pattern) => {
     const summary = patternMatchById.get(pattern.id);
@@ -262,15 +313,15 @@ export default function Patterns() {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
-          <table className="w-full table-auto">
+        <section className="overflow-scroll rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
+          <table className="w-full table-fixed">
             <thead>
               <tr className="border-b border-stone-200/70 text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
-                <th className="px-5 py-4 text-left">Pattern</th>
-                <th className="px-5 py-4 text-left">Category</th>
-                <th className="px-5 py-4 text-left">Difficulty</th>
-                <th className="px-5 py-4 text-left">Status</th>
-                <th className="px-5 py-4 text-left">Actions</th>
+                <th className="w-[50%] px-4 py-4 text-left sm:px-5 md:w-[36%]">Pattern</th>
+                <th className="hidden w-[18%] px-4 py-4 text-left md:table-cell xl:w-[16%] xl:px-5">Category</th>
+                <th className="hidden w-[20%] px-4 py-4 text-left md:table-cell sm:px-5">Difficulty</th>
+                <th className="w-[20%] px-4 py-4 text-left sm:w-[10%] sm:px-5">Status</th>
+                <th className="w-16 px-3 py-4 text-right sm:px-4"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
@@ -279,39 +330,47 @@ export default function Patterns() {
 
                 return (
                   <tr key={pattern.id} className="transition hover:bg-stone-50">
-                    <td className="px-5 py-5 sm:px-6">
+                    <td className="px-4 py-5 align-center sm:px-5">
                       <Link
                         to={`/patterns/${pattern.id}`}
-                        className="font-semibold text-stone-900 hover:underline"
+                        className="block text-sm font-semibold leading-6 text-stone-900 hover:underline sm:text-base"
                       >
                         {pattern.name}
                       </Link>
-                      <p className="text-sm leading-6 text-stone-600">
+                      <div className="mt-2 flex flex-wrap items-center gap-2 md:hidden">
+                        <TableDifficultyToken difficulty={pattern.difficulty} />
+                      </div>
+                      <p className="mt-1 hidden text-sm leading-6 text-stone-600 xl:block">
                         {pattern.notes ?? "No notes yet for this pattern."}
                       </p>
                     </td>
-                    <td className="px-5 py-5 text-sm text-stone-700 sm:px-6">
-                      {pattern.category ? <TitleCase value={pattern.category} /> : "Uncategorized"}
+                    <td className="hidden px-4 py-5 align-center text-sm text-stone-700 md:table-cell xl:px-5">
+                      {pattern.category ? titleCase(pattern.category) : "Uncategorized"}
                     </td>
-                    <td className="px-5 py-5 sm:px-6">
-                      <DifficultyBadge difficulty={pattern.difficulty} />
+                    <td className="hidden px-4 py-5 align-center md:table-cell sm:px-5">
+                      <TableDifficultyToken difficulty={pattern.difficulty} />
                     </td>
-                    <td className="px-5 py-5 sm:px-6">
-                      <RequirementBadge status={summary?.status} />
+                    <td className="px-4 py-5 align-center sm:px-5">
+                      <TableStatusIndicator status={summary?.status} />
                     </td>
-                    <td className="px-5 py-5 sm:px-6">
-                      <div className="flex gap-2">
-                        <ActionButton label={`Edit ${pattern.name}`} onClick={() => setEditingPattern(pattern)}>
-                          <Pencil size={16} />
-                        </ActionButton>
-                        <ActionButton
-                          label={`Delete ${pattern.name}`}
-                          tone="danger"
-                          onClick={() => setPatternPendingDelete(pattern)}
-                        >
-                          <Trash2 size={16} />
-                        </ActionButton>
-                      </div>
+                    <td className="px-3 py-5 align-center sm:px-4">
+                      <RowActions
+                        patternName={pattern.name}
+                        isOpen={openRowActionId === pattern.id}
+                        onToggle={() =>
+                          setOpenRowActionId((currentId) =>
+                            currentId === pattern.id ? null : pattern.id,
+                          )
+                        }
+                        onEdit={() => {
+                          setOpenRowActionId(null);
+                          setEditingPattern(pattern);
+                        }}
+                        onDelete={() => {
+                          setOpenRowActionId(null);
+                          setPatternPendingDelete(pattern);
+                        }}
+                      />
                     </td>
                   </tr>
                 );
