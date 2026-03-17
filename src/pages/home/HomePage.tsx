@@ -1,6 +1,6 @@
-import { useAppData } from '../context/app-data'
-import type { PatternMatchStatus, ProjectStatus } from '../types/models'
-import { patternMatchLabels } from '../utils/patternMatching'
+import { useAppData } from '../../app/state/app-data'
+import type { PatternMatchStatus, ProjectStatus } from '../../types/models'
+import { patternMatchLabels } from '../patterns/lib/patternMatching'
 
 type HomeStat = {
   label: string

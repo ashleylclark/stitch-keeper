@@ -143,7 +143,7 @@ function seedDatabaseIfEmpty() {
         id: pattern.id,
         name: pattern.name,
         addedAt: pattern.addedAt ?? null,
-        isPlanned: pattern.isPlanned ?? 0,
+        isPlanned: pattern.isPlanned ? 1 : 0,
         source: pattern.source ?? null,
         sourceUrl: pattern.sourceUrl ?? null,
         category: pattern.category ?? null,
@@ -152,7 +152,7 @@ function seedDatabaseIfEmpty() {
         instructions: pattern.instructions,
       })
 
-      for (const requirement of pattern.requirements) {
+      for (const requirement of pattern.requirements ?? []) {
         insertRequirement.run({
           id: requirement.id,
           patternId: pattern.id,
@@ -178,7 +178,7 @@ function seedDatabaseIfEmpty() {
         notes: project.notes ?? null,
       })
 
-      for (const stashItemId of project.stashItemIds) {
+      for (const stashItemId of project.stashItemIds ?? []) {
         insertProjectStashItem.run({ projectId: project.id, stashItemId })
       }
     }

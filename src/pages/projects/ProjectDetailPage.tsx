@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Modal } from '../components/Modal'
-import { ConfirmDialog } from '../components/ConfirmDialog'
-import { ProjectForm, type ProjectFormValues } from '../components/forms/ProjectForm'
-import { useAppData } from '../context/app-data'
-import type { Pattern, Project, ProjectStatus } from '../types/models'
+import { Modal } from '../../components/Modal'
+import { ConfirmDialog } from '../../components/ConfirmDialog'
+import { ProjectForm, type ProjectFormValues } from './components/ProjectForm'
+import { useAppData } from '../../app/state/app-data'
+import type { Pattern, Project, ProjectStatus } from '../../types/models'
 
 const statusConfig: Record<
   ProjectStatus,

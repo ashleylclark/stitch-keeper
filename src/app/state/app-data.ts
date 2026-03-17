@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { Pattern, PatternMatchSummary, Project, StashItem } from '../types/models'
+import type { Pattern, PatternMatchSummary, Project, StashItem } from '../../types/models'
 
 export type AppDataContextValue = {
   isLoading: boolean

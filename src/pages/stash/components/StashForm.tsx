@@ -1,11 +1,11 @@
 import { useState } from "react";
-import type { ItemCategory, YarnWeight } from "../../types/models";
-import { FormActions } from "./shared/FormActions";
-import { FormField } from "./shared/FormField";
-import { FormSection } from "./shared/FormSection";
-import { SelectInput } from "./shared/SelectInput";
-import { TextArea } from "./shared/TextArea";
-import { TextInput } from "./shared/TextInput";
+import type { ItemCategory, YarnWeight } from '../../../types/models'
+import { FormActions } from '../../../components/forms/FormActions'
+import { FormField } from '../../../components/forms/FormField'
+import { FormSection } from '../../../components/forms/FormSection'
+import { SelectInput } from '../../../components/forms/SelectInput'
+import { TextArea } from '../../../components/forms/TextArea'
+import { TextInput } from '../../../components/forms/TextInput'
 
 export type StashFormValues = {
   category: ItemCategory;

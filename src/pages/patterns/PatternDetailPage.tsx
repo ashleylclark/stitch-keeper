@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Modal } from '../components/Modal'
-import { ConfirmDialog } from '../components/ConfirmDialog'
-import { PatternForm, type PatternFormValues } from '../components/forms/PatternForm'
-import { useAppData } from '../context/app-data'
-import type { Pattern, PatternMatchStatus, RequirementMatch } from '../types/models'
+import { Modal } from '../../components/Modal'
+import { ConfirmDialog } from '../../components/ConfirmDialog'
+import { PatternForm, type PatternFormValues } from './components/PatternForm'
+import { useAppData } from '../../app/state/app-data'
+import type { Pattern, PatternMatchStatus, RequirementMatch } from '../../types/models'
 import {
   patternMatchBadgeClasses,
   patternMatchLabels,
   requirementMatchBadgeClasses,
   requirementMatchLabels,
-} from '../utils/patternMatching'
+} from './lib/patternMatching'
 
 const difficultyStyles: Record<NonNullable<Pattern['difficulty']>, string> = {
   beginner: 'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200',

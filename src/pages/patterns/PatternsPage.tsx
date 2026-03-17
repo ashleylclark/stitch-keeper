@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Ellipsis, Pencil, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Modal } from "../components/Modal";
-import { ConfirmDialog } from "../components/ConfirmDialog";
-import { PatternForm, type PatternFormValues } from "../components/forms/PatternForm";
-import { useAppData } from "../context/app-data";
-import type { Pattern, PatternMatchStatus } from "../types/models";
+import { Modal } from '../../components/Modal'
+import { ConfirmDialog } from '../../components/ConfirmDialog'
+import { PatternForm, type PatternFormValues } from './components/PatternForm'
+import { useAppData } from '../../app/state/app-data'
+import type { Pattern, PatternMatchStatus } from '../../types/models'
 
 type DifficultyFilter = NonNullable<Pattern["difficulty"]> | "all";
 type CategoryFilter = NonNullable<Pattern["category"]> | "all";

@@ -6,7 +6,7 @@ import type {
   PatternRequirement,
   RequirementMatch,
   StashItem,
-} from '../types/models'
+} from '../../../types/models'
 
 const availableStatuses = new Set(['in-stock', 'low-stock', 'not-replacing'])
 
