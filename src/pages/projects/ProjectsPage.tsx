@@ -243,8 +243,14 @@ function ProjectSection({
 }
 
 export default function Projects() {
-  const { stashItems, projects, patterns, addProject, updateProject, deleteProject } =
-    useAppData();
+  const {
+    stashItems,
+    projects,
+    patterns,
+    addProject,
+    updateProject,
+    deleteProject,
+  } = useAppData();
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all');
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);

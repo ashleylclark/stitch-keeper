@@ -113,7 +113,8 @@ export function buildRequirementMatch(
   );
   const matchedItemIds = matchingItems.map((item) => item.id);
   const quantityMatched = matchingItems.reduce(
-    (sum, item) => sum + getComparableQuantity(item.category, item.quantity, item.unit),
+    (sum, item) =>
+      sum + getComparableQuantity(item.category, item.quantity, item.unit),
     0,
   );
 

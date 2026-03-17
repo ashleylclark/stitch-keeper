@@ -201,6 +201,8 @@ function ensureColumn(tableName, columnName, columnDefinition) {
   const hasColumn = columns.some((column) => column.name === columnName);
 
   if (!hasColumn) {
-    db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
+    db.exec(
+      `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`,
+    );
   }
 }

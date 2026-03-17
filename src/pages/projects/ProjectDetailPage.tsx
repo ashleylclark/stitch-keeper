@@ -161,7 +161,8 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 export default function ProjectDetail() {
   const navigate = useNavigate();
-  const { stashItems, patterns, projects, updateProject, deleteProject } = useAppData();
+  const { stashItems, patterns, projects, updateProject, deleteProject } =
+    useAppData();
   const { projectId } = useParams();
   const project = projects.find((item) => item.id === projectId);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -313,7 +314,8 @@ export default function ProjectDetail() {
                       </p>
                     </div>
                     <div className="text-sm text-stone-500">
-                      {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
+                      {item.category.charAt(0).toUpperCase() +
+                        item.category.slice(1)}
                     </div>
                   </div>
                 </div>

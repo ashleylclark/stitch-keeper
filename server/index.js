@@ -389,7 +389,7 @@ function saveProject(project, replace = false) {
 
     const stashUsageAppliedAt = shouldApplyStashUsage
       ? new Date().toISOString()
-      : existingProject?.stashUsageAppliedAt ?? null;
+      : (existingProject?.stashUsageAppliedAt ?? null);
 
     db.prepare(
       `

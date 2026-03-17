@@ -334,7 +334,9 @@ export function PatternForm({
                     unit: event.target.value,
                   }))
                 }
-                placeholder={getRequirementUnitPlaceholder(newRequirement.category)}
+                placeholder={getRequirementUnitPlaceholder(
+                  newRequirement.category,
+                )}
               />
             </FormField>
           ) : null}
@@ -445,7 +447,12 @@ function showsRequirementSize(category: ItemCategory) {
 }
 
 function showsRequirementUnit(category: ItemCategory) {
-  return category === 'yarn' || category === 'stuffing' || category === 'eyes' || category === 'other';
+  return (
+    category === 'yarn' ||
+    category === 'stuffing' ||
+    category === 'eyes' ||
+    category === 'other'
+  );
 }
 
 function getRequirementUnitPlaceholder(category: ItemCategory) {
