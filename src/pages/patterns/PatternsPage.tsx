@@ -20,10 +20,13 @@ type RequirementFilter = 'all' | 'ready' | 'review' | 'missing';
 const categoryOptions: { label: string; value: CategoryFilter }[] = [
   { label: 'All categories', value: 'all' },
   { label: 'Accessory', value: 'accessory' },
+  { label: 'Amigurumi', value: 'amigurumi' },
   { label: 'Bag', value: 'bag' },
   { label: 'Blanket', value: 'blanket' },
   { label: 'Garment', value: 'garment' },
   { label: 'Home', value: 'home' },
+  { label: 'Toy', value: 'toy' },
+  { label: 'Other', value: 'other' },
 ];
 
 const difficultyOptions: { label: string; value: DifficultyFilter }[] = [
@@ -381,7 +384,7 @@ export default function Patterns() {
           </div>
         </section>
 
-        <section className="overflow-scroll rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
           <table className="w-full table-fixed">
             <thead>
               <tr className="border-b border-stone-200/70 text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">

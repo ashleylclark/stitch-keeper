@@ -113,7 +113,7 @@ export function buildRequirementMatch(
   );
   const matchedItemIds = matchingItems.map((item) => item.id);
   const quantityMatched = matchingItems.reduce(
-    (sum, item) => sum + item.quantity,
+    (sum, item) => sum + getComparableQuantity(item.category, item.quantity, item.unit),
     0,
   );
 
@@ -128,13 +128,19 @@ export function buildRequirementMatch(
   }
 
   if (typeof requirement.quantityNeeded === 'number') {
-    if (quantityMatched >= requirement.quantityNeeded) {
+    const comparableQuantityNeeded = getComparableQuantity(
+      requirement.category,
+      requirement.quantityNeeded,
+      requirement.unit,
+    );
+
+    if (quantityMatched >= comparableQuantityNeeded) {
       return {
         requirementId: requirement.id,
         matchedItemIds,
         status: 'owned',
         quantityMatched,
-        reason: `Matched ${quantityMatched} ${requirement.unit ?? 'items'}.`,
+        reason: `Matched ${quantityMatched} ${getComparableUnitLabel(requirement)}.`,
       };
     }
 
@@ -143,7 +149,7 @@ export function buildRequirementMatch(
       matchedItemIds,
       status: 'partial',
       quantityMatched,
-      reason: `Only ${quantityMatched} of ${requirement.quantityNeeded} ${requirement.unit ?? 'items'} available.`,
+      reason: `Only ${quantityMatched} of ${comparableQuantityNeeded} ${getComparableUnitLabel(requirement)} available.`,
     };
   }
 
@@ -185,6 +191,36 @@ function isMatchingItem(requirement: PatternRequirement, item: StashItem) {
 
 function needsSizeMatch(category: ItemCategory) {
   return category === 'hook' || category === 'needle' || category === 'eyes';
+}
+
+function getComparableQuantity(
+  category: ItemCategory,
+  quantity: number,
+  unit?: string,
+) {
+  if (category !== 'eyes') {
+    return quantity;
+  }
+
+  const normalizedUnit = normalizeUnit(unit);
+
+  if (normalizedUnit === 'pair') {
+    return quantity * 2;
+  }
+
+  return quantity;
+}
+
+function getComparableUnitLabel(requirement: PatternRequirement) {
+  if (requirement.category === 'eyes') {
+    return 'eyes';
+  }
+
+  return requirement.unit ?? 'items';
+}
+
+function normalizeUnit(unit?: string) {
+  return unit?.trim().toLowerCase().replace(/\.$/, '').replace(/s$/, '');
 }
 
 function buildMissingReason(requirement: PatternRequirement) {

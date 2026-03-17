@@ -94,7 +94,7 @@ if (hasBuiltFrontend) {
 }
 
 app.listen(port, () => {
-  console.log(`Hook Stash server listening on http://localhost:${port}`);
+  console.log(`Stash Keeper server listening on http://localhost:${port}`);
 });
 
 function listStashItems() {
@@ -184,7 +184,8 @@ function listProjects() {
       start_date AS startDate,
       end_date AS endDate,
       status,
-      notes
+      notes,
+      stash_usage_applied_at AS stashUsageAppliedAt
     FROM projects
     ORDER BY rowid DESC
   `,
@@ -194,7 +195,7 @@ function listProjects() {
   const projectStashItems = db
     .prepare(
       `
-    SELECT project_id AS projectId, stash_item_id AS stashItemId
+    SELECT project_id AS projectId, stash_item_id AS stashItemId, quantity_used AS quantityUsed
     FROM project_stash_items
     ORDER BY rowid ASC
   `,
@@ -202,11 +203,19 @@ function listProjects() {
     .all();
 
   const stashItemIdsByProjectId = new Map();
+  const stashUsagesByProjectId = new Map();
 
   for (const row of projectStashItems) {
     const current = stashItemIdsByProjectId.get(row.projectId) ?? [];
     current.push(row.stashItemId);
     stashItemIdsByProjectId.set(row.projectId, current);
+
+    const usageCurrent = stashUsagesByProjectId.get(row.projectId) ?? [];
+    usageCurrent.push({
+      stashItemId: row.stashItemId,
+      quantityUsed: row.quantityUsed ?? undefined,
+    });
+    stashUsagesByProjectId.set(row.projectId, usageCurrent);
   }
 
   return projects.map((project) => ({
@@ -216,6 +225,8 @@ function listProjects() {
     endDate: project.endDate ?? undefined,
     notes: project.notes ?? undefined,
     stashItemIds: stashItemIdsByProjectId.get(project.id) ?? [],
+    stashUsages: stashUsagesByProjectId.get(project.id) ?? [],
+    stashUsageAppliedAt: project.stashUsageAppliedAt ?? undefined,
   }));
 }
 
@@ -270,6 +281,25 @@ function normalizePattern(input) {
 }
 
 function normalizeProject(input) {
+  const normalizedStashUsages = Array.isArray(input.stashUsages)
+    ? input.stashUsages
+        .map((usage) => ({
+          stashItemId: String(usage.stashItemId),
+          quantityUsed:
+            usage.quantityUsed === undefined ||
+            usage.quantityUsed === null ||
+            usage.quantityUsed === ''
+              ? undefined
+              : Number(usage.quantityUsed),
+        }))
+        .filter((usage) => usage.stashItemId)
+    : Array.isArray(input.stashItemIds)
+      ? input.stashItemIds.map((stashItemId) => ({
+          stashItemId: String(stashItemId),
+          quantityUsed: undefined,
+        }))
+      : [];
+
   return {
     id: String(input.id ?? `project-${randomUUID()}`),
     name: String(input.name ?? '').trim(),
@@ -278,9 +308,8 @@ function normalizeProject(input) {
     endDate: emptyToUndefined(input.endDate),
     status: String(input.status),
     notes: emptyToUndefined(input.notes),
-    stashItemIds: Array.isArray(input.stashItemIds)
-      ? input.stashItemIds.map(String)
-      : [],
+    stashItemIds: normalizedStashUsages.map((usage) => usage.stashItemId),
+    stashUsages: normalizedStashUsages,
   };
 }
 
@@ -339,29 +368,99 @@ function savePattern(pattern, replace = false) {
 
 function saveProject(project, replace = false) {
   db.transaction(() => {
+    const existingProject = replace
+      ? db
+          .prepare(
+            `
+            SELECT id, status, stash_usage_applied_at AS stashUsageAppliedAt
+            FROM projects
+            WHERE id = ?
+          `,
+          )
+          .get(project.id)
+      : null;
+
     if (replace) {
       db.prepare('DELETE FROM projects WHERE id = ?').run(project.id);
     }
 
+    const shouldApplyStashUsage =
+      project.status === 'completed' && !existingProject?.stashUsageAppliedAt;
+
+    const stashUsageAppliedAt = shouldApplyStashUsage
+      ? new Date().toISOString()
+      : existingProject?.stashUsageAppliedAt ?? null;
+
     db.prepare(
       `
       INSERT INTO projects (
-        id, name, pattern_id, start_date, end_date, status, notes
+        id, name, pattern_id, start_date, end_date, status, notes, stash_usage_applied_at
       ) VALUES (
-        @id, @name, @patternId, @startDate, @endDate, @status, @notes
+        @id, @name, @patternId, @startDate, @endDate, @status, @notes, @stashUsageAppliedAt
       )
     `,
-    ).run(project);
+    ).run({
+      ...project,
+      stashUsageAppliedAt,
+    });
 
     const insertLinkedItem = db.prepare(`
-      INSERT INTO project_stash_items (project_id, stash_item_id)
-      VALUES (@projectId, @stashItemId)
+      INSERT INTO project_stash_items (project_id, stash_item_id, quantity_used)
+      VALUES (@projectId, @stashItemId, @quantityUsed)
     `);
 
-    for (const stashItemId of project.stashItemIds) {
-      insertLinkedItem.run({ projectId: project.id, stashItemId });
+    for (const usage of project.stashUsages) {
+      insertLinkedItem.run({
+        projectId: project.id,
+        stashItemId: usage.stashItemId,
+        quantityUsed: usage.quantityUsed ?? null,
+      });
+    }
+
+    if (shouldApplyStashUsage) {
+      applyProjectStashUsage(project.stashUsages);
     }
   })();
+}
+
+function applyProjectStashUsage(stashUsages) {
+  const updateStashQuantity = db.prepare(`
+    UPDATE stash_items
+    SET quantity = MAX(quantity - @quantityUsed, 0)
+    WHERE id = @stashItemId
+  `);
+
+  for (const usage of stashUsages) {
+    if (
+      typeof usage.quantityUsed !== 'number' ||
+      Number.isNaN(usage.quantityUsed) ||
+      usage.quantityUsed <= 0
+    ) {
+      continue;
+    }
+
+    const stashItem = db
+      .prepare('SELECT category FROM stash_items WHERE id = ?')
+      .get(usage.stashItemId);
+
+    if (!stashItem || !isConsumableCategory(stashItem.category)) {
+      continue;
+    }
+
+    updateStashQuantity.run({
+      stashItemId: usage.stashItemId,
+      quantityUsed: usage.quantityUsed,
+    });
+  }
+}
+
+function isConsumableCategory(category) {
+  return (
+    category === 'yarn' ||
+    category === 'eyes' ||
+    category === 'stuffing' ||
+    category === 'other'
+  );
 }
 
 function emptyToUndefined(value) {

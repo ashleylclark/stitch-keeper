@@ -32,8 +32,8 @@ type StashFormProps = {
 type FormErrors = Partial<Record<'name' | 'quantity', string>>;
 
 const defaultUnits: Record<ItemCategory, string> = {
-  yarn: 'skeins',
-  hook: 'hooks',
+  yarn: 'yrds',
+  hook: 'hook',
   needle: 'needles',
   eyes: 'pairs',
   stuffing: 'bags',
@@ -181,7 +181,7 @@ export function StashForm({
               <TextInput
                 value={values.unit}
                 onChange={(event) => update('unit', event.target.value)}
-                placeholder="skeins, bags, items"
+                placeholder="yrdss, bags, items"
               />
             </FormField>
           ) : null}
@@ -220,13 +220,14 @@ export function StashForm({
                   }
                 >
                   <option value="">Select weight</option>
-                  <option value="lace">Lace</option>
-                  <option value="fingering">Fingering</option>
-                  <option value="sport">Sport</option>
-                  <option value="dk">DK</option>
-                  <option value="worsted">Worsted</option>
-                  <option value="bulky">Bulky</option>
-                  <option value="super-bulky">Super Bulky</option>
+                  <option value="lace">0 - Lace</option>
+                  <option value="super-fine">1 - Super Fine</option>
+                  <option value="fine">2 - Fine</option>
+                  <option value="light">3 - Light</option>
+                  <option value="medium">4 - Medium</option>
+                  <option value="bulky">5 - Bulky</option>
+                  <option value="super-bulky">6 - Super Bulky</option>
+                  <option value="jumbo">7 - Jumbo</option>
                 </SelectInput>
               </FormField>
             ) : null}
@@ -296,7 +297,7 @@ function showsMaterial(category: ItemCategory) {
 }
 
 function showsUnit(category: ItemCategory) {
-  return ['yarn', 'stuffing', 'other'].includes(category);
+  return ['yarn', 'stuffing', 'eyes', 'other'].includes(category);
 }
 
 function showsNotes(category: ItemCategory) {

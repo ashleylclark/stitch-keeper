@@ -7,8 +7,8 @@ export const stashItems = [
     color: 'Charcoal',
     material: 'Acrylic',
     weight: 'bulky',
-    quantity: 3,
-    unit: 'skeins',
+    quantity: 30,
+    unit: 'yrds',
     status: 'in-stock',
   },
   {
@@ -30,7 +30,7 @@ export const stashItems = [
     material: 'Acrylic',
     weight: 'light',
     quantity: 10,
-    unit: 'skeins',
+    unit: 'yrds',
     status: 'in-stock',
   },
 ];
@@ -67,6 +67,10 @@ export const projects = [
     patternId: '101',
     startDate: '2024-05-01',
     stashItemIds: ['s1', 's2'],
+    stashUsages: [
+      { stashItemId: 's1', quantityUsed: 1 },
+      { stashItemId: 's2' },
+    ],
     status: 'in-progress',
     notes: 'On round 12',
   },

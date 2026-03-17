@@ -44,12 +44,21 @@ type PatternFormProps = {
 
 type FormErrors = Partial<Record<'name' | 'instructions', string>>;
 
+const defaultRequirementUnits: Record<ItemCategory, string> = {
+  yarn: 'yrds',
+  hook: 'hook',
+  needle: '',
+  eyes: 'pairs',
+  stuffing: 'bags',
+  other: 'items',
+};
+
 const initialRequirementValues: RequirementFormValues = {
   category: 'yarn',
   name: '',
   weight: '',
   quantityNeeded: '',
-  unit: '',
+  unit: defaultRequirementUnits.yarn,
   size: '',
   notes: '',
 };
@@ -77,6 +86,10 @@ export function PatternForm({
   const [newRequirement, setNewRequirement] = useState<RequirementFormValues>(
     initialRequirementValues,
   );
+
+  const showRequirementWeight = showsRequirementWeight(newRequirement.category);
+  const showRequirementSize = showsRequirementSize(newRequirement.category);
+  const showRequirementUnit = showsRequirementUnit(newRequirement.category);
 
   function update<K extends keyof PatternFormValues>(
     key: K,
@@ -179,10 +192,13 @@ export function PatternForm({
             >
               <option value="">Select category</option>
               <option value="accessory">Accessory</option>
+              <option value="amigurumi">Amigurumi</option>
               <option value="bag">Bag</option>
               <option value="blanket">Blanket</option>
               <option value="garment">Garment</option>
               <option value="home">Home</option>
+              <option value="toy">Toy</option>
+              <option value="other">Other</option>
             </SelectInput>
           </FormField>
 
@@ -237,8 +253,10 @@ export function PatternForm({
               value={newRequirement.category}
               onChange={(event) =>
                 setNewRequirement((prev) => ({
-                  ...prev,
-                  category: event.target.value as ItemCategory,
+                  ...getNextRequirementValues(
+                    prev,
+                    event.target.value as ItemCategory,
+                  ),
                 }))
               }
             >
@@ -267,26 +285,29 @@ export function PatternForm({
             ) : null}
           </FormField>
 
-          <FormField label="Weight">
-            <SelectInput
-              value={newRequirement.weight}
-              onChange={(event) =>
-                setNewRequirement((prev) => ({
-                  ...prev,
-                  weight: event.target.value as YarnWeight | '',
-                }))
-              }
-            >
-              <option value="">Select weight</option>
-              <option value="lace">Lace</option>
-              <option value="fingering">Fingering</option>
-              <option value="sport">Sport</option>
-              <option value="dk">DK</option>
-              <option value="worsted">Worsted</option>
-              <option value="bulky">Bulky</option>
-              <option value="super-bulky">Super Bulky</option>
-            </SelectInput>
-          </FormField>
+          {showRequirementWeight ? (
+            <FormField label="Weight">
+              <SelectInput
+                value={newRequirement.weight}
+                onChange={(event) =>
+                  setNewRequirement((prev) => ({
+                    ...prev,
+                    weight: event.target.value as YarnWeight | '',
+                  }))
+                }
+              >
+                <option value="">Select weight</option>
+                <option value="lace">0 - Lace</option>
+                <option value="super-fine">1 - Super Fine</option>
+                <option value="fine">2 - Fine</option>
+                <option value="light">3 - Light</option>
+                <option value="medium">4 - Medium</option>
+                <option value="bulky">5 - Bulky</option>
+                <option value="super-bulky">6 - Super Bulky</option>
+                <option value="jumbo">7 - Jumbo</option>
+              </SelectInput>
+            </FormField>
+          ) : null}
 
           <FormField label="Quantity Needed">
             <TextInput
@@ -303,31 +324,35 @@ export function PatternForm({
             />
           </FormField>
 
-          <FormField label="Unit">
-            <TextInput
-              value={newRequirement.unit}
-              onChange={(event) =>
-                setNewRequirement((prev) => ({
-                  ...prev,
-                  unit: event.target.value,
-                }))
-              }
-              placeholder="skeins, pairs"
-            />
-          </FormField>
+          {showRequirementUnit ? (
+            <FormField label="Unit">
+              <TextInput
+                value={newRequirement.unit}
+                onChange={(event) =>
+                  setNewRequirement((prev) => ({
+                    ...prev,
+                    unit: event.target.value,
+                  }))
+                }
+                placeholder={getRequirementUnitPlaceholder(newRequirement.category)}
+              />
+            </FormField>
+          ) : null}
 
-          <FormField label="Size">
-            <TextInput
-              value={newRequirement.size}
-              onChange={(event) =>
-                setNewRequirement((prev) => ({
-                  ...prev,
-                  size: event.target.value,
-                }))
-              }
-              placeholder="5 mm, 12 mm"
-            />
-          </FormField>
+          {showRequirementSize ? (
+            <FormField label="Size">
+              <TextInput
+                value={newRequirement.size}
+                onChange={(event) =>
+                  setNewRequirement((prev) => ({
+                    ...prev,
+                    size: event.target.value,
+                  }))
+                }
+                placeholder="5 mm, 12 mm"
+              />
+            </FormField>
+          ) : null}
         </div>
 
         <FormField label="Notes">
@@ -396,4 +421,33 @@ export function PatternForm({
       />
     </form>
   );
+}
+
+function getNextRequirementValues(
+  previous: RequirementFormValues,
+  category: ItemCategory,
+): RequirementFormValues {
+  return {
+    ...previous,
+    category,
+    unit: defaultRequirementUnits[category],
+    weight: showsRequirementWeight(category) ? previous.weight : '',
+    size: showsRequirementSize(category) ? previous.size : '',
+  };
+}
+
+function showsRequirementWeight(category: ItemCategory) {
+  return category === 'yarn';
+}
+
+function showsRequirementSize(category: ItemCategory) {
+  return category === 'hook' || category === 'needle' || category === 'eyes';
+}
+
+function showsRequirementUnit(category: ItemCategory) {
+  return category === 'yarn' || category === 'stuffing' || category === 'eyes' || category === 'other';
+}
+
+function getRequirementUnitPlaceholder(category: ItemCategory) {
+  return defaultRequirementUnits[category] || 'items';
 }
