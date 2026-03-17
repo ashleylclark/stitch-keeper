@@ -13,6 +13,10 @@ import {
   requirementMatchLabels,
 } from './lib/patternMatching'
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Something went wrong. Please try again.'
+}
+
 const difficultyStyles: Record<NonNullable<Pattern['difficulty']>, string> = {
   beginner: 'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200',
   intermediate: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
@@ -111,6 +115,10 @@ export default function PatternDetail() {
   const pattern = patterns.find((item) => item.id === patternId)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   if (!pattern) {
     return <NotFoundState />
@@ -123,25 +131,43 @@ export default function PatternDetail() {
   )
 
   async function handleSubmit(values: PatternFormValues) {
-    const nextPattern: Pattern = {
-      ...currentPattern,
-      name: values.name.trim(),
-      source: values.source.trim() || undefined,
-      sourceUrl: values.sourceUrl.trim() || undefined,
-      category: values.category || undefined,
-      difficulty: values.difficulty || undefined,
-      notes: values.notes.trim() || undefined,
-      instructions: values.instructions,
-      requirements: values.requirements,
-    }
+    setSubmitError(null)
+    setIsSubmitting(true)
 
-    await updatePattern(nextPattern)
-    setIsEditOpen(false)
+    try {
+      const nextPattern: Pattern = {
+        ...currentPattern,
+        name: values.name.trim(),
+        source: values.source.trim() || undefined,
+        sourceUrl: values.sourceUrl.trim() || undefined,
+        category: values.category || undefined,
+        difficulty: values.difficulty || undefined,
+        notes: values.notes.trim() || undefined,
+        instructions: values.instructions,
+        requirements: values.requirements,
+      }
+
+      await updatePattern(nextPattern)
+      setIsEditOpen(false)
+    } catch (error) {
+      setSubmitError(getErrorMessage(error))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   async function handleDelete() {
-    await deletePattern(currentPattern.id)
-    navigate('/patterns')
+    setDeleteError(null)
+    setIsDeleting(true)
+
+    try {
+      await deletePattern(currentPattern.id)
+      navigate('/patterns')
+    } catch (error) {
+      setDeleteError(getErrorMessage(error))
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -243,7 +269,15 @@ export default function PatternDetail() {
         </section>
       </section>
 
-      <Modal title="Edit Pattern" isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} maxWidthClassName="max-w-5xl">
+      <Modal
+        title="Edit Pattern"
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false)
+          setSubmitError(null)
+        }}
+        maxWidthClassName="max-w-5xl"
+      >
         <PatternForm
           initialValues={{
             name: currentPattern.name,
@@ -257,7 +291,12 @@ export default function PatternDetail() {
           }}
           submitLabel="Save Changes"
           onSubmit={(values) => { void handleSubmit(values) }}
-          onCancel={() => setIsEditOpen(false)}
+          onCancel={() => {
+            setIsEditOpen(false)
+            setSubmitError(null)
+          }}
+          submitError={submitError}
+          isSubmitting={isSubmitting}
         />
       </Modal>
 
@@ -267,7 +306,12 @@ export default function PatternDetail() {
         description={`Delete "${currentPattern.name}" and all of its requirements? This cannot be undone.`}
         confirmLabel="Delete Pattern"
         onConfirm={() => { void handleDelete() }}
-        onCancel={() => setIsDeleteOpen(false)}
+        onCancel={() => {
+          setIsDeleteOpen(false)
+          setDeleteError(null)
+        }}
+        error={deleteError}
+        isConfirming={isDeleting}
       />
     </>
   )

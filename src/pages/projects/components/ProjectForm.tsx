@@ -22,12 +22,14 @@ type PatternOption = {
 };
 
 type ProjectFormProps = {
-  patternOptions: PatternOption[];
-  initialValues?: Partial<ProjectFormValues>;
-  submitLabel?: string;
-  onSubmit: (values: ProjectFormValues) => void;
-  onCancel?: () => void;
-};
+  patternOptions: PatternOption[]
+  initialValues?: Partial<ProjectFormValues>
+  submitLabel?: string
+  onSubmit: (values: ProjectFormValues) => void
+  onCancel?: () => void
+  submitError?: string | null
+  isSubmitting?: boolean
+}
 
 type FormErrors = Partial<Record<"name" | "patternId" | "status", string>>;
 
@@ -37,6 +39,8 @@ export function ProjectForm({
   submitLabel = "Save Project",
   onSubmit,
   onCancel,
+  submitError = null,
+  isSubmitting = false,
 }: ProjectFormProps) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [values, setValues] = useState<ProjectFormValues>({
@@ -83,6 +87,12 @@ export function ProjectForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {submitError ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {submitError}
+        </div>
+      ) : null}
+
       <FormSection title="Project Info">
         <FormField label="Name">
           <TextInput
@@ -153,7 +163,11 @@ export function ProjectForm({
         </FormField>
       </FormSection>
 
-      <FormActions submitLabel={submitLabel} onCancel={onCancel} />
+      <FormActions
+        submitLabel={submitLabel}
+        onCancel={onCancel}
+        isSubmitting={isSubmitting}
+      />
     </form>
-  );
+  )
 }

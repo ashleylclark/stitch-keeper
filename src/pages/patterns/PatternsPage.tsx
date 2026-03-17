@@ -7,6 +7,10 @@ import { PatternForm, type PatternFormValues } from './components/PatternForm'
 import { useAppData } from '../../app/state/app-data'
 import type { Pattern, PatternMatchStatus } from '../../types/models'
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Something went wrong. Please try again.'
+}
+
 type DifficultyFilter = NonNullable<Pattern["difficulty"]> | "all";
 type CategoryFilter = NonNullable<Pattern["category"]> | "all";
 type RequirementFilter = "all" | "ready" | "review" | "missing";
@@ -176,6 +180,10 @@ export default function Patterns() {
   const [editingPattern, setEditingPattern] = useState<Pattern | null>(null);
   const [patternPendingDelete, setPatternPendingDelete] = useState<Pattern | null>(null);
   const [openRowActionId, setOpenRowActionId] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const filteredPatterns = patterns.filter((pattern) => {
     const summary = patternMatchById.get(pattern.id);
@@ -194,30 +202,40 @@ export default function Patterns() {
   function closePatternModal() {
     setIsAddPatternOpen(false);
     setEditingPattern(null);
+    setSubmitError(null)
   }
 
   async function handlePatternSubmit(values: PatternFormValues) {
-    const nextPattern: Pattern = {
-      id: editingPattern?.id ?? `pattern-${Date.now()}`,
-      name: values.name.trim(),
-      addedAt: editingPattern?.addedAt ?? new Date().toISOString().slice(0, 10),
-      isPlanned: editingPattern?.isPlanned ?? false,
-      category: values.category || undefined,
-      difficulty: values.difficulty || undefined,
-      source: values.source.trim() || undefined,
-      sourceUrl: values.sourceUrl.trim() || undefined,
-      notes: values.notes.trim() || undefined,
-      instructions: values.instructions,
-      requirements: values.requirements,
-    };
+    setSubmitError(null)
+    setIsSubmitting(true)
 
-    if (editingPattern) {
-      await updatePattern(nextPattern);
-    } else {
-      await addPattern(nextPattern);
+    try {
+      const nextPattern: Pattern = {
+        id: editingPattern?.id ?? `pattern-${Date.now()}`,
+        name: values.name.trim(),
+        addedAt: editingPattern?.addedAt ?? new Date().toISOString().slice(0, 10),
+        isPlanned: editingPattern?.isPlanned ?? false,
+        category: values.category || undefined,
+        difficulty: values.difficulty || undefined,
+        source: values.source.trim() || undefined,
+        sourceUrl: values.sourceUrl.trim() || undefined,
+        notes: values.notes.trim() || undefined,
+        instructions: values.instructions,
+        requirements: values.requirements,
+      };
+
+      if (editingPattern) {
+        await updatePattern(nextPattern);
+      } else {
+        await addPattern(nextPattern);
+      }
+
+      closePatternModal();
+    } catch (error) {
+      setSubmitError(getErrorMessage(error))
+    } finally {
+      setIsSubmitting(false)
     }
-
-    closePatternModal();
   }
 
   async function handleDeleteConfirm() {
@@ -225,8 +243,17 @@ export default function Patterns() {
       return;
     }
 
-    await deletePattern(patternPendingDelete.id);
-    setPatternPendingDelete(null);
+    setDeleteError(null)
+    setIsDeleting(true)
+
+    try {
+      await deletePattern(patternPendingDelete.id);
+      setPatternPendingDelete(null);
+    } catch (error) {
+      setDeleteError(getErrorMessage(error))
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -404,6 +431,8 @@ export default function Patterns() {
           submitLabel={editingPattern ? "Save Changes" : "Save Pattern"}
           onSubmit={(values) => { void handlePatternSubmit(values) }}
           onCancel={closePatternModal}
+          submitError={submitError}
+          isSubmitting={isSubmitting}
         />
       </Modal>
 
@@ -417,7 +446,12 @@ export default function Patterns() {
         }
         confirmLabel="Delete Pattern"
         onConfirm={() => { void handleDeleteConfirm() }}
-        onCancel={() => setPatternPendingDelete(null)}
+        onCancel={() => {
+          setPatternPendingDelete(null)
+          setDeleteError(null)
+        }}
+        error={deleteError}
+        isConfirming={isDeleting}
       />
     </>
   );

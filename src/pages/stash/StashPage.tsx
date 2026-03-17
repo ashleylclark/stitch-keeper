@@ -6,6 +6,10 @@ import { StashForm, type StashFormValues } from './components/StashForm'
 import { useAppData } from '../../app/state/app-data'
 import type { ItemCategory, StashItem, StashStatus, YarnWeight } from '../../types/models'
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Something went wrong. Please try again.'
+}
+
 type FilterOption<T extends string> = {
   label: string;
   value: T;
@@ -168,6 +172,10 @@ export default function Stash() {
   const [editingItem, setEditingItem] = useState<StashItem | null>(null);
   const [itemPendingDelete, setItemPendingDelete] = useState<StashItem | null>(null);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const showWeightFilter = selectedCategory === "yarn";
 
@@ -182,31 +190,41 @@ export default function Stash() {
   function closeModal() {
     setIsAddItemOpen(false);
     setEditingItem(null);
+    setSubmitError(null)
   }
 
   async function handleSubmit(values: StashFormValues) {
-    const nextItem: StashItem = {
-      id: editingItem?.id ?? `stash-${Date.now()}`,
-      category: values.category,
-      name: values.name.trim(),
-      quantity: Number(values.quantity),
-      status: editingItem?.status ?? "in-stock",
-      brand: values.brand.trim() || undefined,
-      color: values.color.trim() || undefined,
-      weight: values.weight || undefined,
-      unit: values.unit.trim() || undefined,
-      size: values.size.trim() || undefined,
-      material: values.material.trim() || undefined,
-      notes: values.notes.trim() || undefined,
-    };
+    setSubmitError(null)
+    setIsSubmitting(true)
 
-    if (editingItem) {
-      await updateStashItem(nextItem);
-    } else {
-      await addStashItem(nextItem);
+    try {
+      const nextItem: StashItem = {
+        id: editingItem?.id ?? `stash-${Date.now()}`,
+        category: values.category,
+        name: values.name.trim(),
+        quantity: Number(values.quantity),
+        status: editingItem?.status ?? "in-stock",
+        brand: values.brand.trim() || undefined,
+        color: values.color.trim() || undefined,
+        weight: values.weight || undefined,
+        unit: values.unit.trim() || undefined,
+        size: values.size.trim() || undefined,
+        material: values.material.trim() || undefined,
+        notes: values.notes.trim() || undefined,
+      };
+
+      if (editingItem) {
+        await updateStashItem(nextItem);
+      } else {
+        await addStashItem(nextItem);
+      }
+
+      closeModal();
+    } catch (error) {
+      setSubmitError(getErrorMessage(error))
+    } finally {
+      setIsSubmitting(false)
     }
-
-    closeModal();
   }
 
   async function handleDeleteConfirm() {
@@ -214,8 +232,17 @@ export default function Stash() {
       return;
     }
 
-    await deleteStashItem(itemPendingDelete.id);
-    setItemPendingDelete(null);
+    setDeleteError(null)
+    setIsDeleting(true)
+
+    try {
+      await deleteStashItem(itemPendingDelete.id);
+      setItemPendingDelete(null);
+    } catch (error) {
+      setDeleteError(getErrorMessage(error))
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -332,6 +359,8 @@ export default function Stash() {
           submitLabel={editingItem ? "Save Changes" : "Save Stash Item"}
           onSubmit={(values) => { void handleSubmit(values) }}
           onCancel={closeModal}
+          submitError={submitError}
+          isSubmitting={isSubmitting}
         />
       </Modal>
 
@@ -345,7 +374,12 @@ export default function Stash() {
         }
         confirmLabel="Delete Item"
         onConfirm={() => { void handleDeleteConfirm() }}
-        onCancel={() => setItemPendingDelete(null)}
+        onCancel={() => {
+          setItemPendingDelete(null)
+          setDeleteError(null)
+        }}
+        error={deleteError}
+        isConfirming={isDeleting}
       />
     </>
   );

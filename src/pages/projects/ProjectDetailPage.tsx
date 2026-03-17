@@ -7,6 +7,10 @@ import { ProjectForm, type ProjectFormValues } from './components/ProjectForm'
 import { useAppData } from '../../app/state/app-data'
 import type { Pattern, Project, ProjectStatus } from '../../types/models'
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Something went wrong. Please try again.'
+}
+
 const statusConfig: Record<
   ProjectStatus,
   { label: string; badgeClassName: string }
@@ -132,6 +136,10 @@ export default function ProjectDetail() {
   const project = projects.find((item) => item.id === projectId)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   if (!project) {
     return <NotFoundState />
@@ -143,23 +151,41 @@ export default function ProjectDetail() {
     : undefined
 
   async function handleSubmit(values: ProjectFormValues) {
-    const nextProject: Project = {
-      ...currentProject,
-      name: values.name.trim(),
-      patternId: values.patternId,
-      status: values.status,
-      startDate: values.startDate || undefined,
-      endDate: values.endDate || undefined,
-      notes: values.notes.trim() || undefined,
-    }
+    setSubmitError(null)
+    setIsSubmitting(true)
 
-    await updateProject(nextProject)
-    setIsEditOpen(false)
+    try {
+      const nextProject: Project = {
+        ...currentProject,
+        name: values.name.trim(),
+        patternId: values.patternId,
+        status: values.status,
+        startDate: values.startDate || undefined,
+        endDate: values.endDate || undefined,
+        notes: values.notes.trim() || undefined,
+      }
+
+      await updateProject(nextProject)
+      setIsEditOpen(false)
+    } catch (error) {
+      setSubmitError(getErrorMessage(error))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   async function handleDelete() {
-    await deleteProject(currentProject.id)
-    navigate('/projects')
+    setDeleteError(null)
+    setIsDeleting(true)
+
+    try {
+      await deleteProject(currentProject.id)
+      navigate('/projects')
+    } catch (error) {
+      setDeleteError(getErrorMessage(error))
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -234,7 +260,15 @@ export default function ProjectDetail() {
         </section>
       </section>
 
-      <Modal title="Edit Project" isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} maxWidthClassName="max-w-3xl">
+      <Modal
+        title="Edit Project"
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false)
+          setSubmitError(null)
+        }}
+        maxWidthClassName="max-w-3xl"
+      >
         <ProjectForm
           patternOptions={patterns.map((pattern) => ({ id: pattern.id, name: pattern.name }))}
           initialValues={{
@@ -247,7 +281,12 @@ export default function ProjectDetail() {
           }}
           submitLabel="Save Changes"
           onSubmit={(values) => { void handleSubmit(values) }}
-          onCancel={() => setIsEditOpen(false)}
+          onCancel={() => {
+            setIsEditOpen(false)
+            setSubmitError(null)
+          }}
+          submitError={submitError}
+          isSubmitting={isSubmitting}
         />
       </Modal>
 
@@ -257,7 +296,12 @@ export default function ProjectDetail() {
         description={`Delete "${currentProject.name}"? This cannot be undone.`}
         confirmLabel="Delete Project"
         onConfirm={() => { void handleDelete() }}
-        onCancel={() => setIsDeleteOpen(false)}
+        onCancel={() => {
+          setIsDeleteOpen(false)
+          setDeleteError(null)
+        }}
+        error={deleteError}
+        isConfirming={isDeleting}
       />
     </>
   )

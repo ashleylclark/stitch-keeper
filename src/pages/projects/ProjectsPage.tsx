@@ -7,6 +7,10 @@ import { ProjectForm, type ProjectFormValues } from './components/ProjectForm'
 import { useAppData } from '../../app/state/app-data'
 import type { Project, ProjectStatus } from '../../types/models'
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Something went wrong. Please try again.'
+}
+
 type StatusFilter = ProjectStatus | "all";
 
 type StatusConfig = {
@@ -210,6 +214,10 @@ export default function Projects() {
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [projectPendingDelete, setProjectPendingDelete] = useState<Project | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const filteredProjects =
     selectedStatus === "all"
@@ -226,27 +234,37 @@ export default function Projects() {
   function closeProjectModal() {
     setIsAddProjectOpen(false);
     setEditingProject(null);
+    setSubmitError(null)
   }
 
   async function handleProjectSubmit(values: ProjectFormValues) {
-    const nextProject: Project = {
-      id: editingProject?.id ?? `project-${Date.now()}`,
-      name: values.name.trim(),
-      patternId: values.patternId,
-      status: values.status,
-      startDate: values.startDate || undefined,
-      endDate: values.endDate || undefined,
-      notes: values.notes.trim() || undefined,
-      stashItemIds: editingProject?.stashItemIds ?? [],
-    };
+    setSubmitError(null)
+    setIsSubmitting(true)
 
-    if (editingProject) {
-      await updateProject(nextProject);
-    } else {
-      await addProject(nextProject);
+    try {
+      const nextProject: Project = {
+        id: editingProject?.id ?? `project-${Date.now()}`,
+        name: values.name.trim(),
+        patternId: values.patternId,
+        status: values.status,
+        startDate: values.startDate || undefined,
+        endDate: values.endDate || undefined,
+        notes: values.notes.trim() || undefined,
+        stashItemIds: editingProject?.stashItemIds ?? [],
+      };
+
+      if (editingProject) {
+        await updateProject(nextProject);
+      } else {
+        await addProject(nextProject);
+      }
+
+      closeProjectModal();
+    } catch (error) {
+      setSubmitError(getErrorMessage(error))
+    } finally {
+      setIsSubmitting(false)
     }
-
-    closeProjectModal();
   }
 
   async function handleDeleteConfirm() {
@@ -254,8 +272,17 @@ export default function Projects() {
       return;
     }
 
-    await deleteProject(projectPendingDelete.id);
-    setProjectPendingDelete(null);
+    setDeleteError(null)
+    setIsDeleting(true)
+
+    try {
+      await deleteProject(projectPendingDelete.id);
+      setProjectPendingDelete(null);
+    } catch (error) {
+      setDeleteError(getErrorMessage(error))
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -345,6 +372,8 @@ export default function Projects() {
           submitLabel={editingProject ? "Save Changes" : "Save Project"}
           onSubmit={(values) => { void handleProjectSubmit(values) }}
           onCancel={closeProjectModal}
+          submitError={submitError}
+          isSubmitting={isSubmitting}
         />
       </Modal>
 
@@ -358,7 +387,12 @@ export default function Projects() {
         }
         confirmLabel="Delete Project"
         onConfirm={() => { void handleDeleteConfirm() }}
-        onCancel={() => setProjectPendingDelete(null)}
+        onCancel={() => {
+          setProjectPendingDelete(null)
+          setDeleteError(null)
+        }}
+        error={deleteError}
+        isConfirming={isDeleting}
       />
     </>
   );

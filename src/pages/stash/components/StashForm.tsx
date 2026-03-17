@@ -21,11 +21,13 @@ export type StashFormValues = {
 };
 
 type StashFormProps = {
-  initialValues?: Partial<StashFormValues>;
-  submitLabel?: string;
-  onSubmit: (values: StashFormValues) => void;
-  onCancel?: () => void;
-};
+  initialValues?: Partial<StashFormValues>
+  submitLabel?: string
+  onSubmit: (values: StashFormValues) => void
+  onCancel?: () => void
+  submitError?: string | null
+  isSubmitting?: boolean
+}
 
 type FormErrors = Partial<Record<"name" | "quantity", string>>;
 
@@ -43,6 +45,8 @@ export function StashForm({
   submitLabel = "Save Stash Item",
   onSubmit,
   onCancel,
+  submitError = null,
+  isSubmitting = false,
 }: StashFormProps) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [values, setValues] = useState<StashFormValues>({
@@ -115,6 +119,12 @@ export function StashForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {submitError ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {submitError}
+        </div>
+      ) : null}
+
       <FormSection title="Basic Info">
         <FormField label="Category">
           <SelectInput
@@ -241,9 +251,13 @@ export function StashForm({
         </FormSection>
       ) : null}
 
-      <FormActions submitLabel={submitLabel} onCancel={onCancel} />
+      <FormActions
+        submitLabel={submitLabel}
+        onCancel={onCancel}
+        isSubmitting={isSubmitting}
+      />
     </form>
-  );
+  )
 }
 
 function showsWeight(category: ItemCategory) {
