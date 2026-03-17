@@ -29,13 +29,14 @@ const categoryOptions: FilterOption<ItemCategory | "all">[] = [
 
 const yarnWeightOptions: FilterOption<YarnWeight | "all">[] = [
   { label: "All weights", value: "all" },
-  { label: "Lace", value: "lace" },
-  { label: "Fingering", value: "fingering" },
-  { label: "Sport", value: "sport" },
-  { label: "DK", value: "dk" },
-  { label: "Worsted", value: "worsted" },
-  { label: "Bulky", value: "bulky" },
-  { label: "Super bulky", value: "super-bulky" },
+  { label: "0 - Lace", value: "lace" },
+  { label: "1 - Super Fine", value: "super-fine" },
+  { label: "2 - Fine", value: "fine" },
+  { label: "3 - Light", value: "light" },
+  { label: "4 - Medium", value: "medium" },
+  { label: "5 - Bulky", value: "bulky" },
+  { label: "6 - Super bulky", value: "super-bulky" },
+  { label: "7 - Jumbo", value: "jumbo" },
 ];
 
 const statusStyles: Record<StashStatus, string> = {

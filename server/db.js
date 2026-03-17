@@ -3,7 +3,7 @@ import path from 'node:path'
 import Database from 'better-sqlite3'
 import { patterns, projects, stashItems } from './seed-data.js'
 
-const sqlitePath = process.env.SQLITE_PATH ?? path.join(process.cwd(), 'data', 'hook-stash.db')
+const sqlitePath = process.env.SQLITE_PATH ?? path.join(process.cwd(), 'data', 'stash-keeper.db')
 
 fs.mkdirSync(path.dirname(sqlitePath), { recursive: true })
 

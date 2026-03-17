@@ -1,5 +1,5 @@
 type ItemCategory = 'yarn' | 'hook' | 'needle' | 'eyes' | 'stuffing' | 'other'
-type YarnWeight = 'lace' | 'fingering' | 'sport' | 'dk' | 'worsted' | 'bulky' | 'super-bulky'
+type YarnWeight = 'lace' | 'super-fine' | 'fine' | 'light' | 'medium' | 'bulky' | 'super-bulky' | 'jumbo'
 type StashStatus = 'in-stock' | 'low-stock' | 'out-of-stock' | 'not-replacing'
 
 type StashItem = {
