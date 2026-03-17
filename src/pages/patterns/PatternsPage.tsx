@@ -1,59 +1,64 @@
-import { useState } from "react";
-import { Ellipsis, Pencil, Plus, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Modal } from '../../components/Modal'
-import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { PatternForm, type PatternFormValues } from './components/PatternForm'
-import { useAppData } from '../../app/state/app-data'
-import type { Pattern, PatternMatchStatus } from '../../types/models'
+import { useState } from 'react';
+import { Ellipsis, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Modal } from '../../components/Modal';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { PatternForm, type PatternFormValues } from './components/PatternForm';
+import { useAppData } from '../../app/state/app-data';
+import type { Pattern, PatternMatchStatus } from '../../types/models';
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof Error
+    ? error.message
+    : 'Something went wrong. Please try again.';
 }
 
-type DifficultyFilter = NonNullable<Pattern["difficulty"]> | "all";
-type CategoryFilter = NonNullable<Pattern["category"]> | "all";
-type RequirementFilter = "all" | "ready" | "review" | "missing";
+type DifficultyFilter = NonNullable<Pattern['difficulty']> | 'all';
+type CategoryFilter = NonNullable<Pattern['category']> | 'all';
+type RequirementFilter = 'all' | 'ready' | 'review' | 'missing';
 
 const categoryOptions: { label: string; value: CategoryFilter }[] = [
-  { label: "All categories", value: "all" },
-  { label: "Accessory", value: "accessory" },
-  { label: "Bag", value: "bag" },
-  { label: "Blanket", value: "blanket" },
-  { label: "Garment", value: "garment" },
-  { label: "Home", value: "home" },
+  { label: 'All categories', value: 'all' },
+  { label: 'Accessory', value: 'accessory' },
+  { label: 'Bag', value: 'bag' },
+  { label: 'Blanket', value: 'blanket' },
+  { label: 'Garment', value: 'garment' },
+  { label: 'Home', value: 'home' },
 ];
 
 const difficultyOptions: { label: string; value: DifficultyFilter }[] = [
-  { label: "All difficulties", value: "all" },
-  { label: "Beginner", value: "beginner" },
-  { label: "Intermediate", value: "intermediate" },
-  { label: "Advanced", value: "advanced" },
+  { label: 'All difficulties', value: 'all' },
+  { label: 'Beginner', value: 'beginner' },
+  { label: 'Intermediate', value: 'intermediate' },
+  { label: 'Advanced', value: 'advanced' },
 ];
 
 const requirementOptions: { label: string; value: RequirementFilter }[] = [
-  { label: "All stash matches", value: "all" },
-  { label: "Meets all requirements", value: "ready" },
-  { label: "Needs review", value: "review" },
-  { label: "Missing supplies", value: "missing" },
+  { label: 'All stash matches', value: 'all' },
+  { label: 'Meets all requirements', value: 'ready' },
+  { label: 'Needs review', value: 'review' },
+  { label: 'Missing supplies', value: 'missing' },
 ];
 
-const difficultyStyles: Record<NonNullable<Pattern["difficulty"]>, string> = {
-  beginner: "bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200",
-  intermediate: "bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200",
-  advanced: "bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200",
+const difficultyStyles: Record<NonNullable<Pattern['difficulty']>, string> = {
+  beginner: 'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200',
+  intermediate: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
+  advanced: 'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200',
 };
 
-const compactDifficultyLabels: Record<NonNullable<Pattern["difficulty"]>, string> = {
-  beginner: "Beg",
-  intermediate: "Int",
-  advanced: "Adv",
+const compactDifficultyLabels: Record<
+  NonNullable<Pattern['difficulty']>,
+  string
+> = {
+  beginner: 'Beg',
+  intermediate: 'Int',
+  advanced: 'Adv',
 };
 
 const compactStatusLabels: Record<PatternMatchStatus, string> = {
-  "ready-to-start": "Ready",
-  "review-supplies": "Review",
-  "need-supplies": "Missing",
+  'ready-to-start': 'Ready',
+  'review-supplies': 'Review',
+  'need-supplies': 'Missing',
 };
 
 function titleCase(value: string) {
@@ -64,7 +69,11 @@ function FieldLabel({ label }: { label: string }) {
   return <span className="text-sm font-medium text-stone-700">{label}</span>;
 }
 
-function TableDifficultyToken({ difficulty }: { difficulty?: Pattern["difficulty"] }) {
+function TableDifficultyToken({
+  difficulty,
+}: {
+  difficulty?: Pattern['difficulty'];
+}) {
   if (!difficulty) {
     return (
       <span className="inline-flex w-fit items-center rounded-full bg-stone-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500">
@@ -76,9 +85,9 @@ function TableDifficultyToken({ difficulty }: { difficulty?: Pattern["difficulty
   return (
     <span
       className={[
-        "inline-flex w-fit items-center rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
+        'inline-flex w-fit items-center rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]',
         difficultyStyles[difficulty],
-      ].join(" ")}
+      ].join(' ')}
       title={titleCase(difficulty)}
     >
       {compactDifficultyLabels[difficulty]}
@@ -90,21 +99,27 @@ function TableStatusIndicator({ status }: { status?: PatternMatchStatus }) {
   if (!status) {
     return (
       <span className="inline-flex items-center gap-2 text-xs font-medium text-stone-500">
-        <span className="h-2.5 w-2.5 rounded-full bg-stone-300" aria-hidden="true" />
+        <span
+          className="h-2.5 w-2.5 rounded-full bg-stone-300"
+          aria-hidden="true"
+        />
         Unscored
       </span>
     );
   }
 
   const dotClasses: Record<PatternMatchStatus, string> = {
-    "ready-to-start": "bg-emerald-500",
-    "review-supplies": "bg-amber-500",
-    "need-supplies": "bg-rose-500",
+    'ready-to-start': 'bg-emerald-500',
+    'review-supplies': 'bg-amber-500',
+    'need-supplies': 'bg-rose-500',
   };
 
   return (
     <span className="inline-flex items-center gap-2 whitespace-nowrap text-xs font-semibold text-stone-700">
-      <span className={["h-2.5 w-2.5 rounded-full", dotClasses[status]].join(" ")} aria-hidden="true" />
+      <span
+        className={['h-2.5 w-2.5 rounded-full', dotClasses[status]].join(' ')}
+        aria-hidden="true"
+      />
       {compactStatusLabels[status]}
     </span>
   );
@@ -132,7 +147,7 @@ function RowActions({
         aria-expanded={isOpen}
         onClick={onToggle}
         onKeyDown={(event) => {
-          if (event.key === "Escape" && isOpen) {
+          if (event.key === 'Escape' && isOpen) {
             event.preventDefault();
             onToggle();
           }
@@ -172,29 +187,43 @@ function RowActions({
 }
 
 export default function Patterns() {
-  const { patterns, addPattern, updatePattern, deletePattern, patternMatchById } = useAppData();
-  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("all");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyFilter>("all");
-  const [selectedRequirement, setSelectedRequirement] = useState<RequirementFilter>("all");
+  const {
+    patterns,
+    addPattern,
+    updatePattern,
+    deletePattern,
+    patternMatchById,
+  } = useAppData();
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategoryFilter>('all');
+  const [selectedDifficulty, setSelectedDifficulty] =
+    useState<DifficultyFilter>('all');
+  const [selectedRequirement, setSelectedRequirement] =
+    useState<RequirementFilter>('all');
   const [isAddPatternOpen, setIsAddPatternOpen] = useState(false);
   const [editingPattern, setEditingPattern] = useState<Pattern | null>(null);
-  const [patternPendingDelete, setPatternPendingDelete] = useState<Pattern | null>(null);
+  const [patternPendingDelete, setPatternPendingDelete] =
+    useState<Pattern | null>(null);
   const [openRowActionId, setOpenRowActionId] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredPatterns = patterns.filter((pattern) => {
     const summary = patternMatchById.get(pattern.id);
-    const categoryMatches = selectedCategory === "all" || pattern.category === selectedCategory;
+    const categoryMatches =
+      selectedCategory === 'all' || pattern.category === selectedCategory;
     const difficultyMatches =
-      selectedDifficulty === "all" || pattern.difficulty === selectedDifficulty;
+      selectedDifficulty === 'all' || pattern.difficulty === selectedDifficulty;
     const requirementMatches =
-      selectedRequirement === "all" ||
-      (selectedRequirement === "ready" && summary?.status === "ready-to-start") ||
-      (selectedRequirement === "review" && summary?.status === "review-supplies") ||
-      (selectedRequirement === "missing" && summary?.status === "need-supplies");
+      selectedRequirement === 'all' ||
+      (selectedRequirement === 'ready' &&
+        summary?.status === 'ready-to-start') ||
+      (selectedRequirement === 'review' &&
+        summary?.status === 'review-supplies') ||
+      (selectedRequirement === 'missing' &&
+        summary?.status === 'need-supplies');
 
     return categoryMatches && difficultyMatches && requirementMatches;
   });
@@ -202,18 +231,19 @@ export default function Patterns() {
   function closePatternModal() {
     setIsAddPatternOpen(false);
     setEditingPattern(null);
-    setSubmitError(null)
+    setSubmitError(null);
   }
 
   async function handlePatternSubmit(values: PatternFormValues) {
-    setSubmitError(null)
-    setIsSubmitting(true)
+    setSubmitError(null);
+    setIsSubmitting(true);
 
     try {
       const nextPattern: Pattern = {
         id: editingPattern?.id ?? `pattern-${Date.now()}`,
         name: values.name.trim(),
-        addedAt: editingPattern?.addedAt ?? new Date().toISOString().slice(0, 10),
+        addedAt:
+          editingPattern?.addedAt ?? new Date().toISOString().slice(0, 10),
         isPlanned: editingPattern?.isPlanned ?? false,
         category: values.category || undefined,
         difficulty: values.difficulty || undefined,
@@ -232,9 +262,9 @@ export default function Patterns() {
 
       closePatternModal();
     } catch (error) {
-      setSubmitError(getErrorMessage(error))
+      setSubmitError(getErrorMessage(error));
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -243,16 +273,16 @@ export default function Patterns() {
       return;
     }
 
-    setDeleteError(null)
-    setIsDeleting(true)
+    setDeleteError(null);
+    setIsDeleting(true);
 
     try {
       await deletePattern(patternPendingDelete.id);
       setPatternPendingDelete(null);
     } catch (error) {
-      setDeleteError(getErrorMessage(error))
+      setDeleteError(getErrorMessage(error));
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
   }
 
@@ -268,8 +298,8 @@ export default function Patterns() {
               Patterns
             </h1>
             <p className="max-w-2xl text-base leading-7 text-stone-600">
-              Browse your pattern library and narrow it down by category, difficulty, and stash
-              readiness.
+              Browse your pattern library and narrow it down by category,
+              difficulty, and stash readiness.
             </p>
           </div>
 
@@ -280,7 +310,9 @@ export default function Patterns() {
             className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 sm:gap-2 sm:px-5"
           >
             <Plus size={18} />
-            <span className="hidden whitespace-nowrap sm:inline">Add Pattern</span>
+            <span className="hidden whitespace-nowrap sm:inline">
+              Add Pattern
+            </span>
           </button>
         </div>
 
@@ -290,7 +322,9 @@ export default function Patterns() {
               <FieldLabel label="Category" />
               <select
                 value={selectedCategory}
-                onChange={(event) => setSelectedCategory(event.target.value as CategoryFilter)}
+                onChange={(event) =>
+                  setSelectedCategory(event.target.value as CategoryFilter)
+                }
                 className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300"
               >
                 {categoryOptions.map((option) => (
@@ -305,7 +339,9 @@ export default function Patterns() {
               <FieldLabel label="Difficulty" />
               <select
                 value={selectedDifficulty}
-                onChange={(event) => setSelectedDifficulty(event.target.value as DifficultyFilter)}
+                onChange={(event) =>
+                  setSelectedDifficulty(event.target.value as DifficultyFilter)
+                }
                 className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300"
               >
                 {difficultyOptions.map((option) => (
@@ -321,7 +357,9 @@ export default function Patterns() {
               <select
                 value={selectedRequirement}
                 onChange={(event) =>
-                  setSelectedRequirement(event.target.value as RequirementFilter)
+                  setSelectedRequirement(
+                    event.target.value as RequirementFilter,
+                  )
                 }
                 className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300"
               >
@@ -334,7 +372,10 @@ export default function Patterns() {
             </label>
 
             <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-stone-600">
-              Showing <span className="font-semibold text-stone-900">{filteredPatterns.length}</span>{" "}
+              Showing{' '}
+              <span className="font-semibold text-stone-900">
+                {filteredPatterns.length}
+              </span>{' '}
               patterns
             </div>
           </div>
@@ -344,10 +385,18 @@ export default function Patterns() {
           <table className="w-full table-fixed">
             <thead>
               <tr className="border-b border-stone-200/70 text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
-                <th className="w-[50%] px-4 py-4 text-left sm:px-5 md:w-[36%]">Pattern</th>
-                <th className="hidden w-[18%] px-4 py-4 text-left md:table-cell xl:w-[16%] xl:px-5">Category</th>
-                <th className="hidden w-[20%] px-4 py-4 text-left md:table-cell sm:px-5">Difficulty</th>
-                <th className="w-[20%] px-4 py-4 text-left sm:w-[10%] sm:px-5">Status</th>
+                <th className="w-[50%] px-4 py-4 text-left sm:px-5 md:w-[36%]">
+                  Pattern
+                </th>
+                <th className="hidden w-[18%] px-4 py-4 text-left md:table-cell xl:w-[16%] xl:px-5">
+                  Category
+                </th>
+                <th className="hidden w-[20%] px-4 py-4 text-left md:table-cell sm:px-5">
+                  Difficulty
+                </th>
+                <th className="w-[20%] px-4 py-4 text-left sm:w-[10%] sm:px-5">
+                  Status
+                </th>
                 <th className="w-16 px-3 py-4 text-right sm:px-4"></th>
               </tr>
             </thead>
@@ -368,11 +417,13 @@ export default function Patterns() {
                         <TableDifficultyToken difficulty={pattern.difficulty} />
                       </div>
                       <p className="mt-1 hidden text-sm leading-6 text-stone-600 xl:block">
-                        {pattern.notes ?? "No notes yet for this pattern."}
+                        {pattern.notes ?? 'No notes yet for this pattern.'}
                       </p>
                     </td>
                     <td className="hidden px-4 py-5 align-center text-sm text-stone-700 md:table-cell xl:px-5">
-                      {pattern.category ? titleCase(pattern.category) : "Uncategorized"}
+                      {pattern.category
+                        ? titleCase(pattern.category)
+                        : 'Uncategorized'}
                     </td>
                     <td className="hidden px-4 py-5 align-center md:table-cell sm:px-5">
                       <TableDifficultyToken difficulty={pattern.difficulty} />
@@ -408,7 +459,7 @@ export default function Patterns() {
       </section>
 
       <Modal
-        title={editingPattern ? "Edit Pattern" : "Add Pattern"}
+        title={editingPattern ? 'Edit Pattern' : 'Add Pattern'}
         isOpen={isAddPatternOpen || Boolean(editingPattern)}
         onClose={closePatternModal}
         maxWidthClassName="max-w-5xl"
@@ -418,18 +469,20 @@ export default function Patterns() {
             editingPattern
               ? {
                   name: editingPattern.name,
-                  source: editingPattern.source ?? "",
-                  sourceUrl: editingPattern.sourceUrl ?? "",
-                  category: editingPattern.category ?? "",
-                  difficulty: editingPattern.difficulty ?? "",
-                  notes: editingPattern.notes ?? "",
+                  source: editingPattern.source ?? '',
+                  sourceUrl: editingPattern.sourceUrl ?? '',
+                  category: editingPattern.category ?? '',
+                  difficulty: editingPattern.difficulty ?? '',
+                  notes: editingPattern.notes ?? '',
                   instructions: editingPattern.instructions,
                   requirements: editingPattern.requirements,
                 }
               : undefined
           }
-          submitLabel={editingPattern ? "Save Changes" : "Save Pattern"}
-          onSubmit={(values) => { void handlePatternSubmit(values) }}
+          submitLabel={editingPattern ? 'Save Changes' : 'Save Pattern'}
+          onSubmit={(values) => {
+            void handlePatternSubmit(values);
+          }}
           onCancel={closePatternModal}
           submitError={submitError}
           isSubmitting={isSubmitting}
@@ -442,13 +495,15 @@ export default function Patterns() {
         description={
           patternPendingDelete
             ? `Delete "${patternPendingDelete.name}" and all of its requirements? This cannot be undone.`
-            : ""
+            : ''
         }
         confirmLabel="Delete Pattern"
-        onConfirm={() => { void handleDeleteConfirm() }}
+        onConfirm={() => {
+          void handleDeleteConfirm();
+        }}
         onCancel={() => {
-          setPatternPendingDelete(null)
-          setDeleteError(null)
+          setPatternPendingDelete(null);
+          setDeleteError(null);
         }}
         error={deleteError}
         isConfirming={isDeleting}

@@ -1,17 +1,19 @@
-import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Modal } from '../../components/Modal'
-import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { ProjectForm, type ProjectFormValues } from './components/ProjectForm'
-import { useAppData } from '../../app/state/app-data'
-import type { Project, ProjectStatus } from '../../types/models'
+import { useState } from 'react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Modal } from '../../components/Modal';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { ProjectForm, type ProjectFormValues } from './components/ProjectForm';
+import { useAppData } from '../../app/state/app-data';
+import type { Project, ProjectStatus } from '../../types/models';
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof Error
+    ? error.message
+    : 'Something went wrong. Please try again.';
 }
 
-type StatusFilter = ProjectStatus | "all";
+type StatusFilter = ProjectStatus | 'all';
 
 type StatusConfig = {
   label: string;
@@ -20,47 +22,50 @@ type StatusConfig = {
 };
 
 const statusOrder: ProjectStatus[] = [
-  "planned",
-  "in-progress",
-  "need-supplies",
-  "paused",
-  "completed",
+  'planned',
+  'in-progress',
+  'need-supplies',
+  'paused',
+  'completed',
 ];
 
 const statusOptions: { label: string; value: StatusFilter }[] = [
-  { label: "All statuses", value: "all" },
-  { label: "Planned", value: "planned" },
-  { label: "In Progress", value: "in-progress" },
-  { label: "Need Supplies", value: "need-supplies" },
-  { label: "Paused", value: "paused" },
-  { label: "Completed", value: "completed" },
+  { label: 'All statuses', value: 'all' },
+  { label: 'Planned', value: 'planned' },
+  { label: 'In Progress', value: 'in-progress' },
+  { label: 'Need Supplies', value: 'need-supplies' },
+  { label: 'Paused', value: 'paused' },
+  { label: 'Completed', value: 'completed' },
 ];
 
 const statusConfig: Record<ProjectStatus, StatusConfig> = {
   planned: {
-    label: "Planned",
+    label: 'Planned',
     dateLabel: null,
-    badgeClassName: "bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200",
+    badgeClassName: 'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200',
   },
-  "in-progress": {
-    label: "In Progress",
-    dateLabel: "Started",
-    badgeClassName: "bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200",
+  'in-progress': {
+    label: 'In Progress',
+    dateLabel: 'Started',
+    badgeClassName:
+      'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200',
   },
-  "need-supplies": {
-    label: "Need Supplies",
-    dateLabel: "Started",
-    badgeClassName: "bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200",
+  'need-supplies': {
+    label: 'Need Supplies',
+    dateLabel: 'Started',
+    badgeClassName:
+      'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
   },
   paused: {
-    label: "Paused",
-    dateLabel: "Started",
-    badgeClassName: "bg-stone-200 text-stone-700 ring-1 ring-inset ring-stone-300",
+    label: 'Paused',
+    dateLabel: 'Started',
+    badgeClassName:
+      'bg-stone-200 text-stone-700 ring-1 ring-inset ring-stone-300',
   },
   completed: {
-    label: "Completed",
-    dateLabel: "Completed",
-    badgeClassName: "bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200",
+    label: 'Completed',
+    dateLabel: 'Completed',
+    badgeClassName: 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200',
   },
 };
 
@@ -70,34 +75,45 @@ function FieldLabel({ label }: { label: string }) {
 
 function StatusBadge({ status }: { status: ProjectStatus }) {
   return (
-    <span className={["rounded-full px-3 py-1 text-xs font-semibold", statusConfig[status].badgeClassName].join(" ")}>
+    <span
+      className={[
+        'rounded-full px-3 py-1 text-xs font-semibold',
+        statusConfig[status].badgeClassName,
+      ].join(' ')}
+    >
       {statusConfig[status].label}
     </span>
   );
 }
 
 function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   }).format(new Date(date));
 }
 
 function getRelevantDate(project: Project) {
-  if (project.status === "completed") {
+  if (project.status === 'completed') {
     return project.endDate
-      ? { label: statusConfig.completed.dateLabel, value: formatDate(project.endDate) }
+      ? {
+          label: statusConfig.completed.dateLabel,
+          value: formatDate(project.endDate),
+        }
       : null;
   }
 
   if (
-    project.status === "in-progress" ||
-    project.status === "need-supplies" ||
-    project.status === "paused"
+    project.status === 'in-progress' ||
+    project.status === 'need-supplies' ||
+    project.status === 'paused'
   ) {
     return project.startDate
-      ? { label: statusConfig[project.status].dateLabel, value: formatDate(project.startDate) }
+      ? {
+          label: statusConfig[project.status].dateLabel,
+          value: formatDate(project.startDate),
+        }
       : null;
   }
 
@@ -106,12 +122,12 @@ function getRelevantDate(project: Project) {
 
 function ActionButton({
   label,
-  tone = "default",
+  tone = 'default',
   onClick,
   children,
 }: {
   label: string;
-  tone?: "default" | "danger";
+  tone?: 'default' | 'danger';
   onClick: () => void;
   children: React.ReactNode;
 }) {
@@ -121,11 +137,11 @@ function ActionButton({
       aria-label={label}
       onClick={onClick}
       className={[
-        "inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white transition",
-        tone === "danger"
-          ? "border-rose-200 text-rose-600 hover:bg-rose-50"
-          : "border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900",
-      ].join(" ")}
+        'inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white transition',
+        tone === 'danger'
+          ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
+          : 'border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900',
+      ].join(' ')}
     >
       {children}
     </button>
@@ -151,10 +167,14 @@ function ProjectRow({
           className="flex min-w-0 flex-1 flex-col gap-3 transition hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
         >
           <div className="space-y-1">
-            <h3 className="text-base font-semibold text-stone-900">{project.name}</h3>
+            <h3 className="text-base font-semibold text-stone-900">
+              {project.name}
+            </h3>
             {relevantDate ? (
               <p className="text-sm text-stone-600">
-                <span className="font-medium text-stone-500">{relevantDate.label}: </span>
+                <span className="font-medium text-stone-500">
+                  {relevantDate.label}:{' '}
+                </span>
                 {relevantDate.value}
               </p>
             ) : null}
@@ -163,10 +183,17 @@ function ProjectRow({
 
         <div className="flex items-center gap-2">
           <StatusBadge status={project.status} />
-          <ActionButton label={`Edit ${project.name}`} onClick={() => onEdit(project)}>
+          <ActionButton
+            label={`Edit ${project.name}`}
+            onClick={() => onEdit(project)}
+          >
             <Pencil size={16} />
           </ActionButton>
-          <ActionButton label={`Delete ${project.name}`} tone="danger" onClick={() => onDelete(project)}>
+          <ActionButton
+            label={`Delete ${project.name}`}
+            tone="danger"
+            onClick={() => onDelete(project)}
+          >
             <Trash2 size={16} />
           </ActionButton>
         </div>
@@ -191,9 +218,11 @@ function ProjectSection({
       <div className="border-b border-stone-200/70 px-5 py-4 sm:px-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="font-serif text-2xl text-stone-900">{statusConfig[status].label}</h2>
+            <h2 className="font-serif text-2xl text-stone-900">
+              {statusConfig[status].label}
+            </h2>
             <p className="mt-1 text-sm text-stone-600">
-              {projects.length} {projects.length === 1 ? "project" : "projects"}
+              {projects.length} {projects.length === 1 ? 'project' : 'projects'}
             </p>
           </div>
         </div>
@@ -201,7 +230,12 @@ function ProjectSection({
 
       <div className="divide-y divide-stone-100">
         {projects.map((project) => (
-          <ProjectRow key={project.id} project={project} onEdit={onEdit} onDelete={onDelete} />
+          <ProjectRow
+            key={project.id}
+            project={project}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ))}
       </div>
     </section>
@@ -209,18 +243,20 @@ function ProjectSection({
 }
 
 export default function Projects() {
-  const { projects, patterns, addProject, updateProject, deleteProject } = useAppData();
-  const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("all");
+  const { projects, patterns, addProject, updateProject, deleteProject } =
+    useAppData();
+  const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all');
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [projectPendingDelete, setProjectPendingDelete] = useState<Project | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [projectPendingDelete, setProjectPendingDelete] =
+    useState<Project | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredProjects =
-    selectedStatus === "all"
+    selectedStatus === 'all'
       ? projects
       : projects.filter((project) => project.status === selectedStatus);
 
@@ -234,12 +270,12 @@ export default function Projects() {
   function closeProjectModal() {
     setIsAddProjectOpen(false);
     setEditingProject(null);
-    setSubmitError(null)
+    setSubmitError(null);
   }
 
   async function handleProjectSubmit(values: ProjectFormValues) {
-    setSubmitError(null)
-    setIsSubmitting(true)
+    setSubmitError(null);
+    setIsSubmitting(true);
 
     try {
       const nextProject: Project = {
@@ -261,9 +297,9 @@ export default function Projects() {
 
       closeProjectModal();
     } catch (error) {
-      setSubmitError(getErrorMessage(error))
+      setSubmitError(getErrorMessage(error));
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -272,16 +308,16 @@ export default function Projects() {
       return;
     }
 
-    setDeleteError(null)
-    setIsDeleting(true)
+    setDeleteError(null);
+    setIsDeleting(true);
 
     try {
       await deleteProject(projectPendingDelete.id);
       setProjectPendingDelete(null);
     } catch (error) {
-      setDeleteError(getErrorMessage(error))
+      setDeleteError(getErrorMessage(error));
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
   }
 
@@ -297,7 +333,8 @@ export default function Projects() {
               Projects
             </h1>
             <p className="max-w-2xl text-base leading-7 text-stone-600">
-              View crochet projects by status, from planned ideas to finished makes.
+              View crochet projects by status, from planned ideas to finished
+              makes.
             </p>
           </div>
 
@@ -308,7 +345,9 @@ export default function Projects() {
             className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 sm:gap-2 sm:px-5"
           >
             <Plus size={18} />
-            <span className="hidden whitespace-nowrap sm:inline">Add Project</span>
+            <span className="hidden whitespace-nowrap sm:inline">
+              Add Project
+            </span>
           </button>
         </div>
 
@@ -318,7 +357,9 @@ export default function Projects() {
               <FieldLabel label="Status" />
               <select
                 value={selectedStatus}
-                onChange={(event) => setSelectedStatus(event.target.value as StatusFilter)}
+                onChange={(event) =>
+                  setSelectedStatus(event.target.value as StatusFilter)
+                }
                 className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300"
               >
                 {statusOptions.map((option) => (
@@ -330,7 +371,10 @@ export default function Projects() {
             </label>
 
             <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-stone-600">
-              Showing <span className="font-semibold text-stone-900">{filteredProjects.length}</span>{" "}
+              Showing{' '}
+              <span className="font-semibold text-stone-900">
+                {filteredProjects.length}
+              </span>{' '}
               projects
             </div>
           </div>
@@ -350,27 +394,32 @@ export default function Projects() {
       </section>
 
       <Modal
-        title={editingProject ? "Edit Project" : "Add Project"}
+        title={editingProject ? 'Edit Project' : 'Add Project'}
         isOpen={isAddProjectOpen || Boolean(editingProject)}
         onClose={closeProjectModal}
         maxWidthClassName="max-w-3xl"
       >
         <ProjectForm
-          patternOptions={patterns.map((pattern) => ({ id: pattern.id, name: pattern.name }))}
+          patternOptions={patterns.map((pattern) => ({
+            id: pattern.id,
+            name: pattern.name,
+          }))}
           initialValues={
             editingProject
               ? {
                   name: editingProject.name,
-                  patternId: editingProject.patternId ?? "",
+                  patternId: editingProject.patternId ?? '',
                   status: editingProject.status,
-                  startDate: editingProject.startDate ?? "",
-                  endDate: editingProject.endDate ?? "",
-                  notes: editingProject.notes ?? "",
+                  startDate: editingProject.startDate ?? '',
+                  endDate: editingProject.endDate ?? '',
+                  notes: editingProject.notes ?? '',
                 }
               : undefined
           }
-          submitLabel={editingProject ? "Save Changes" : "Save Project"}
-          onSubmit={(values) => { void handleProjectSubmit(values) }}
+          submitLabel={editingProject ? 'Save Changes' : 'Save Project'}
+          onSubmit={(values) => {
+            void handleProjectSubmit(values);
+          }}
           onCancel={closeProjectModal}
           submitError={submitError}
           isSubmitting={isSubmitting}
@@ -383,13 +432,15 @@ export default function Projects() {
         description={
           projectPendingDelete
             ? `Delete "${projectPendingDelete.name}"? This cannot be undone.`
-            : ""
+            : ''
         }
         confirmLabel="Delete Project"
-        onConfirm={() => { void handleDeleteConfirm() }}
+        onConfirm={() => {
+          void handleDeleteConfirm();
+        }}
         onCancel={() => {
-          setProjectPendingDelete(null)
-          setDeleteError(null)
+          setProjectPendingDelete(null);
+          setDeleteError(null);
         }}
         error={deleteError}
         isConfirming={isDeleting}

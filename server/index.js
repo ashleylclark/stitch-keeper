@@ -1,112 +1,118 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import { randomUUID } from 'node:crypto'
-import { fileURLToPath } from 'node:url'
-import cors from 'cors'
-import express from 'express'
-import { db, initializeDatabase } from './db.js'
+import fs from 'node:fs';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import cors from 'cors';
+import express from 'express';
+import { db, initializeDatabase } from './db.js';
 
-initializeDatabase()
+initializeDatabase();
 
-const app = express()
-const port = Number(process.env.PORT ?? 3001)
-const serverDir = path.dirname(fileURLToPath(import.meta.url))
-const distDir = path.resolve(serverDir, '../dist')
-const indexHtmlPath = path.join(distDir, 'index.html')
-const hasBuiltFrontend = fs.existsSync(indexHtmlPath)
+const app = express();
+const port = Number(process.env.PORT ?? 3001);
+const serverDir = path.dirname(fileURLToPath(import.meta.url));
+const distDir = path.resolve(serverDir, '../dist');
+const indexHtmlPath = path.join(distDir, 'index.html');
+const hasBuiltFrontend = fs.existsSync(indexHtmlPath);
 
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
 app.get('/api/health', (_request, response) => {
-  response.json({ ok: true })
-})
+  response.json({ ok: true });
+});
 
 app.get('/api/stash', (_request, response) => {
-  response.json(listStashItems())
-})
+  response.json(listStashItems());
+});
 
 app.post('/api/stash', (request, response) => {
-  const item = normalizeStashItem(request.body)
-  saveStashItem(item)
-  response.status(201).json(item)
-})
+  const item = normalizeStashItem(request.body);
+  saveStashItem(item);
+  response.status(201).json(item);
+});
 
 app.put('/api/stash/:id', (request, response) => {
-  const item = normalizeStashItem({ ...request.body, id: request.params.id })
-  saveStashItem(item, true)
-  response.json(item)
-})
+  const item = normalizeStashItem({ ...request.body, id: request.params.id });
+  saveStashItem(item, true);
+  response.json(item);
+});
 
 app.delete('/api/stash/:id', (request, response) => {
-  db.prepare('DELETE FROM stash_items WHERE id = ?').run(request.params.id)
-  response.status(204).end()
-})
+  db.prepare('DELETE FROM stash_items WHERE id = ?').run(request.params.id);
+  response.status(204).end();
+});
 
 app.get('/api/patterns', (_request, response) => {
-  response.json(listPatterns())
-})
+  response.json(listPatterns());
+});
 
 app.post('/api/patterns', (request, response) => {
-  const pattern = normalizePattern(request.body)
-  savePattern(pattern)
-  response.status(201).json(pattern)
-})
+  const pattern = normalizePattern(request.body);
+  savePattern(pattern);
+  response.status(201).json(pattern);
+});
 
 app.put('/api/patterns/:id', (request, response) => {
-  const pattern = normalizePattern({ ...request.body, id: request.params.id })
-  savePattern(pattern, true)
-  response.json(pattern)
-})
+  const pattern = normalizePattern({ ...request.body, id: request.params.id });
+  savePattern(pattern, true);
+  response.json(pattern);
+});
 
 app.delete('/api/patterns/:id', (request, response) => {
-  db.prepare('DELETE FROM patterns WHERE id = ?').run(request.params.id)
-  response.status(204).end()
-})
+  db.prepare('DELETE FROM patterns WHERE id = ?').run(request.params.id);
+  response.status(204).end();
+});
 
 app.get('/api/projects', (_request, response) => {
-  response.json(listProjects())
-})
+  response.json(listProjects());
+});
 
 app.post('/api/projects', (request, response) => {
-  const project = normalizeProject(request.body)
-  saveProject(project)
-  response.status(201).json(project)
-})
+  const project = normalizeProject(request.body);
+  saveProject(project);
+  response.status(201).json(project);
+});
 
 app.put('/api/projects/:id', (request, response) => {
-  const project = normalizeProject({ ...request.body, id: request.params.id })
-  saveProject(project, true)
-  response.json(project)
-})
+  const project = normalizeProject({ ...request.body, id: request.params.id });
+  saveProject(project, true);
+  response.json(project);
+});
 
 app.delete('/api/projects/:id', (request, response) => {
-  db.prepare('DELETE FROM projects WHERE id = ?').run(request.params.id)
-  response.status(204).end()
-})
+  db.prepare('DELETE FROM projects WHERE id = ?').run(request.params.id);
+  response.status(204).end();
+});
 
 if (hasBuiltFrontend) {
-  app.use(express.static(distDir))
+  app.use(express.static(distDir));
 
   app.get(/^\/(?!api\/).*/, (_request, response) => {
-    response.sendFile(indexHtmlPath)
-  })
+    response.sendFile(indexHtmlPath);
+  });
 }
 
 app.listen(port, () => {
-  console.log(`Hook Stash server listening on http://localhost:${port}`)
-})
+  console.log(`Hook Stash server listening on http://localhost:${port}`);
+});
 
 function listStashItems() {
-  return db.prepare(`
+  return db
+    .prepare(
+      `
     SELECT id, name, category, status, material, weight, brand, color, quantity, unit, size, notes
     FROM stash_items
     ORDER BY rowid DESC
-  `).all()
+  `,
+    )
+    .all();
 }
 
 function listPatterns() {
-  const patterns = db.prepare(`
+  const patterns = db
+    .prepare(
+      `
     SELECT
       id,
       name,
@@ -120,9 +126,13 @@ function listPatterns() {
       instructions
     FROM patterns
     ORDER BY COALESCE(added_at, '') DESC, rowid DESC
-  `).all()
+  `,
+    )
+    .all();
 
-  const requirements = db.prepare(`
+  const requirements = db
+    .prepare(
+      `
     SELECT
       id,
       pattern_id AS patternId,
@@ -135,12 +145,14 @@ function listPatterns() {
       notes
     FROM pattern_requirements
     ORDER BY rowid ASC
-  `).all()
+  `,
+    )
+    .all();
 
-  const requirementsByPatternId = new Map()
+  const requirementsByPatternId = new Map();
 
   for (const requirement of requirements) {
-    const current = requirementsByPatternId.get(requirement.patternId) ?? []
+    const current = requirementsByPatternId.get(requirement.patternId) ?? [];
     current.push({
       id: requirement.id,
       category: requirement.category,
@@ -150,19 +162,21 @@ function listPatterns() {
       unit: requirement.unit ?? undefined,
       size: requirement.size ?? undefined,
       notes: requirement.notes ?? undefined,
-    })
-    requirementsByPatternId.set(requirement.patternId, current)
+    });
+    requirementsByPatternId.set(requirement.patternId, current);
   }
 
   return patterns.map((pattern) => ({
     ...pattern,
     isPlanned: Boolean(pattern.isPlanned),
     requirements: requirementsByPatternId.get(pattern.id) ?? [],
-  }))
+  }));
 }
 
 function listProjects() {
-  const projects = db.prepare(`
+  const projects = db
+    .prepare(
+      `
     SELECT
       id,
       name,
@@ -173,20 +187,26 @@ function listProjects() {
       notes
     FROM projects
     ORDER BY rowid DESC
-  `).all()
+  `,
+    )
+    .all();
 
-  const projectStashItems = db.prepare(`
+  const projectStashItems = db
+    .prepare(
+      `
     SELECT project_id AS projectId, stash_item_id AS stashItemId
     FROM project_stash_items
     ORDER BY rowid ASC
-  `).all()
+  `,
+    )
+    .all();
 
-  const stashItemIdsByProjectId = new Map()
+  const stashItemIdsByProjectId = new Map();
 
   for (const row of projectStashItems) {
-    const current = stashItemIdsByProjectId.get(row.projectId) ?? []
-    current.push(row.stashItemId)
-    stashItemIdsByProjectId.set(row.projectId, current)
+    const current = stashItemIdsByProjectId.get(row.projectId) ?? [];
+    current.push(row.stashItemId);
+    stashItemIdsByProjectId.set(row.projectId, current);
   }
 
   return projects.map((project) => ({
@@ -196,7 +216,7 @@ function listProjects() {
     endDate: project.endDate ?? undefined,
     notes: project.notes ?? undefined,
     stashItemIds: stashItemIdsByProjectId.get(project.id) ?? [],
-  }))
+  }));
 }
 
 function normalizeStashItem(input) {
@@ -213,14 +233,15 @@ function normalizeStashItem(input) {
     unit: emptyToUndefined(input.unit),
     size: emptyToUndefined(input.size),
     notes: emptyToUndefined(input.notes),
-  }
+  };
 }
 
 function normalizePattern(input) {
   return {
     id: String(input.id ?? `pattern-${randomUUID()}`),
     name: String(input.name ?? '').trim(),
-    addedAt: emptyToUndefined(input.addedAt) ?? new Date().toISOString().slice(0, 10),
+    addedAt:
+      emptyToUndefined(input.addedAt) ?? new Date().toISOString().slice(0, 10),
     isPlanned: Boolean(input.isPlanned),
     source: emptyToUndefined(input.source),
     sourceUrl: emptyToUndefined(input.sourceUrl),
@@ -235,7 +256,9 @@ function normalizePattern(input) {
           name: String(requirement.name ?? '').trim(),
           weight: emptyToUndefined(requirement.weight),
           quantityNeeded:
-            requirement.quantityNeeded === undefined || requirement.quantityNeeded === null || requirement.quantityNeeded === ''
+            requirement.quantityNeeded === undefined ||
+            requirement.quantityNeeded === null ||
+            requirement.quantityNeeded === ''
               ? undefined
               : Number(requirement.quantityNeeded),
           unit: emptyToUndefined(requirement.unit),
@@ -243,7 +266,7 @@ function normalizePattern(input) {
           notes: emptyToUndefined(requirement.notes),
         }))
       : [],
-  }
+  };
 }
 
 function normalizeProject(input) {
@@ -255,8 +278,10 @@ function normalizeProject(input) {
     endDate: emptyToUndefined(input.endDate),
     status: String(input.status),
     notes: emptyToUndefined(input.notes),
-    stashItemIds: Array.isArray(input.stashItemIds) ? input.stashItemIds.map(String) : [],
-  }
+    stashItemIds: Array.isArray(input.stashItemIds)
+      ? input.stashItemIds.map(String)
+      : [],
+  };
 }
 
 function saveStashItem(item, replace = false) {
@@ -274,27 +299,29 @@ function saveStashItem(item, replace = false) {
         ) VALUES (
           @id, @name, @category, @status, @material, @weight, @brand, @color, @quantity, @unit, @size, @notes
         )
-      `
+      `;
 
-  db.prepare(sql).run(item)
+  db.prepare(sql).run(item);
 }
 
 function savePattern(pattern, replace = false) {
   db.transaction(() => {
     if (replace) {
-      db.prepare('DELETE FROM patterns WHERE id = ?').run(pattern.id)
+      db.prepare('DELETE FROM patterns WHERE id = ?').run(pattern.id);
     }
 
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO patterns (
         id, name, added_at, is_planned, source, source_url, category, difficulty, notes, instructions
       ) VALUES (
         @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @category, @difficulty, @notes, @instructions
       )
-    `).run({
+    `,
+    ).run({
       ...pattern,
       isPlanned: pattern.isPlanned ? 1 : 0,
-    })
+    });
 
     const insertRequirement = db.prepare(`
       INSERT INTO pattern_requirements (
@@ -302,44 +329,46 @@ function savePattern(pattern, replace = false) {
       ) VALUES (
         @id, @patternId, @category, @name, @weight, @quantityNeeded, @unit, @size, @notes
       )
-    `)
+    `);
 
     for (const requirement of pattern.requirements) {
-      insertRequirement.run({ ...requirement, patternId: pattern.id })
+      insertRequirement.run({ ...requirement, patternId: pattern.id });
     }
-  })()
+  })();
 }
 
 function saveProject(project, replace = false) {
   db.transaction(() => {
     if (replace) {
-      db.prepare('DELETE FROM projects WHERE id = ?').run(project.id)
+      db.prepare('DELETE FROM projects WHERE id = ?').run(project.id);
     }
 
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO projects (
         id, name, pattern_id, start_date, end_date, status, notes
       ) VALUES (
         @id, @name, @patternId, @startDate, @endDate, @status, @notes
       )
-    `).run(project)
+    `,
+    ).run(project);
 
     const insertLinkedItem = db.prepare(`
       INSERT INTO project_stash_items (project_id, stash_item_id)
       VALUES (@projectId, @stashItemId)
-    `)
+    `);
 
     for (const stashItemId of project.stashItemIds) {
-      insertLinkedItem.run({ projectId: project.id, stashItemId })
+      insertLinkedItem.run({ projectId: project.id, stashItemId });
     }
-  })()
+  })();
 }
 
 function emptyToUndefined(value) {
   if (value === undefined || value === null) {
-    return undefined
+    return undefined;
   }
 
-  const trimmed = String(value).trim()
-  return trimmed === '' ? undefined : trimmed
+  const trimmed = String(value).trim();
+  return trimmed === '' ? undefined : trimmed;
 }

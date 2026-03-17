@@ -1,8 +1,8 @@
-import type { Project } from '../../types/models'
-import { fetchJson } from '../../shared/api/fetchJson'
+import type { Project } from '../../types/models';
+import { fetchJson } from '../../shared/api/fetchJson';
 
 export function fetchProjects() {
-  return fetchJson<Project[]>('/api/projects')
+  return fetchJson<Project[]>('/api/projects');
 }
 
 export function createProject(project: Project) {
@@ -10,7 +10,7 @@ export function createProject(project: Project) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(project),
-  })
+  });
 }
 
 export function saveProject(project: Project) {
@@ -18,9 +18,13 @@ export function saveProject(project: Project) {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(project),
-  })
+  });
 }
 
 export function removeProject(projectId: string) {
-  return fetchJson<void>(`/api/projects/${projectId}`, { method: 'DELETE' }, true)
+  return fetchJson<void>(
+    `/api/projects/${projectId}`,
+    { method: 'DELETE' },
+    true,
+  );
 }

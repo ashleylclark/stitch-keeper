@@ -1,23 +1,23 @@
-import { useState } from "react";
+import { useState } from 'react';
 import type {
   ItemCategory,
   Pattern,
   PatternRequirement,
   YarnWeight,
-} from '../../../types/models'
-import { FormActions } from '../../../components/forms/FormActions'
-import { FormField } from '../../../components/forms/FormField'
-import { FormSection } from '../../../components/forms/FormSection'
-import { SelectInput } from '../../../components/forms/SelectInput'
-import { TextArea } from '../../../components/forms/TextArea'
-import { TextInput } from '../../../components/forms/TextInput'
+} from '../../../types/models';
+import { FormActions } from '../../../components/forms/FormActions';
+import { FormField } from '../../../components/forms/FormField';
+import { FormSection } from '../../../components/forms/FormSection';
+import { SelectInput } from '../../../components/forms/SelectInput';
+import { TextArea } from '../../../components/forms/TextArea';
+import { TextInput } from '../../../components/forms/TextInput';
 
 export type PatternFormValues = {
   name: string;
   source: string;
   sourceUrl: string;
-  category: NonNullable<Pattern["category"]> | "";
-  difficulty: NonNullable<Pattern["difficulty"]> | "";
+  category: NonNullable<Pattern['category']> | '';
+  difficulty: NonNullable<Pattern['difficulty']> | '';
   notes: string;
   instructions: string;
   requirements: PatternRequirement[];
@@ -26,7 +26,7 @@ export type PatternFormValues = {
 type RequirementFormValues = {
   category: ItemCategory;
   name: string;
-  weight: YarnWeight | "";
+  weight: YarnWeight | '';
   quantityNeeded: string;
   unit: string;
   size: string;
@@ -34,29 +34,29 @@ type RequirementFormValues = {
 };
 
 type PatternFormProps = {
-  initialValues?: Partial<PatternFormValues>
-  submitLabel?: string
-  onSubmit: (values: PatternFormValues) => void
-  onCancel?: () => void
-  submitError?: string | null
-  isSubmitting?: boolean
-}
+  initialValues?: Partial<PatternFormValues>;
+  submitLabel?: string;
+  onSubmit: (values: PatternFormValues) => void;
+  onCancel?: () => void;
+  submitError?: string | null;
+  isSubmitting?: boolean;
+};
 
-type FormErrors = Partial<Record<"name" | "instructions", string>>;
+type FormErrors = Partial<Record<'name' | 'instructions', string>>;
 
 const initialRequirementValues: RequirementFormValues = {
-  category: "yarn",
-  name: "",
-  weight: "",
-  quantityNeeded: "",
-  unit: "",
-  size: "",
-  notes: "",
+  category: 'yarn',
+  name: '',
+  weight: '',
+  quantityNeeded: '',
+  unit: '',
+  size: '',
+  notes: '',
 };
 
 export function PatternForm({
   initialValues,
-  submitLabel = "Save Pattern",
+  submitLabel = 'Save Pattern',
   onSubmit,
   onCancel,
   submitError = null,
@@ -65,29 +65,33 @@ export function PatternForm({
   const [errors, setErrors] = useState<FormErrors>({});
   const [requirementError, setRequirementError] = useState<string>();
   const [values, setValues] = useState<PatternFormValues>({
-    name: initialValues?.name ?? "",
-    source: initialValues?.source ?? "",
-    sourceUrl: initialValues?.sourceUrl ?? "",
-    category: initialValues?.category ?? "",
-    difficulty: initialValues?.difficulty ?? "",
-    notes: initialValues?.notes ?? "",
-    instructions: initialValues?.instructions ?? "",
+    name: initialValues?.name ?? '',
+    source: initialValues?.source ?? '',
+    sourceUrl: initialValues?.sourceUrl ?? '',
+    category: initialValues?.category ?? '',
+    difficulty: initialValues?.difficulty ?? '',
+    notes: initialValues?.notes ?? '',
+    instructions: initialValues?.instructions ?? '',
     requirements: initialValues?.requirements ?? [],
   });
-  const [newRequirement, setNewRequirement] =
-    useState<RequirementFormValues>(initialRequirementValues);
+  const [newRequirement, setNewRequirement] = useState<RequirementFormValues>(
+    initialRequirementValues,
+  );
 
-  function update<K extends keyof PatternFormValues>(key: K, value: PatternFormValues[K]) {
+  function update<K extends keyof PatternFormValues>(
+    key: K,
+    value: PatternFormValues[K],
+  ) {
     setValues((prev) => ({ ...prev, [key]: value }));
 
-    if (key === "name" || key === "instructions") {
+    if (key === 'name' || key === 'instructions') {
       setErrors((prev) => ({ ...prev, [key]: undefined }));
     }
   }
 
   function addRequirement() {
     if (!newRequirement.name.trim()) {
-      setRequirementError("Requirement name is required.");
+      setRequirementError('Requirement name is required.');
       return;
     }
 
@@ -115,7 +119,9 @@ export function PatternForm({
   function removeRequirement(requirementId: string) {
     setValues((prev) => ({
       ...prev,
-      requirements: prev.requirements.filter((requirement) => requirement.id !== requirementId),
+      requirements: prev.requirements.filter(
+        (requirement) => requirement.id !== requirementId,
+      ),
     }));
   }
 
@@ -125,11 +131,11 @@ export function PatternForm({
     const nextErrors: FormErrors = {};
 
     if (!values.name.trim()) {
-      nextErrors.name = "Pattern name is required.";
+      nextErrors.name = 'Pattern name is required.';
     }
 
     if (!values.instructions.trim()) {
-      nextErrors.instructions = "Instructions are required.";
+      nextErrors.instructions = 'Instructions are required.';
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -153,17 +159,22 @@ export function PatternForm({
           <FormField label="Name">
             <TextInput
               value={values.name}
-              onChange={(event) => update("name", event.target.value)}
+              onChange={(event) => update('name', event.target.value)}
               placeholder="Pattern name"
             />
-            {errors.name ? <p className="text-sm text-rose-600">{errors.name}</p> : null}
+            {errors.name ? (
+              <p className="text-sm text-rose-600">{errors.name}</p>
+            ) : null}
           </FormField>
 
           <FormField label="Category">
             <SelectInput
               value={values.category}
               onChange={(event) =>
-                update("category", event.target.value as PatternFormValues["category"])
+                update(
+                  'category',
+                  event.target.value as PatternFormValues['category'],
+                )
               }
             >
               <option value="">Select category</option>
@@ -179,7 +190,10 @@ export function PatternForm({
             <SelectInput
               value={values.difficulty}
               onChange={(event) =>
-                update("difficulty", event.target.value as PatternFormValues["difficulty"])
+                update(
+                  'difficulty',
+                  event.target.value as PatternFormValues['difficulty'],
+                )
               }
             >
               <option value="">Select difficulty</option>
@@ -192,7 +206,7 @@ export function PatternForm({
           <FormField label="Source">
             <TextInput
               value={values.source}
-              onChange={(event) => update("source", event.target.value)}
+              onChange={(event) => update('source', event.target.value)}
               placeholder="Designer, book, website"
             />
           </FormField>
@@ -201,7 +215,7 @@ export function PatternForm({
             <TextInput
               type="url"
               value={values.sourceUrl}
-              onChange={(event) => update("sourceUrl", event.target.value)}
+              onChange={(event) => update('sourceUrl', event.target.value)}
               placeholder="https://"
             />
           </FormField>
@@ -210,7 +224,7 @@ export function PatternForm({
         <FormField label="Notes">
           <TextArea
             value={values.notes}
-            onChange={(event) => update("notes", event.target.value)}
+            onChange={(event) => update('notes', event.target.value)}
             placeholder="Optional notes about the pattern"
           />
         </FormField>
@@ -241,11 +255,16 @@ export function PatternForm({
             <TextInput
               value={newRequirement.name}
               onChange={(event) =>
-                setNewRequirement((prev) => ({ ...prev, name: event.target.value }))
+                setNewRequirement((prev) => ({
+                  ...prev,
+                  name: event.target.value,
+                }))
               }
               placeholder="Cotton yarn, 5 mm hook"
             />
-            {requirementError ? <p className="text-sm text-rose-600">{requirementError}</p> : null}
+            {requirementError ? (
+              <p className="text-sm text-rose-600">{requirementError}</p>
+            ) : null}
           </FormField>
 
           <FormField label="Weight">
@@ -254,7 +273,7 @@ export function PatternForm({
               onChange={(event) =>
                 setNewRequirement((prev) => ({
                   ...prev,
-                  weight: event.target.value as YarnWeight | "",
+                  weight: event.target.value as YarnWeight | '',
                 }))
               }
             >
@@ -288,7 +307,10 @@ export function PatternForm({
             <TextInput
               value={newRequirement.unit}
               onChange={(event) =>
-                setNewRequirement((prev) => ({ ...prev, unit: event.target.value }))
+                setNewRequirement((prev) => ({
+                  ...prev,
+                  unit: event.target.value,
+                }))
               }
               placeholder="skeins, pairs"
             />
@@ -298,7 +320,10 @@ export function PatternForm({
             <TextInput
               value={newRequirement.size}
               onChange={(event) =>
-                setNewRequirement((prev) => ({ ...prev, size: event.target.value }))
+                setNewRequirement((prev) => ({
+                  ...prev,
+                  size: event.target.value,
+                }))
               }
               placeholder="5 mm, 12 mm"
             />
@@ -309,7 +334,10 @@ export function PatternForm({
           <TextInput
             value={newRequirement.notes}
             onChange={(event) =>
-              setNewRequirement((prev) => ({ ...prev, notes: event.target.value }))
+              setNewRequirement((prev) => ({
+                ...prev,
+                notes: event.target.value,
+              }))
             }
             placeholder="Optional requirement details"
           />
@@ -330,7 +358,9 @@ export function PatternForm({
               className="flex items-center justify-between rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm"
             >
               <span>
-                <span className="font-medium capitalize">{requirement.category}:</span>{" "}
+                <span className="font-medium capitalize">
+                  {requirement.category}:
+                </span>{' '}
                 {requirement.name}
               </span>
 
@@ -350,7 +380,7 @@ export function PatternForm({
         <FormField label="Instructions">
           <TextArea
             value={values.instructions}
-            onChange={(event) => update("instructions", event.target.value)}
+            onChange={(event) => update('instructions', event.target.value)}
             placeholder="Paste or type the pattern instructions here."
           />
           {errors.instructions ? (
@@ -365,5 +395,5 @@ export function PatternForm({
         isSubmitting={isSubmitting}
       />
     </form>
-  )
+  );
 }

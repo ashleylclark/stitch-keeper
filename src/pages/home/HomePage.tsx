@@ -1,50 +1,56 @@
-import { useAppData } from '../../app/state/app-data'
-import type { PatternMatchStatus, ProjectStatus } from '../../types/models'
-import { patternMatchLabels } from '../patterns/lib/patternMatching'
+import { useAppData } from '../../app/state/app-data';
+import type { PatternMatchStatus, ProjectStatus } from '../../types/models';
+import { patternMatchLabels } from '../patterns/lib/patternMatching';
 
 type HomeStat = {
-  label: string
-  value: number
-  helperText: string
-}
+  label: string;
+  value: number;
+  helperText: string;
+};
 
-type StatusTone = 'rose' | 'amber' | 'emerald' | 'sky'
+type StatusTone = 'rose' | 'amber' | 'emerald' | 'sky';
 
 type DashboardItem = {
-  id: string
-  name: string
-  detail: string
-  status: string
-  tone: StatusTone
-}
+  id: string;
+  name: string;
+  detail: string;
+  status: string;
+  tone: StatusTone;
+};
 
 const badgeClasses: Record<StatusTone, string> = {
   rose: 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200',
   amber: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
   emerald: 'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200',
   sky: 'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200',
-}
+};
 
-const projectStatusConfig: Record<ProjectStatus, { label: string; tone: StatusTone }> = {
+const projectStatusConfig: Record<
+  ProjectStatus,
+  { label: string; tone: StatusTone }
+> = {
   planned: { label: 'Planned', tone: 'sky' },
   'in-progress': { label: 'In Progress', tone: 'rose' },
   completed: { label: 'Completed', tone: 'emerald' },
   paused: { label: 'Paused', tone: 'amber' },
   'need-supplies': { label: 'Need More Supplies', tone: 'amber' },
-}
+};
 
-const patternStatusConfig: Record<PatternMatchStatus, { label: string; tone: StatusTone }> = {
+const patternStatusConfig: Record<
+  PatternMatchStatus,
+  { label: string; tone: StatusTone }
+> = {
   'ready-to-start': { label: 'Ready To Start', tone: 'emerald' },
   'review-supplies': { label: 'Review Supplies', tone: 'amber' },
   'need-supplies': { label: 'Need More Supplies', tone: 'amber' },
-}
+};
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  }).format(new Date(date))
+  }).format(new Date(date));
 }
 
 function StatCard({ label, value, helperText }: HomeStat) {
@@ -52,19 +58,26 @@ function StatCard({ label, value, helperText }: HomeStat) {
     <article className="rounded-[1.75rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
       <p className="text-sm font-medium text-stone-500">{label}</p>
       <div className="mt-4 flex items-end gap-2">
-        <span className="font-serif text-4xl leading-none text-stone-900">{value}</span>
+        <span className="font-serif text-4xl leading-none text-stone-900">
+          {value}
+        </span>
       </div>
       <p className="mt-4 text-sm leading-6 text-stone-600">{helperText}</p>
     </article>
-  )
+  );
 }
 
 function StatusBadge({ status, tone }: Pick<DashboardItem, 'status' | 'tone'>) {
   return (
-    <span className={['inline-flex rounded-full px-3 py-1 text-xs font-semibold text-center justify-center', badgeClasses[tone]].join(' ')}>
+    <span
+      className={[
+        'inline-flex rounded-full px-3 py-1 text-xs font-semibold text-center justify-center',
+        badgeClasses[tone],
+      ].join(' ')}
+    >
       {status}
     </span>
-  )
+  );
 }
 
 function DashboardList({
@@ -72,9 +85,9 @@ function DashboardList({
   description,
   items,
 }: {
-  title: string
-  description: string
-  items: DashboardItem[]
+  title: string;
+  description: string;
+  items: DashboardItem[];
 }) {
   return (
     <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
@@ -91,8 +104,12 @@ function DashboardList({
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-1">
-                <h3 className="text-base font-semibold text-stone-900">{item.name}</h3>
-                <p className="text-sm leading-6 text-stone-600">{item.detail}</p>
+                <h3 className="text-base font-semibold text-stone-900">
+                  {item.name}
+                </h3>
+                <p className="text-sm leading-6 text-stone-600">
+                  {item.detail}
+                </p>
               </div>
               <StatusBadge status={item.status} tone={item.tone} />
             </div>
@@ -100,58 +117,72 @@ function DashboardList({
         ))}
       </div>
     </section>
-  )
+  );
 }
 
 export default function Home() {
-  const { patterns, patternMatchById, projects } = useAppData()
+  const { patterns, patternMatchById, projects } = useAppData();
 
   const activeProjects = projects
-    .filter((project) => project.status !== 'completed' && project.status !== 'paused')
+    .filter(
+      (project) =>
+        project.status !== 'completed' && project.status !== 'paused',
+    )
     .map<DashboardItem>((project) => ({
       id: project.id,
       name: project.name,
       detail: project.notes ?? 'No project notes yet.',
       status: projectStatusConfig[project.status].label,
       tone: projectStatusConfig[project.status].tone,
-    }))
+    }));
 
   const readyPatterns = patterns
-    .filter((pattern) => patternMatchById.get(pattern.id)?.status === 'ready-to-start')
+    .filter(
+      (pattern) =>
+        patternMatchById.get(pattern.id)?.status === 'ready-to-start',
+    )
     .map<DashboardItem>((pattern) => {
-      const summary = patternMatchById.get(pattern.id)
-      const status = summary?.status ?? 'review-supplies'
+      const summary = patternMatchById.get(pattern.id);
+      const status = summary?.status ?? 'review-supplies';
 
       return {
         id: pattern.id,
         name: pattern.name,
-        detail: summary?.detail ?? 'Review the requirements against your stash.',
+        detail:
+          summary?.detail ?? 'Review the requirements against your stash.',
         status: patternStatusConfig[status].label,
         tone: patternStatusConfig[status].tone,
-      }
-    })
+      };
+    });
 
   const recentPatterns = [...patterns]
     .filter((pattern) => pattern.addedAt)
-    .sort((left, right) => new Date(right.addedAt ?? '').getTime() - new Date(left.addedAt ?? '').getTime())
+    .sort(
+      (left, right) =>
+        new Date(right.addedAt ?? '').getTime() -
+        new Date(left.addedAt ?? '').getTime(),
+    )
     .slice(0, 3)
     .map<DashboardItem>((pattern) => {
-      const summary = patternMatchById.get(pattern.id)
+      const summary = patternMatchById.get(pattern.id);
 
       return {
         id: pattern.id,
         name: pattern.name,
-        detail: pattern.addedAt ? `Added ${formatDate(pattern.addedAt)}` : 'Recently added',
+        detail: pattern.addedAt
+          ? `Added ${formatDate(pattern.addedAt)}`
+          : 'Recently added',
         status: summary ? patternMatchLabels[summary.status] : 'New',
         tone: summary ? patternStatusConfig[summary.status].tone : 'rose',
-      }
-    })
+      };
+    });
 
   const homeStats: HomeStat[] = [
     {
       label: 'Active Projects',
       value: activeProjects.length,
-      helperText: 'Projects currently in progress, planned, or waiting on supplies.',
+      helperText:
+        'Projects currently in progress, planned, or waiting on supplies.',
     },
     {
       label: 'Ready Patterns',
@@ -165,18 +196,24 @@ export default function Home() {
     },
     {
       label: 'Finished Makes',
-      value: projects.filter((project) => project.status === 'completed').length,
+      value: projects.filter((project) => project.status === 'completed')
+        .length,
       helperText: 'Projects marked complete in your project history.',
     },
-  ]
+  ];
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-8">
       <div className="space-y-3">
-        <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500">Stitch Keeper</p>
-        <h1 className="font-serif text-4xl tracking-tight text-stone-900 sm:text-5xl">Home</h1>
+        <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500">
+          Stitch Keeper
+        </p>
+        <h1 className="font-serif text-4xl tracking-tight text-stone-900 sm:text-5xl">
+          Home
+        </h1>
         <p className="max-w-2xl text-base leading-7 text-stone-600">
-          A quick snapshot of the parts of your crochet stash you will check most often.
+          A quick snapshot of the parts of your crochet stash you will check
+          most often.
         </p>
       </div>
 
@@ -207,5 +244,5 @@ export default function Home() {
         />
       </div>
     </section>
-  )
+  );
 }

@@ -1,8 +1,8 @@
 type FormActionsProps = {
-  submitLabel: string
-  onCancel?: () => void
-  isSubmitting?: boolean
-}
+  submitLabel: string;
+  onCancel?: () => void;
+  isSubmitting?: boolean;
+};
 
 export function FormActions({
   submitLabel,
@@ -30,5 +30,5 @@ export function FormActions({
         {isSubmitting ? 'Saving...' : submitLabel}
       </button>
     </div>
-  )
+  );
 }

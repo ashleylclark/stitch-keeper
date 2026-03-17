@@ -1,8 +1,8 @@
-import type { StashItem } from '../../types/models'
-import { fetchJson } from '../../shared/api/fetchJson'
+import type { StashItem } from '../../types/models';
+import { fetchJson } from '../../shared/api/fetchJson';
 
 export function fetchStashItems() {
-  return fetchJson<StashItem[]>('/api/stash')
+  return fetchJson<StashItem[]>('/api/stash');
 }
 
 export function createStashItem(item: StashItem) {
@@ -10,7 +10,7 @@ export function createStashItem(item: StashItem) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item),
-  })
+  });
 }
 
 export function saveStashItem(item: StashItem) {
@@ -18,9 +18,9 @@ export function saveStashItem(item: StashItem) {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item),
-  })
+  });
 }
 
 export function removeStashItem(itemId: string) {
-  return fetchJson<void>(`/api/stash/${itemId}`, { method: 'DELETE' }, true)
+  return fetchJson<void>(`/api/stash/${itemId}`, { method: 'DELETE' }, true);
 }

@@ -1,11 +1,11 @@
-import { useState } from "react";
-import type { ProjectStatus } from '../../../types/models'
-import { FormActions } from '../../../components/forms/FormActions'
-import { FormField } from '../../../components/forms/FormField'
-import { FormSection } from '../../../components/forms/FormSection'
-import { SelectInput } from '../../../components/forms/SelectInput'
-import { TextArea } from '../../../components/forms/TextArea'
-import { TextInput } from '../../../components/forms/TextInput'
+import { useState } from 'react';
+import type { ProjectStatus } from '../../../types/models';
+import { FormActions } from '../../../components/forms/FormActions';
+import { FormField } from '../../../components/forms/FormField';
+import { FormSection } from '../../../components/forms/FormSection';
+import { SelectInput } from '../../../components/forms/SelectInput';
+import { TextArea } from '../../../components/forms/TextArea';
+import { TextInput } from '../../../components/forms/TextInput';
 
 export type ProjectFormValues = {
   name: string;
@@ -22,21 +22,21 @@ type PatternOption = {
 };
 
 type ProjectFormProps = {
-  patternOptions: PatternOption[]
-  initialValues?: Partial<ProjectFormValues>
-  submitLabel?: string
-  onSubmit: (values: ProjectFormValues) => void
-  onCancel?: () => void
-  submitError?: string | null
-  isSubmitting?: boolean
-}
+  patternOptions: PatternOption[];
+  initialValues?: Partial<ProjectFormValues>;
+  submitLabel?: string;
+  onSubmit: (values: ProjectFormValues) => void;
+  onCancel?: () => void;
+  submitError?: string | null;
+  isSubmitting?: boolean;
+};
 
-type FormErrors = Partial<Record<"name" | "patternId" | "status", string>>;
+type FormErrors = Partial<Record<'name' | 'patternId' | 'status', string>>;
 
 export function ProjectForm({
   patternOptions,
   initialValues,
-  submitLabel = "Save Project",
+  submitLabel = 'Save Project',
   onSubmit,
   onCancel,
   submitError = null,
@@ -44,18 +44,21 @@ export function ProjectForm({
 }: ProjectFormProps) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [values, setValues] = useState<ProjectFormValues>({
-    name: initialValues?.name ?? "",
-    patternId: initialValues?.patternId ?? "",
-    status: initialValues?.status ?? "planned",
-    startDate: initialValues?.startDate ?? "",
-    endDate: initialValues?.endDate ?? "",
-    notes: initialValues?.notes ?? "",
+    name: initialValues?.name ?? '',
+    patternId: initialValues?.patternId ?? '',
+    status: initialValues?.status ?? 'planned',
+    startDate: initialValues?.startDate ?? '',
+    endDate: initialValues?.endDate ?? '',
+    notes: initialValues?.notes ?? '',
   });
 
-  function update<K extends keyof ProjectFormValues>(key: K, value: ProjectFormValues[K]) {
+  function update<K extends keyof ProjectFormValues>(
+    key: K,
+    value: ProjectFormValues[K],
+  ) {
     setValues((prev) => ({ ...prev, [key]: value }));
 
-    if (key === "name" || key === "patternId" || key === "status") {
+    if (key === 'name' || key === 'patternId' || key === 'status') {
       setErrors((prev) => ({ ...prev, [key]: undefined }));
     }
   }
@@ -66,15 +69,15 @@ export function ProjectForm({
     const nextErrors: FormErrors = {};
 
     if (!values.name.trim()) {
-      nextErrors.name = "Project name is required.";
+      nextErrors.name = 'Project name is required.';
     }
 
     if (!values.patternId) {
-      nextErrors.patternId = "A linked pattern is required.";
+      nextErrors.patternId = 'A linked pattern is required.';
     }
 
     if (!values.status) {
-      nextErrors.status = "Status is required.";
+      nextErrors.status = 'Status is required.';
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -97,16 +100,18 @@ export function ProjectForm({
         <FormField label="Name">
           <TextInput
             value={values.name}
-            onChange={(event) => update("name", event.target.value)}
+            onChange={(event) => update('name', event.target.value)}
             placeholder="Project name"
           />
-          {errors.name ? <p className="text-sm text-rose-600">{errors.name}</p> : null}
+          {errors.name ? (
+            <p className="text-sm text-rose-600">{errors.name}</p>
+          ) : null}
         </FormField>
 
         <FormField label="Linked Pattern">
           <SelectInput
             value={values.patternId}
-            onChange={(event) => update("patternId", event.target.value)}
+            onChange={(event) => update('patternId', event.target.value)}
           >
             <option value="">Select a pattern</option>
             {patternOptions.map((pattern) => (
@@ -115,13 +120,17 @@ export function ProjectForm({
               </option>
             ))}
           </SelectInput>
-          {errors.patternId ? <p className="text-sm text-rose-600">{errors.patternId}</p> : null}
+          {errors.patternId ? (
+            <p className="text-sm text-rose-600">{errors.patternId}</p>
+          ) : null}
         </FormField>
 
         <FormField label="Status">
           <SelectInput
             value={values.status}
-            onChange={(event) => update("status", event.target.value as ProjectStatus)}
+            onChange={(event) =>
+              update('status', event.target.value as ProjectStatus)
+            }
           >
             <option value="planned">Planned</option>
             <option value="in-progress">In Progress</option>
@@ -129,7 +138,9 @@ export function ProjectForm({
             <option value="paused">Paused</option>
             <option value="completed">Completed</option>
           </SelectInput>
-          {errors.status ? <p className="text-sm text-rose-600">{errors.status}</p> : null}
+          {errors.status ? (
+            <p className="text-sm text-rose-600">{errors.status}</p>
+          ) : null}
         </FormField>
       </FormSection>
 
@@ -139,7 +150,7 @@ export function ProjectForm({
             <TextInput
               type="date"
               value={values.startDate}
-              onChange={(event) => update("startDate", event.target.value)}
+              onChange={(event) => update('startDate', event.target.value)}
             />
           </FormField>
 
@@ -147,7 +158,7 @@ export function ProjectForm({
             <TextInput
               type="date"
               value={values.endDate}
-              onChange={(event) => update("endDate", event.target.value)}
+              onChange={(event) => update('endDate', event.target.value)}
             />
           </FormField>
         </div>
@@ -157,7 +168,7 @@ export function ProjectForm({
         <FormField label="Notes">
           <TextArea
             value={values.notes}
-            onChange={(event) => update("notes", event.target.value)}
+            onChange={(event) => update('notes', event.target.value)}
             placeholder="Optional project notes"
           />
         </FormField>
@@ -169,5 +180,5 @@ export function ProjectForm({
         isSubmitting={isSubmitting}
       />
     </form>
-  )
+  );
 }

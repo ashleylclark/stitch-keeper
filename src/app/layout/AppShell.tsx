@@ -1,13 +1,20 @@
-import { useState, type ReactNode } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
-import { BookMarked, HouseHeart, Menu, PackageOpen, Spool, X } from 'lucide-react'
-import { useAppData } from '../state/app-data'
+import { useState, type ReactNode } from 'react';
+import { NavLink, Outlet } from 'react-router-dom';
+import {
+  BookMarked,
+  HouseHeart,
+  Menu,
+  PackageOpen,
+  Spool,
+  X,
+} from 'lucide-react';
+import { useAppData } from '../state/app-data';
 
 type NavItem = {
-  label: string
-  to: string
-  icon: ReactNode
-}
+  label: string;
+  to: string;
+  icon: ReactNode;
+};
 
 const navItems: NavItem[] = [
   {
@@ -30,14 +37,14 @@ const navItems: NavItem[] = [
     to: '/projects',
     icon: <PackageOpen color="currentColor" size={20} />,
   },
-]
+];
 
 function Sidebar({
   mobile = false,
   onNavigate,
 }: {
-  mobile?: boolean
-  onNavigate?: () => void
+  mobile?: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -45,7 +52,9 @@ function Sidebar({
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-rose-500">
           Stitch Keeper
         </p>
-        <h1 className="mt-3 font-serif text-2xl text-stone-900">Fiber Arts HQ</h1>
+        <h1 className="mt-3 font-serif text-2xl text-stone-900">
+          Fiber Arts HQ
+        </h1>
         <p className="mt-2 text-sm leading-6 text-stone-600">
           Keep yarn, patterns, and works in progress in one place.
         </p>
@@ -73,7 +82,11 @@ function Sidebar({
                     <span
                       className={[
                         'flex h-10 w-10 items-center justify-center rounded-xl transition',
-                        isActive ? 'bg-white/15' : mobile ? 'bg-white/70' : 'bg-white/90',
+                        isActive
+                          ? 'bg-white/15'
+                          : mobile
+                            ? 'bg-white/70'
+                            : 'bg-white/90',
                       ].join(' ')}
                     >
                       {item.icon}
@@ -87,12 +100,12 @@ function Sidebar({
         </ul>
       </nav>
     </div>
-  )
+  );
 }
 
 export function AppShell() {
-  const { isLoading, error } = useAppData()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { isLoading, error } = useAppData();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#fffaf7_0%,#f7f1eb_100%)] text-stone-900">
@@ -170,5 +183,5 @@ export function AppShell() {
         </div>
       ) : null}
     </div>
-  )
+  );
 }

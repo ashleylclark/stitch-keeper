@@ -1,15 +1,17 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import Database from 'better-sqlite3'
-import { patterns, projects, stashItems } from './seed-data.js'
+import fs from 'node:fs';
+import path from 'node:path';
+import Database from 'better-sqlite3';
+import { patterns, projects, stashItems } from './seed-data.js';
 
-const sqlitePath = process.env.SQLITE_PATH ?? path.join(process.cwd(), 'data', 'stash-keeper.db')
+const sqlitePath =
+  process.env.SQLITE_PATH ??
+  path.join(process.cwd(), 'data', 'stash-keeper.db');
 
-fs.mkdirSync(path.dirname(sqlitePath), { recursive: true })
+fs.mkdirSync(path.dirname(sqlitePath), { recursive: true });
 
-export const db = new Database(sqlitePath)
+export const db = new Database(sqlitePath);
 
-db.pragma('foreign_keys = ON')
+db.pragma('foreign_keys = ON');
 
 export function initializeDatabase() {
   db.exec(`
@@ -71,16 +73,16 @@ export function initializeDatabase() {
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
       FOREIGN KEY (stash_item_id) REFERENCES stash_items(id) ON DELETE CASCADE
     );
-  `)
+  `);
 
-  seedDatabaseIfEmpty()
+  seedDatabaseIfEmpty();
 }
 
 function seedDatabaseIfEmpty() {
-  const row = db.prepare('SELECT COUNT(*) AS count FROM stash_items').get()
+  const row = db.prepare('SELECT COUNT(*) AS count FROM stash_items').get();
 
   if (row.count > 0) {
-    return
+    return;
   }
 
   const insertStash = db.prepare(`
@@ -89,7 +91,7 @@ function seedDatabaseIfEmpty() {
     ) VALUES (
       @id, @name, @category, @status, @material, @weight, @brand, @color, @quantity, @unit, @size, @notes
     )
-  `)
+  `);
 
   const insertPattern = db.prepare(`
     INSERT INTO patterns (
@@ -97,7 +99,7 @@ function seedDatabaseIfEmpty() {
     ) VALUES (
       @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @category, @difficulty, @notes, @instructions
     )
-  `)
+  `);
 
   const insertRequirement = db.prepare(`
     INSERT INTO pattern_requirements (
@@ -105,7 +107,7 @@ function seedDatabaseIfEmpty() {
     ) VALUES (
       @id, @patternId, @category, @name, @weight, @quantityNeeded, @unit, @size, @notes
     )
-  `)
+  `);
 
   const insertProject = db.prepare(`
     INSERT INTO projects (
@@ -113,12 +115,12 @@ function seedDatabaseIfEmpty() {
     ) VALUES (
       @id, @name, @patternId, @startDate, @endDate, @status, @notes
     )
-  `)
+  `);
 
   const insertProjectStashItem = db.prepare(`
     INSERT INTO project_stash_items (project_id, stash_item_id)
     VALUES (@projectId, @stashItemId)
-  `)
+  `);
 
   db.transaction(() => {
     for (const item of stashItems) {
@@ -135,7 +137,7 @@ function seedDatabaseIfEmpty() {
         unit: item.unit ?? null,
         size: item.size ?? null,
         notes: item.notes ?? null,
-      })
+      });
     }
 
     for (const pattern of patterns) {
@@ -150,7 +152,7 @@ function seedDatabaseIfEmpty() {
         difficulty: pattern.difficulty ?? null,
         notes: pattern.notes ?? null,
         instructions: pattern.instructions,
-      })
+      });
 
       for (const requirement of pattern.requirements ?? []) {
         insertRequirement.run({
@@ -163,7 +165,7 @@ function seedDatabaseIfEmpty() {
           unit: requirement.unit ?? null,
           size: requirement.size ?? null,
           notes: requirement.notes ?? null,
-        })
+        });
       }
     }
 
@@ -176,11 +178,11 @@ function seedDatabaseIfEmpty() {
         endDate: project.endDate ?? null,
         status: project.status,
         notes: project.notes ?? null,
-      })
+      });
 
       for (const stashItemId of project.stashItemIds ?? []) {
-        insertProjectStashItem.run({ projectId: project.id, stashItemId })
+        insertProjectStashItem.run({ projectId: project.id, stashItemId });
       }
     }
-  })()
+  })();
 }

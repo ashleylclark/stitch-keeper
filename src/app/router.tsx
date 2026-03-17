@@ -1,11 +1,11 @@
-import { createBrowserRouter } from 'react-router-dom'
-import { AppShell } from './layout/AppShell'
-import HomePage from '../pages/home/HomePage'
-import StashPage from '../pages/stash/StashPage'
-import PatternsPage from '../pages/patterns/PatternsPage'
-import PatternDetailPage from '../pages/patterns/PatternDetailPage'
-import ProjectsPage from '../pages/projects/ProjectsPage'
-import ProjectDetailPage from '../pages/projects/ProjectDetailPage'
+import { createBrowserRouter } from 'react-router-dom';
+import { AppShell } from './layout/AppShell';
+import HomePage from '../pages/home/HomePage';
+import StashPage from '../pages/stash/StashPage';
+import PatternsPage from '../pages/patterns/PatternsPage';
+import PatternDetailPage from '../pages/patterns/PatternDetailPage';
+import ProjectsPage from '../pages/projects/ProjectsPage';
+import ProjectDetailPage from '../pages/projects/ProjectDetailPage';
 
 export const router = createBrowserRouter([
   {
@@ -38,4 +38,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-])
+]);

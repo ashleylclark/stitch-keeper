@@ -1,8 +1,8 @@
-import type { Pattern } from '../../types/models'
-import { fetchJson } from '../../shared/api/fetchJson'
+import type { Pattern } from '../../types/models';
+import { fetchJson } from '../../shared/api/fetchJson';
 
 export function fetchPatterns() {
-  return fetchJson<Pattern[]>('/api/patterns')
+  return fetchJson<Pattern[]>('/api/patterns');
 }
 
 export function createPattern(pattern: Pattern) {
@@ -10,7 +10,7 @@ export function createPattern(pattern: Pattern) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(pattern),
-  })
+  });
 }
 
 export function savePattern(pattern: Pattern) {
@@ -18,9 +18,13 @@ export function savePattern(pattern: Pattern) {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(pattern),
-  })
+  });
 }
 
 export function removePattern(patternId: string) {
-  return fetchJson<void>(`/api/patterns/${patternId}`, { method: 'DELETE' }, true)
+  return fetchJson<void>(
+    `/api/patterns/${patternId}`,
+    { method: 'DELETE' },
+    true,
+  );
 }

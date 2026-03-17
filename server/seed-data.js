@@ -33,7 +33,7 @@ export const stashItems = [
     unit: 'skeins',
     status: 'in-stock',
   },
-]
+];
 
 export const patterns = [
   {
@@ -44,14 +44,30 @@ export const patterns = [
     category: 'accessory',
     difficulty: 'beginner',
     notes: 'Example notes.',
-    instructions: 'Chain 60. Join with slip stitch to form a ring, being careful not to twist the chain. Round 1: Chain 2 (counts as first dc), dc in each chain around. Join with slst to top of beginning chain-2. Round 2: Chain 2, double crochet in each stitch around. Join with slst to top of beginning chain-2. Repeat Round 2 until cowl measures approximately 12 inches from the join, or desired length. Fasten off and weave in ends.',
+    instructions:
+      'Chain 60. Join with slip stitch to form a ring, being careful not to twist the chain. Round 1: Chain 2 (counts as first dc), dc in each chain around. Join with slst to top of beginning chain-2. Round 2: Chain 2, double crochet in each stitch around. Join with slst to top of beginning chain-2. Repeat Round 2 until cowl measures approximately 12 inches from the join, or desired length. Fasten off and weave in ends.',
     requirements: [
-      { id: '101-yarn', category: 'yarn', name: 'Pattern example yarn', weight: 'bulky', quantityNeeded: 2, unit: 'skeins' },
+      {
+        id: '101-yarn',
+        category: 'yarn',
+        name: 'Pattern example yarn',
+        weight: 'bulky',
+        quantityNeeded: 2,
+        unit: 'skeins',
+      },
       { id: '101-hook', category: 'hook', name: '8 mm hook', size: '8 mm' },
     ],
   },
-]
+];
 
 export const projects = [
-  { id: 'example-project', name: 'Example Project', patternId: '101', startDate: '2024-05-01', stashItemIds: ['s1', 's2'], status: 'in-progress', notes: 'On round 12' },
-]
+  {
+    id: 'example-project',
+    name: 'Example Project',
+    patternId: '101',
+    startDate: '2024-05-01',
+    stashItemIds: ['s1', 's2'],
+    status: 'in-progress',
+    notes: 'On round 12',
+  },
+];

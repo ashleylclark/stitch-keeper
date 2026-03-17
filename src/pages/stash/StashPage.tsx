@@ -1,13 +1,20 @@
-import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { Modal } from '../../components/Modal'
-import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { StashForm, type StashFormValues } from './components/StashForm'
-import { useAppData } from '../../app/state/app-data'
-import type { ItemCategory, StashItem, StashStatus, YarnWeight } from '../../types/models'
+import { useState } from 'react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Modal } from '../../components/Modal';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { StashForm, type StashFormValues } from './components/StashForm';
+import { useAppData } from '../../app/state/app-data';
+import type {
+  ItemCategory,
+  StashItem,
+  StashStatus,
+  YarnWeight,
+} from '../../types/models';
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof Error
+    ? error.message
+    : 'Something went wrong. Please try again.';
 }
 
 type FilterOption<T extends string> = {
@@ -21,49 +28,51 @@ type StashCardProps = {
   onDelete: (item: StashItem) => void;
 };
 
-const categoryOptions: FilterOption<ItemCategory | "all">[] = [
-  { label: "All categories", value: "all" },
-  { label: "Yarn", value: "yarn" },
-  { label: "Hooks", value: "hook" },
-  { label: "Needles", value: "needle" },
-  { label: "Safety eyes", value: "eyes" },
-  { label: "Stuffing", value: "stuffing" },
-  { label: "Other notions", value: "other" },
+const categoryOptions: FilterOption<ItemCategory | 'all'>[] = [
+  { label: 'All categories', value: 'all' },
+  { label: 'Yarn', value: 'yarn' },
+  { label: 'Hooks', value: 'hook' },
+  { label: 'Needles', value: 'needle' },
+  { label: 'Safety eyes', value: 'eyes' },
+  { label: 'Stuffing', value: 'stuffing' },
+  { label: 'Other notions', value: 'other' },
 ];
 
-const yarnWeightOptions: FilterOption<YarnWeight | "all">[] = [
-  { label: "All weights", value: "all" },
-  { label: "0 - Lace", value: "lace" },
-  { label: "1 - Super Fine", value: "super-fine" },
-  { label: "2 - Fine", value: "fine" },
-  { label: "3 - Light", value: "light" },
-  { label: "4 - Medium", value: "medium" },
-  { label: "5 - Bulky", value: "bulky" },
-  { label: "6 - Super bulky", value: "super-bulky" },
-  { label: "7 - Jumbo", value: "jumbo" },
+const yarnWeightOptions: FilterOption<YarnWeight | 'all'>[] = [
+  { label: 'All weights', value: 'all' },
+  { label: '0 - Lace', value: 'lace' },
+  { label: '1 - Super Fine', value: 'super-fine' },
+  { label: '2 - Fine', value: 'fine' },
+  { label: '3 - Light', value: 'light' },
+  { label: '4 - Medium', value: 'medium' },
+  { label: '5 - Bulky', value: 'bulky' },
+  { label: '6 - Super bulky', value: 'super-bulky' },
+  { label: '7 - Jumbo', value: 'jumbo' },
 ];
 
 const statusStyles: Record<StashStatus, string> = {
-  "in-stock": "bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200",
-  "low-stock": "bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200",
-  "out-of-stock": "bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200",
-  "not-replacing": "bg-stone-200 text-stone-700 ring-1 ring-inset ring-stone-300",
+  'in-stock':
+    'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200',
+  'low-stock': 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
+  'out-of-stock': 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200',
+  'not-replacing':
+    'bg-stone-200 text-stone-700 ring-1 ring-inset ring-stone-300',
 };
 
 const statusLabels: Record<StashStatus, string> = {
-  "in-stock": "In Stock",
-  "low-stock": "Low Stock",
-  "out-of-stock": "Out of Stock",
-  "not-replacing": "Not Replacing",
+  'in-stock': 'In Stock',
+  'low-stock': 'Low Stock',
+  'out-of-stock': 'Out of Stock',
+  'not-replacing': 'Not Replacing',
 };
 
 const categoryLabels: Record<ItemCategory, string> = {
-  yarn: "Yarn",
-  hook: "Hook",
-  needle: "Needle",
-  eyes: "Safety Eyes",
-  stuffing: "Stuffing",
-  other: "Other",
+  yarn: 'Yarn',
+  hook: 'Hook',
+  needle: 'Needle',
+  eyes: 'Safety Eyes',
+  stuffing: 'Stuffing',
+  other: 'Other',
 };
 
 function DetailPill({ label }: { label: string }) {
@@ -74,14 +83,14 @@ function DetailPill({ label }: { label: string }) {
   );
 }
 
-function StatusBadge({ status = "in-stock" }: { status?: StashStatus }) {
+function StatusBadge({ status = 'in-stock' }: { status?: StashStatus }) {
   return (
     <span
       className={[
-        "inline-flex min-w-[5.75rem] justify-center rounded-full px-3 py-1 text-center text-xs font-semibold",
-        status === "in-stock" ? "whitespace-nowrap" : "whitespace-normal",
+        'inline-flex min-w-[5.75rem] justify-center rounded-full px-3 py-1 text-center text-xs font-semibold',
+        status === 'in-stock' ? 'whitespace-nowrap' : 'whitespace-normal',
         statusStyles[status],
-      ].join(" ")}
+      ].join(' ')}
     >
       {statusLabels[status]}
     </span>
@@ -90,12 +99,12 @@ function StatusBadge({ status = "in-stock" }: { status?: StashStatus }) {
 
 function ActionButton({
   label,
-  tone = "default",
+  tone = 'default',
   onClick,
   children,
 }: {
   label: string;
-  tone?: "default" | "danger";
+  tone?: 'default' | 'danger';
   onClick: () => void;
   children: React.ReactNode;
 }) {
@@ -105,11 +114,11 @@ function ActionButton({
       aria-label={label}
       onClick={onClick}
       className={[
-        "inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white transition",
-        tone === "danger"
-          ? "border-rose-200 text-rose-600 hover:bg-rose-50"
-          : "border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900",
-      ].join(" ")}
+        'inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white transition',
+        tone === 'danger'
+          ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
+          : 'border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900',
+      ].join(' ')}
     >
       {children}
     </button>
@@ -131,17 +140,26 @@ function StashCard({ item, onEdit, onDelete }: StashCardProps) {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-stone-900">{item.name}</h2>
+            <h2 className="text-lg font-semibold text-stone-900">
+              {item.name}
+            </h2>
             <p className="text-sm text-stone-500">
-              {item.quantity} {item.unit ?? "items"}
+              {item.quantity} {item.unit ?? 'items'}
             </p>
           </div>
           <div className="flex items-center gap-2 self-start">
             <StatusBadge status={item.status} />
-            <ActionButton label={`Edit ${item.name}`} onClick={() => onEdit(item)}>
+            <ActionButton
+              label={`Edit ${item.name}`}
+              onClick={() => onEdit(item)}
+            >
               <Pencil size={16} />
             </ActionButton>
-            <ActionButton label={`Delete ${item.name}`} tone="danger" onClick={() => onDelete(item)}>
+            <ActionButton
+              label={`Delete ${item.name}`}
+              tone="danger"
+              onClick={() => onDelete(item)}
+            >
               <Trash2 size={16} />
             </ActionButton>
           </div>
@@ -154,7 +172,7 @@ function StashCard({ item, onEdit, onDelete }: StashCardProps) {
         </div>
 
         <p className="text-sm leading-6 text-stone-600">
-          {item.notes ?? "No notes yet for this stash item."}
+          {item.notes ?? 'No notes yet for this stash item.'}
         </p>
       </div>
     </article>
@@ -166,23 +184,33 @@ function FieldLabel({ label }: { label: string }) {
 }
 
 export default function Stash() {
-  const { stashItems, addStashItem, updateStashItem, deleteStashItem } = useAppData();
-  const [selectedCategory, setSelectedCategory] = useState<ItemCategory | "all">("all");
-  const [selectedWeight, setSelectedWeight] = useState<YarnWeight | "all">("all");
+  const { stashItems, addStashItem, updateStashItem, deleteStashItem } =
+    useAppData();
+  const [selectedCategory, setSelectedCategory] = useState<
+    ItemCategory | 'all'
+  >('all');
+  const [selectedWeight, setSelectedWeight] = useState<YarnWeight | 'all'>(
+    'all',
+  );
   const [editingItem, setEditingItem] = useState<StashItem | null>(null);
-  const [itemPendingDelete, setItemPendingDelete] = useState<StashItem | null>(null);
+  const [itemPendingDelete, setItemPendingDelete] = useState<StashItem | null>(
+    null,
+  );
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const showWeightFilter = selectedCategory === "yarn";
+  const showWeightFilter = selectedCategory === 'yarn';
 
   const filteredItems = stashItems.filter((item) => {
-    const categoryMatches = selectedCategory === "all" || item.category === selectedCategory;
+    const categoryMatches =
+      selectedCategory === 'all' || item.category === selectedCategory;
     const weightMatches =
-      !showWeightFilter || selectedWeight === "all" || item.weight === selectedWeight;
+      !showWeightFilter ||
+      selectedWeight === 'all' ||
+      item.weight === selectedWeight;
 
     return categoryMatches && weightMatches;
   });
@@ -190,12 +218,12 @@ export default function Stash() {
   function closeModal() {
     setIsAddItemOpen(false);
     setEditingItem(null);
-    setSubmitError(null)
+    setSubmitError(null);
   }
 
   async function handleSubmit(values: StashFormValues) {
-    setSubmitError(null)
-    setIsSubmitting(true)
+    setSubmitError(null);
+    setIsSubmitting(true);
 
     try {
       const nextItem: StashItem = {
@@ -203,7 +231,7 @@ export default function Stash() {
         category: values.category,
         name: values.name.trim(),
         quantity: Number(values.quantity),
-        status: editingItem?.status ?? "in-stock",
+        status: editingItem?.status ?? 'in-stock',
         brand: values.brand.trim() || undefined,
         color: values.color.trim() || undefined,
         weight: values.weight || undefined,
@@ -221,9 +249,9 @@ export default function Stash() {
 
       closeModal();
     } catch (error) {
-      setSubmitError(getErrorMessage(error))
+      setSubmitError(getErrorMessage(error));
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -232,16 +260,16 @@ export default function Stash() {
       return;
     }
 
-    setDeleteError(null)
-    setIsDeleting(true)
+    setDeleteError(null);
+    setIsDeleting(true);
 
     try {
       await deleteStashItem(itemPendingDelete.id);
       setItemPendingDelete(null);
     } catch (error) {
-      setDeleteError(getErrorMessage(error))
+      setDeleteError(getErrorMessage(error));
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
   }
 
@@ -257,8 +285,8 @@ export default function Stash() {
               Stash
             </h1>
             <p className="max-w-2xl text-base leading-7 text-stone-600">
-              Browse yarn, tools, and notions in one place, with quick filters for the stash
-              you need right now.
+              Browse yarn, tools, and notions in one place, with quick filters
+              for the stash you need right now.
             </p>
           </div>
 
@@ -280,10 +308,12 @@ export default function Stash() {
               <select
                 value={selectedCategory}
                 onChange={(event) => {
-                  const nextCategory = event.target.value as ItemCategory | "all";
+                  const nextCategory = event.target.value as
+                    | ItemCategory
+                    | 'all';
                   setSelectedCategory(nextCategory);
-                  if (nextCategory !== "yarn") {
-                    setSelectedWeight("all");
+                  if (nextCategory !== 'yarn') {
+                    setSelectedWeight('all');
                   }
                 }}
                 className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300"
@@ -300,7 +330,9 @@ export default function Stash() {
               <FieldLabel label="Yarn weight" />
               <select
                 value={selectedWeight}
-                onChange={(event) => setSelectedWeight(event.target.value as YarnWeight | "all")}
+                onChange={(event) =>
+                  setSelectedWeight(event.target.value as YarnWeight | 'all')
+                }
                 disabled={!showWeightFilter}
                 className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400 focus:border-rose-300"
               >
@@ -313,7 +345,10 @@ export default function Stash() {
             </label>
 
             <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-stone-600">
-              Showing <span className="font-semibold text-stone-900">{filteredItems.length}</span>{" "}
+              Showing{' '}
+              <span className="font-semibold text-stone-900">
+                {filteredItems.length}
+              </span>{' '}
               items
             </div>
           </div>
@@ -335,7 +370,7 @@ export default function Stash() {
       </section>
 
       <Modal
-        title={editingItem ? "Edit Stash Item" : "Add To Stash"}
+        title={editingItem ? 'Edit Stash Item' : 'Add To Stash'}
         isOpen={isAddItemOpen || Boolean(editingItem)}
         onClose={closeModal}
       >
@@ -346,18 +381,20 @@ export default function Stash() {
                   category: editingItem.category,
                   name: editingItem.name,
                   quantity: editingItem.quantity,
-                  unit: editingItem.unit ?? "",
-                  brand: editingItem.brand ?? "",
-                  color: editingItem.color ?? "",
-                  weight: editingItem.weight ?? "",
-                  size: editingItem.size ?? "",
-                  material: editingItem.material ?? "",
-                  notes: editingItem.notes ?? "",
+                  unit: editingItem.unit ?? '',
+                  brand: editingItem.brand ?? '',
+                  color: editingItem.color ?? '',
+                  weight: editingItem.weight ?? '',
+                  size: editingItem.size ?? '',
+                  material: editingItem.material ?? '',
+                  notes: editingItem.notes ?? '',
                 }
               : undefined
           }
-          submitLabel={editingItem ? "Save Changes" : "Save Stash Item"}
-          onSubmit={(values) => { void handleSubmit(values) }}
+          submitLabel={editingItem ? 'Save Changes' : 'Save Stash Item'}
+          onSubmit={(values) => {
+            void handleSubmit(values);
+          }}
           onCancel={closeModal}
           submitError={submitError}
           isSubmitting={isSubmitting}
@@ -370,13 +407,15 @@ export default function Stash() {
         description={
           itemPendingDelete
             ? `Delete "${itemPendingDelete.name}" from your stash? This cannot be undone.`
-            : ""
+            : ''
         }
         confirmLabel="Delete Item"
-        onConfirm={() => { void handleDeleteConfirm() }}
+        onConfirm={() => {
+          void handleDeleteConfirm();
+        }}
         onCancel={() => {
-          setItemPendingDelete(null)
-          setDeleteError(null)
+          setItemPendingDelete(null);
+          setDeleteError(null);
         }}
         error={deleteError}
         isConfirming={isDeleting}
