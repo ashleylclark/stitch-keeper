@@ -18,9 +18,9 @@ export function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4 sm:p-6">
       <div
-        className={`w-full rounded-2xl bg-white shadow-xl ${maxWidthClassName}`}
+        className={`mx-auto mt-4 w-full rounded-2xl bg-white shadow-xl sm:mt-8 ${maxWidthClassName}`}
       >
         <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
           <h2 className="text-lg font-semibold text-stone-800">{title}</h2>
@@ -35,7 +35,7 @@ export function Modal({
           </button>
         </div>
 
-        <div className="max-h-[80vh] overflow-y-auto p-5">{children}</div>
+        <div className="p-5">{children}</div>
       </div>
     </div>
   );
