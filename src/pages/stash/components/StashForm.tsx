@@ -138,7 +138,7 @@ export function StashForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {submitError ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-100">
           {submitError}
         </div>
       ) : null}
@@ -168,7 +168,9 @@ export function StashForm({
               placeholder="Item name"
             />
             {errors.name ? (
-              <p className="text-sm text-rose-600">{errors.name}</p>
+              <p className="text-sm text-rose-600 dark:text-rose-300">
+                {errors.name}
+              </p>
             ) : null}
           </FormField>
 
@@ -186,7 +188,9 @@ export function StashForm({
               placeholder="0"
             />
             {errors.quantity ? (
-              <p className="text-sm text-rose-600">{errors.quantity}</p>
+              <p className="text-sm text-rose-600 dark:text-rose-300">
+                {errors.quantity}
+              </p>
             ) : null}
           </FormField>
 

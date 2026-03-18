@@ -19,10 +19,11 @@ type DashboardItem = {
 };
 
 const badgeClasses: Record<StatusTone, string> = {
-  rose: 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200',
-  amber: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
-  emerald: 'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200',
-  sky: 'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200',
+  rose: 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:ring-rose-800',
+  amber: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-800',
+  emerald:
+    'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-900',
+  sky: 'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-950/40 dark:text-sky-200 dark:ring-sky-900',
 };
 
 const projectStatusConfig: Record<
@@ -55,14 +56,14 @@ function formatDate(date: string) {
 
 function StatCard({ label, value, helperText }: HomeStat) {
   return (
-    <article className="rounded-[1.75rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
-      <p className="text-sm font-medium text-stone-500">{label}</p>
+    <article className="rounded-[1.75rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
+      <p className="text-sm font-medium text-stone-500 dark:text-stone-400">{label}</p>
       <div className="mt-4 flex items-end gap-2">
-        <span className="font-serif text-4xl leading-none text-stone-900">
+        <span className="font-serif text-4xl leading-none text-stone-900 dark:text-stone-100">
           {value}
         </span>
       </div>
-      <p className="mt-4 text-sm leading-6 text-stone-600">{helperText}</p>
+      <p className="mt-4 text-sm leading-6 text-stone-600 dark:text-stone-400">{helperText}</p>
     </article>
   );
 }
@@ -90,24 +91,24 @@ function DashboardList({
   items: DashboardItem[];
 }) {
   return (
-    <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
+    <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
       <div className="space-y-2">
-        <h2 className="font-serif text-2xl text-stone-900">{title}</h2>
-        <p className="text-sm leading-6 text-stone-600">{description}</p>
+        <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-100">{title}</h2>
+        <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">{description}</p>
       </div>
 
       <div className="mt-6 space-y-4">
         {items.map((item) => (
           <article
             key={item.id}
-            className="rounded-[1.5rem] border border-stone-100 bg-stone-50/80 px-4 py-4 transition hover:border-rose-100 hover:bg-rose-50/50"
+            className="rounded-[1.5rem] border border-stone-100 bg-stone-50/80 px-4 py-4 transition hover:border-rose-100 hover:bg-rose-50/50 dark:border-stone-800 dark:bg-stone-950/70 dark:hover:border-rose-900/70 dark:hover:bg-stone-900"
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-1">
-                <h3 className="text-base font-semibold text-stone-900">
+                <h3 className="text-base font-semibold text-stone-900 dark:text-stone-100">
                   {item.name}
                 </h3>
-                <p className="text-sm leading-6 text-stone-600">
+                <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">
                   {item.detail}
                 </p>
               </div>
@@ -205,13 +206,13 @@ export default function Home() {
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-8">
       <div className="space-y-3">
-        <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500">
+        <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500 dark:text-rose-300">
           Stitch Keeper
         </p>
-        <h1 className="font-serif text-4xl tracking-tight text-stone-900 sm:text-5xl">
+        <h1 className="font-serif text-4xl tracking-tight text-stone-900 dark:text-stone-100 sm:text-5xl">
           Home
         </h1>
-        <p className="max-w-2xl text-base leading-7 text-stone-600">
+        <p className="max-w-2xl text-base leading-7 text-stone-600 dark:text-stone-400">
           A quick snapshot of the parts of your crochet stash you will check
           most often.
         </p>

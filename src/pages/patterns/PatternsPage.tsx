@@ -44,9 +44,9 @@ const requirementOptions: { label: string; value: RequirementFilter }[] = [
 ];
 
 const difficultyStyles: Record<NonNullable<Pattern['difficulty']>, string> = {
-  beginner: 'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200',
-  intermediate: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
-  advanced: 'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200',
+  beginner: 'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200 dark:bg-lime-950/40 dark:text-lime-200 dark:ring-lime-900',
+  intermediate: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-900',
+  advanced: 'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200 dark:bg-orange-950/40 dark:text-orange-200 dark:ring-orange-900',
 };
 
 const compactDifficultyLabels: Record<
@@ -69,7 +69,11 @@ function titleCase(value: string) {
 }
 
 function FieldLabel({ label }: { label: string }) {
-  return <span className="text-sm font-medium text-stone-700">{label}</span>;
+  return (
+    <span className="text-sm font-medium text-stone-700 dark:text-stone-300">
+      {label}
+    </span>
+  );
 }
 
 function TableDifficultyToken({
@@ -79,7 +83,7 @@ function TableDifficultyToken({
 }) {
   if (!difficulty) {
     return (
-      <span className="inline-flex w-fit items-center rounded-full bg-stone-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500">
+      <span className="inline-flex w-fit items-center rounded-full bg-stone-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500 dark:bg-stone-800 dark:text-stone-400">
         N/A
       </span>
     );
@@ -101,9 +105,9 @@ function TableDifficultyToken({
 function TableStatusIndicator({ status }: { status?: PatternMatchStatus }) {
   if (!status) {
     return (
-      <span className="inline-flex items-center gap-2 text-xs font-medium text-stone-500">
+      <span className="inline-flex items-center gap-2 text-xs font-medium text-stone-500 dark:text-stone-400">
         <span
-          className="h-2.5 w-2.5 rounded-full bg-stone-300"
+          className="h-2.5 w-2.5 rounded-full bg-stone-300 dark:bg-stone-600"
           aria-hidden="true"
         />
         Unscored
@@ -118,7 +122,7 @@ function TableStatusIndicator({ status }: { status?: PatternMatchStatus }) {
   };
 
   return (
-    <span className="inline-flex items-center gap-2 whitespace-nowrap text-xs font-semibold text-stone-700">
+    <span className="inline-flex items-center gap-2 whitespace-nowrap text-xs font-semibold text-stone-700 dark:text-stone-200">
       <span
         className={['h-2.5 w-2.5 rounded-full', dotClasses[status]].join(' ')}
         aria-hidden="true"
@@ -155,7 +159,7 @@ function RowActions({
             onToggle();
           }
         }}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-rose-200 hover:text-stone-900"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-300 dark:hover:border-rose-400 dark:hover:text-stone-100"
       >
         <Ellipsis size={16} />
       </button>
@@ -163,13 +167,13 @@ function RowActions({
       {isOpen ? (
         <div
           role="menu"
-          className="absolute right-0 top-12 z-10 min-w-36 rounded-2xl border border-stone-200 bg-white p-2 shadow-[0_18px_40px_-24px_rgba(41,37,36,0.45)]"
+          className="absolute right-0 top-12 z-10 min-w-36 rounded-2xl border border-stone-200 bg-white p-2 shadow-[0_18px_40px_-24px_rgba(41,37,36,0.45)] dark:border-stone-700 dark:bg-stone-950 dark:shadow-[0_18px_40px_-24px_rgba(0,0,0,0.7)]"
         >
           <button
             type="button"
             role="menuitem"
             onClick={onEdit}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-stone-700 transition hover:bg-stone-100"
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-stone-700 transition hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800"
           >
             <Pencil size={15} />
             Edit
@@ -178,7 +182,7 @@ function RowActions({
             type="button"
             role="menuitem"
             onClick={onDelete}
-            className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+            className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40"
           >
             <Trash2 size={15} />
             Delete
@@ -294,13 +298,13 @@ export default function Patterns() {
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
-            <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500">
+            <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500 dark:text-rose-300">
               Stitch Keeper
             </p>
-            <h1 className="font-serif text-4xl tracking-tight text-stone-900 sm:text-5xl">
+            <h1 className="font-serif text-4xl tracking-tight text-stone-900 dark:text-stone-100 sm:text-5xl">
               Patterns
             </h1>
-            <p className="max-w-2xl text-base leading-7 text-stone-600">
+            <p className="max-w-2xl text-base leading-7 text-stone-600 dark:text-stone-300">
               Browse your pattern library and narrow it down by category,
               difficulty, and stash readiness.
             </p>
@@ -310,7 +314,7 @@ export default function Patterns() {
             type="button"
             aria-label="Add pattern"
             onClick={() => setIsAddPatternOpen(true)}
-            className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 sm:gap-2 sm:px-5"
+            className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-rose-400 dark:text-stone-950 dark:hover:bg-rose-300 sm:gap-2 sm:px-5"
           >
             <Plus size={18} />
             <span className="hidden whitespace-nowrap sm:inline">
@@ -319,7 +323,7 @@ export default function Patterns() {
           </button>
         </div>
 
-        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-end">
             <label className="space-y-2">
               <FieldLabel label="Category" />
@@ -328,7 +332,7 @@ export default function Patterns() {
                 onChange={(event) =>
                   setSelectedCategory(event.target.value as CategoryFilter)
                 }
-                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300"
+                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:focus:border-rose-400"
               >
                 {categoryOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -345,7 +349,7 @@ export default function Patterns() {
                 onChange={(event) =>
                   setSelectedDifficulty(event.target.value as DifficultyFilter)
                 }
-                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300"
+                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:focus:border-rose-400"
               >
                 {difficultyOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -364,7 +368,7 @@ export default function Patterns() {
                     event.target.value as RequirementFilter,
                   )
                 }
-                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300"
+                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:focus:border-rose-400"
               >
                 {requirementOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -374,9 +378,9 @@ export default function Patterns() {
               </select>
             </label>
 
-            <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-stone-600">
+            <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-stone-600 dark:bg-rose-950/30 dark:text-stone-300">
               Showing{' '}
-              <span className="font-semibold text-stone-900">
+              <span className="font-semibold text-stone-900 dark:text-stone-100">
                 {filteredPatterns.length}
               </span>{' '}
               patterns
@@ -384,10 +388,10 @@ export default function Patterns() {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
           <table className="w-full table-fixed">
             <thead>
-              <tr className="border-b border-stone-200/70 text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
+              <tr className="border-b border-stone-200/70 text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:border-stone-800 dark:text-stone-400">
                 <th className="w-[50%] px-4 py-4 text-left sm:px-5 md:w-[36%]">
                   Pattern
                 </th>
@@ -403,27 +407,27 @@ export default function Patterns() {
                 <th className="w-16 px-3 py-4 text-right sm:px-4"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100">
+            <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
               {filteredPatterns.map((pattern) => {
                 const summary = patternMatchById.get(pattern.id);
 
                 return (
-                  <tr key={pattern.id} className="transition hover:bg-stone-50">
+                  <tr key={pattern.id} className="transition hover:bg-stone-50 dark:hover:bg-stone-800/60">
                     <td className="px-4 py-5 align-center sm:px-5">
                       <Link
                         to={`/patterns/${pattern.id}`}
-                        className="block text-sm font-semibold leading-6 text-stone-900 hover:underline sm:text-base"
+                        className="block text-sm font-semibold leading-6 text-stone-900 hover:underline dark:text-stone-100 sm:text-base"
                       >
                         {pattern.name}
                       </Link>
                       <div className="mt-2 flex flex-wrap items-center gap-2 md:hidden">
                         <TableDifficultyToken difficulty={pattern.difficulty} />
                       </div>
-                      <p className="mt-1 hidden text-sm leading-6 text-stone-600 xl:block">
+                      <p className="mt-1 hidden text-sm leading-6 text-stone-600 dark:text-stone-300 xl:block">
                         {pattern.notes ?? 'No notes yet for this pattern.'}
                       </p>
                     </td>
-                    <td className="hidden px-4 py-5 align-center text-sm text-stone-700 md:table-cell xl:px-5">
+                    <td className="hidden px-4 py-5 align-center text-sm text-stone-700 dark:text-stone-300 md:table-cell xl:px-5">
                       {pattern.category
                         ? titleCase(pattern.category)
                         : 'Uncategorized'}

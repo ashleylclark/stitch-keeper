@@ -162,7 +162,7 @@ export function PatternForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {submitError ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-100">
           {submitError}
         </div>
       ) : null}
@@ -176,7 +176,9 @@ export function PatternForm({
               placeholder="Pattern name"
             />
             {errors.name ? (
-              <p className="text-sm text-rose-600">{errors.name}</p>
+              <p className="text-sm text-rose-600 dark:text-rose-300">
+                {errors.name}
+              </p>
             ) : null}
           </FormField>
 
@@ -281,7 +283,9 @@ export function PatternForm({
               placeholder="Cotton yarn, 5 mm hook"
             />
             {requirementError ? (
-              <p className="text-sm text-rose-600">{requirementError}</p>
+              <p className="text-sm text-rose-600 dark:text-rose-300">
+                {requirementError}
+              </p>
             ) : null}
           </FormField>
 
@@ -373,7 +377,7 @@ export function PatternForm({
         <button
           type="button"
           onClick={addRequirement}
-          className="cursor-pointer rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700"
+          className="cursor-pointer rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 dark:border-stone-700 dark:text-stone-200"
         >
           Add Requirement
         </button>
@@ -382,7 +386,7 @@ export function PatternForm({
           {values.requirements.map((requirement) => (
             <li
               key={requirement.id}
-              className="flex items-center justify-between rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm"
+              className="flex items-center justify-between rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200"
             >
               <span>
                 <span className="font-medium capitalize">
@@ -394,7 +398,7 @@ export function PatternForm({
               <button
                 type="button"
                 onClick={() => removeRequirement(requirement.id)}
-                className="cursor-pointer text-sm text-red-600"
+                className="cursor-pointer text-sm text-red-600 dark:text-rose-300"
               >
                 Remove
               </button>
@@ -411,7 +415,9 @@ export function PatternForm({
             placeholder="Paste or type the pattern instructions here."
           />
           {errors.instructions ? (
-            <p className="text-sm text-rose-600">{errors.instructions}</p>
+            <p className="text-sm text-rose-600 dark:text-rose-300">
+              {errors.instructions}
+            </p>
           ) : null}
         </FormField>
       </FormSection>

@@ -42,35 +42,35 @@ const statusConfig: Record<ProjectStatus, StatusConfig> = {
   planned: {
     label: 'Planned',
     dateLabel: null,
-    badgeClassName: 'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200',
+    badgeClassName: 'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-950/40 dark:text-sky-200 dark:ring-sky-900',
   },
   'in-progress': {
     label: 'In Progress',
     dateLabel: 'Started',
     badgeClassName:
-      'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200',
+      'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200 dark:ring-emerald-800',
   },
   'need-supplies': {
     label: 'Need Supplies',
     dateLabel: 'Started',
     badgeClassName:
-      'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
+      'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-800',
   },
   paused: {
     label: 'Paused',
     dateLabel: 'Started',
     badgeClassName:
-      'bg-stone-200 text-stone-700 ring-1 ring-inset ring-stone-300',
+      'bg-stone-200 text-stone-700 ring-1 ring-inset ring-stone-300 dark:bg-stone-800 dark:text-stone-200 dark:ring-stone-700',
   },
   completed: {
     label: 'Completed',
     dateLabel: 'Completed',
-    badgeClassName: 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200',
+    badgeClassName: 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:ring-rose-800',
   },
 };
 
 function FieldLabel({ label }: { label: string }) {
-  return <span className="text-sm font-medium text-stone-700">{label}</span>;
+  return <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{label}</span>;
 }
 
 function StatusBadge({ status }: { status: ProjectStatus }) {
@@ -137,10 +137,10 @@ function ActionButton({
       aria-label={label}
       onClick={onClick}
       className={[
-        'inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white transition',
+        'inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white transition dark:bg-stone-950',
         tone === 'danger'
-          ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
-          : 'border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900',
+          ? 'border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/80 dark:text-rose-200 dark:hover:bg-rose-950/40'
+          : 'border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:text-stone-300 dark:hover:border-rose-400 dark:hover:text-stone-100',
       ].join(' ')}
     >
       {children}
@@ -164,15 +164,15 @@ function ProjectRow({
       <div className="flex min-w-0 flex-col gap-4 rounded-[1.25rem] lg:flex-row lg:items-center lg:justify-between">
         <Link
           to={`/projects/${project.id}`}
-          className="flex min-w-0 flex-1 flex-col gap-3 transition hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
+          className="flex min-w-0 flex-1 flex-col gap-3 transition hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 dark:hover:text-stone-100 dark:focus-visible:ring-rose-400"
         >
           <div className="space-y-1">
-            <h3 className="text-base font-semibold text-stone-900">
+            <h3 className="text-base font-semibold text-stone-900 dark:text-stone-100">
               {project.name}
             </h3>
             {relevantDate ? (
-              <p className="text-sm text-stone-600">
-                <span className="font-medium text-stone-500">
+              <p className="text-sm text-stone-600 dark:text-stone-400">
+                <span className="font-medium text-stone-500 dark:text-stone-500">
                   {relevantDate.label}:{' '}
                 </span>
                 {relevantDate.value}
@@ -214,21 +214,21 @@ function ProjectSection({
   onDelete: (project: Project) => void;
 }) {
   return (
-    <section className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
-      <div className="border-b border-stone-200/70 px-5 py-4 sm:px-6">
+    <section className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
+      <div className="border-b border-stone-200/70 px-5 py-4 dark:border-stone-800 sm:px-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="font-serif text-2xl text-stone-900">
+            <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-100">
               {statusConfig[status].label}
             </h2>
-            <p className="mt-1 text-sm text-stone-600">
+            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
               {projects.length} {projects.length === 1 ? 'project' : 'projects'}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="divide-y divide-stone-100">
+      <div className="divide-y divide-stone-100 dark:divide-stone-800">
         {projects.map((project) => (
           <ProjectRow
             key={project.id}
@@ -333,13 +333,13 @@ export default function Projects() {
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
-            <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500">
+            <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500 dark:text-rose-300">
               Stitch Keeper
             </p>
-            <h1 className="font-serif text-4xl tracking-tight text-stone-900 sm:text-5xl">
+            <h1 className="font-serif text-4xl tracking-tight text-stone-900 dark:text-stone-100 sm:text-5xl">
               Projects
             </h1>
-            <p className="max-w-2xl text-base leading-7 text-stone-600">
+            <p className="max-w-2xl text-base leading-7 text-stone-600 dark:text-stone-300">
               View crochet projects by status, from planned ideas to finished
               makes.
             </p>
@@ -349,7 +349,7 @@ export default function Projects() {
             type="button"
             aria-label="Add project"
             onClick={() => setIsAddProjectOpen(true)}
-            className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 sm:gap-2 sm:px-5"
+            className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-rose-400 dark:text-stone-950 dark:hover:bg-rose-300 sm:gap-2 sm:px-5"
           >
             <Plus size={18} />
             <span className="hidden whitespace-nowrap sm:inline">
@@ -358,7 +358,7 @@ export default function Projects() {
           </button>
         </div>
 
-        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
           <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
             <label className="space-y-2">
               <FieldLabel label="Status" />
@@ -367,7 +367,7 @@ export default function Projects() {
                 onChange={(event) =>
                   setSelectedStatus(event.target.value as StatusFilter)
                 }
-                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300"
+                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:focus:border-rose-400"
               >
                 {statusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -377,9 +377,9 @@ export default function Projects() {
               </select>
             </label>
 
-            <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-stone-600">
+            <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-stone-600 dark:bg-rose-950/30 dark:text-stone-300">
               Showing{' '}
-              <span className="font-semibold text-stone-900">
+              <span className="font-semibold text-stone-900 dark:text-stone-100">
                 {filteredProjects.length}
               </span>{' '}
               projects

@@ -33,9 +33,9 @@ export function ConfirmDialog({
       maxWidthClassName="max-w-lg"
     >
       <div className="space-y-6">
-        <p className="text-sm leading-6 text-stone-600">{description}</p>
+        <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">{description}</p>
         {error ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-100">
             {error}
           </div>
         ) : null}
@@ -45,7 +45,7 @@ export function ConfirmDialog({
             type="button"
             disabled={isConfirming}
             onClick={onCancel}
-            className="inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-700 transition hover:border-rose-200 hover:text-stone-900 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-700 transition hover:border-rose-200 hover:text-stone-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:hover:border-rose-400 dark:hover:text-stone-50"
           >
             {cancelLabel}
           </button>

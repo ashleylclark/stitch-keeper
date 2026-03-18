@@ -18,10 +18,11 @@ export const patternMatchLabels: Record<PatternMatchStatus, string> = {
 
 export const patternMatchBadgeClasses: Record<PatternMatchStatus, string> = {
   'ready-to-start':
-    'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200',
+    'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-900',
   'review-supplies':
-    'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
-  'need-supplies': 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200',
+    'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-900',
+  'need-supplies':
+    'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-950/40 dark:text-rose-200 dark:ring-rose-900',
 };
 
 export const requirementMatchLabels: Record<
@@ -37,9 +38,12 @@ export const requirementMatchBadgeClasses: Record<
   RequirementMatch['status'],
   string
 > = {
-  owned: 'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200',
-  partial: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
-  missing: 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200',
+  owned:
+    'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-900',
+  partial:
+    'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-900',
+  missing:
+    'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-950/40 dark:text-rose-200 dark:ring-rose-900',
 };
 
 export function buildPatternMatchSummaries(

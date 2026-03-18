@@ -19,33 +19,33 @@ const statusConfig: Record<
 > = {
   planned: {
     label: 'Planned',
-    badgeClassName: 'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200',
+    badgeClassName: 'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-950/40 dark:text-sky-200 dark:ring-sky-900',
   },
   'in-progress': {
     label: 'In Progress',
     badgeClassName:
-      'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200',
+      'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200 dark:ring-emerald-800',
   },
   'need-supplies': {
     label: 'Need Supplies',
     badgeClassName:
-      'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
+      'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-800',
   },
   paused: {
     label: 'Paused',
     badgeClassName:
-      'bg-stone-200 text-stone-700 ring-1 ring-inset ring-stone-300',
+      'bg-stone-200 text-stone-700 ring-1 ring-inset ring-stone-300 dark:bg-stone-800 dark:text-stone-200 dark:ring-stone-700',
   },
   completed: {
     label: 'Completed',
-    badgeClassName: 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200',
+    badgeClassName: 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:ring-rose-800',
   },
 };
 
 const difficultyStyles: Record<NonNullable<Pattern['difficulty']>, string> = {
-  beginner: 'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200',
-  intermediate: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200',
-  advanced: 'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200',
+  beginner: 'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200 dark:bg-lime-900/40 dark:text-lime-200 dark:ring-lime-800',
+  intermediate: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-800',
+  advanced: 'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200 dark:bg-orange-900/40 dark:text-orange-200 dark:ring-orange-800',
 };
 
 function titleCase(value: string) {
@@ -80,7 +80,7 @@ function DifficultyBadge({
 }) {
   if (!difficulty) {
     return (
-      <span className="rounded-full bg-stone-200 px-3 py-1 text-xs font-semibold text-stone-600">
+      <span className="rounded-full bg-stone-200 px-3 py-1 text-xs font-semibold text-stone-600 dark:bg-stone-800 dark:text-stone-300">
         Unknown
       </span>
     );
@@ -115,10 +115,10 @@ function ActionButton({
       aria-label={label}
       onClick={onClick}
       className={[
-        'inline-flex h-11 w-11 items-center justify-center rounded-2xl border bg-white transition',
+        'inline-flex h-11 w-11 items-center justify-center rounded-2xl border bg-white transition dark:bg-stone-900',
         tone === 'danger'
-          ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
-          : 'border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900',
+          ? 'border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-300 dark:hover:bg-rose-950/40'
+          : 'border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:text-stone-300 dark:hover:border-rose-500/50 dark:hover:text-stone-50',
       ].join(' ')}
     >
       {children}
@@ -131,16 +131,16 @@ function NotFoundState() {
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <Link
         to="/projects"
-        className="inline-flex w-fit items-center gap-2 text-sm font-medium text-stone-600 transition hover:text-stone-900"
+        className="inline-flex w-fit items-center gap-2 text-sm font-medium text-stone-600 transition hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-50"
       >
         <ArrowLeft size={16} />
         Back to projects
       </Link>
-      <div className="rounded-[2rem] border border-white/80 bg-white/85 p-8 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
-        <h1 className="font-serif text-3xl text-stone-900">
+      <div className="rounded-[2rem] border border-white/80 bg-white/85 p-8 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
+        <h1 className="font-serif text-3xl text-stone-900 dark:text-stone-50">
           Project not found
         </h1>
-        <p className="mt-3 max-w-2xl text-base leading-7 text-stone-600">
+        <p className="mt-3 max-w-2xl text-base leading-7 text-stone-600 dark:text-stone-300">
           This project does not exist in the current project list.
         </p>
       </div>
@@ -150,11 +150,13 @@ function NotFoundState() {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[1.25rem] bg-stone-50 px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
+    <div className="rounded-[1.25rem] bg-stone-50 px-4 py-4 dark:bg-stone-800/80">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-400">
         {label}
       </p>
-      <p className="mt-2 text-sm text-stone-800">{value}</p>
+      <p className="mt-2 text-sm text-stone-800 dark:text-stone-200">
+        {value}
+      </p>
     </div>
   );
 }
@@ -229,22 +231,22 @@ export default function ProjectDetail() {
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-8">
         <Link
           to="/projects"
-          className="inline-flex w-fit items-center gap-2 text-sm font-medium text-stone-600 transition hover:text-stone-900"
+          className="inline-flex w-fit items-center gap-2 text-sm font-medium text-stone-600 transition hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-50"
         >
           <ArrowLeft size={16} />
           Back to projects
         </Link>
 
-        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur sm:p-8">
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
-              <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500">
+              <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500 dark:text-rose-300">
                 Stitch Keeper
               </p>
-              <h1 className="font-serif text-4xl tracking-tight text-stone-900 sm:text-5xl">
+              <h1 className="font-serif text-4xl tracking-tight text-stone-900 dark:text-stone-50 sm:text-5xl">
                 {currentProject.name}
               </h1>
-              <p className="max-w-3xl text-base leading-7 text-stone-600">
+              <p className="max-w-3xl text-base leading-7 text-stone-600 dark:text-stone-300">
                 {currentProject.notes ??
                   'No notes have been added for this project yet.'}
               </p>
@@ -287,12 +289,12 @@ export default function ProjectDetail() {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur sm:p-8">
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
           <div className="space-y-2">
-            <h2 className="font-serif text-2xl text-stone-900">
+            <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
               Linked Stash Items
             </h2>
-            <p className="text-sm leading-6 text-stone-600">
+            <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
               Supplies currently connected to this project.
             </p>
           </div>
@@ -302,18 +304,18 @@ export default function ProjectDetail() {
               {linkedStashItems.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-[1.5rem] border border-stone-200 bg-stone-50/80 px-5 py-4"
+                  className="rounded-[1.5rem] border border-stone-200 bg-stone-50/80 px-5 py-4 dark:border-stone-700 dark:bg-stone-800/60"
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-base font-semibold text-stone-900">
+                      <p className="text-base font-semibold text-stone-900 dark:text-stone-100">
                         {item.name}
                       </p>
-                      <p className="text-sm text-stone-600">
+                      <p className="text-sm text-stone-600 dark:text-stone-300">
                         {item.quantity} {item.unit ?? 'items'}
                       </p>
                     </div>
-                    <div className="text-sm text-stone-500">
+                    <div className="text-sm text-stone-500 dark:text-stone-400">
                       {item.category.charAt(0).toUpperCase() +
                         item.category.slice(1)}
                     </div>
@@ -322,18 +324,18 @@ export default function ProjectDetail() {
               ))}
             </div>
           ) : (
-            <div className="mt-6 rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 px-5 py-5 text-sm leading-6 text-stone-600">
+            <div className="mt-6 rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 px-5 py-5 text-sm leading-6 text-stone-600 dark:border-stone-700 dark:bg-stone-800/50 dark:text-stone-300">
               No stash items are linked to this project yet.
             </div>
           )}
         </section>
 
-        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur sm:p-8">
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
           <div className="space-y-2">
-            <h2 className="font-serif text-2xl text-stone-900">
+            <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
               Linked Pattern
             </h2>
-            <p className="text-sm leading-6 text-stone-600">
+            <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
               The pattern this project is based on.
             </p>
           </div>
@@ -341,33 +343,33 @@ export default function ProjectDetail() {
           {linkedPattern ? (
             <Link
               to={`/patterns/${linkedPattern.id}`}
-              className="mt-6 block rounded-[1.5rem] border border-stone-200 bg-stone-50/80 p-5 transition hover:border-rose-200 hover:bg-rose-50/60"
+              className="mt-6 block rounded-[1.5rem] border border-stone-200 bg-stone-50/80 p-5 transition hover:border-rose-200 hover:bg-rose-50/60 dark:border-stone-700 dark:bg-stone-800/60 dark:hover:border-rose-500/50 dark:hover:bg-rose-950/20"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-stone-900">
+                  <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                     {linkedPattern.name}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {linkedPattern.category ? (
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-stone-700 ring-1 ring-inset ring-stone-200">
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-stone-700 ring-1 ring-inset ring-stone-200 dark:bg-stone-900 dark:text-stone-200 dark:ring-stone-700">
                         {titleCase(linkedPattern.category)}
                       </span>
                     ) : null}
                     <DifficultyBadge difficulty={linkedPattern.difficulty} />
                   </div>
-                  <p className="text-sm leading-6 text-stone-600">
+                  <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
                     {linkedPattern.notes ??
                       'No notes have been added for this pattern yet.'}
                   </p>
                 </div>
-                <span className="text-sm font-medium text-rose-600">
+                <span className="text-sm font-medium text-rose-600 dark:text-rose-300">
                   View pattern
                 </span>
               </div>
             </Link>
           ) : (
-            <div className="mt-6 rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 px-5 py-5 text-sm leading-6 text-stone-600">
+            <div className="mt-6 rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 px-5 py-5 text-sm leading-6 text-stone-600 dark:border-stone-700 dark:bg-stone-800/50 dark:text-stone-300">
               No linked pattern could be found for this project.
             </div>
           )}

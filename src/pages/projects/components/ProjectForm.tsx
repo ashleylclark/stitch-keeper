@@ -136,7 +136,7 @@ export function ProjectForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {submitError ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-100">
           {submitError}
         </div>
       ) : null}
@@ -149,7 +149,9 @@ export function ProjectForm({
             placeholder="Project name"
           />
           {errors.name ? (
-            <p className="text-sm text-rose-600">{errors.name}</p>
+            <p className="text-sm text-rose-600 dark:text-rose-300">
+              {errors.name}
+            </p>
           ) : null}
         </FormField>
 
@@ -166,7 +168,9 @@ export function ProjectForm({
             ))}
           </SelectInput>
           {errors.patternId ? (
-            <p className="text-sm text-rose-600">{errors.patternId}</p>
+            <p className="text-sm text-rose-600 dark:text-rose-300">
+              {errors.patternId}
+            </p>
           ) : null}
         </FormField>
 
@@ -184,7 +188,9 @@ export function ProjectForm({
             <option value="completed">Completed</option>
           </SelectInput>
           {errors.status ? (
-            <p className="text-sm text-rose-600">{errors.status}</p>
+            <p className="text-sm text-rose-600 dark:text-rose-300">
+              {errors.status}
+            </p>
           ) : null}
         </FormField>
       </FormSection>
@@ -212,10 +218,10 @@ export function ProjectForm({
       <FormSection title="Linked Stash Items">
         {stashItemOptions.length > 0 ? (
           <div className="space-y-3">
-            <p className="text-sm text-stone-600">
+            <p className="text-sm text-stone-600 dark:text-stone-300">
               Select the stash items that belong to this project.
             </p>
-            <div className="max-h-64 space-y-2 overflow-y-auto rounded-2xl border border-stone-200 bg-stone-50 p-3">
+            <div className="max-h-64 space-y-2 overflow-y-auto rounded-2xl border border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-900/70">
               {stashItemOptions.map((item) => {
                 const isChecked = values.stashItemIds.includes(item.id);
                 const usage = values.stashUsages.find(
@@ -225,20 +231,20 @@ export function ProjectForm({
                 return (
                   <div
                     key={item.id}
-                    className="flex cursor-pointer items-start gap-3 rounded-xl border border-transparent bg-white px-3 py-3 transition hover:border-rose-200"
+                    className="flex cursor-pointer items-start gap-3 rounded-xl border border-transparent bg-white px-3 py-3 transition hover:border-rose-200 dark:bg-stone-950 dark:hover:border-rose-500/60"
                   >
                     <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
                       <input
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => toggleStashItem(item.id)}
-                        className="mt-1 h-4 w-4 rounded border-stone-300 text-rose-600 focus:ring-rose-300"
+                        className="mt-1 h-4 w-4 rounded border-stone-300 text-rose-600 focus:ring-rose-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-rose-400"
                       />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-stone-900">
+                        <p className="text-sm font-medium text-stone-900 dark:text-stone-100">
                           {item.name}
                         </p>
-                        <p className="text-sm text-stone-600">
+                        <p className="text-sm text-stone-600 dark:text-stone-400">
                           {formatCategory(item.category)} • {item.quantity}{' '}
                           {item.unit ?? 'items'}
                         </p>
@@ -263,14 +269,14 @@ export function ProjectForm({
                 );
               })}
             </div>
-            <p className="text-xs leading-5 text-stone-500">
+            <p className="text-xs leading-5 text-stone-500 dark:text-stone-400">
               Usage quantities are only applied when the project is first marked
               completed. Hooks and needles are linked for reference only and are
               not decremented.
             </p>
           </div>
         ) : (
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-stone-600 dark:text-stone-300">
             No stash items available yet.
           </p>
         )}
