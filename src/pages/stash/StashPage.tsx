@@ -139,7 +139,7 @@ function StashCard({ item, onEdit, onDelete }: StashCardProps) {
     <article className="rounded-[1.75rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1">
+          <div className="min-w-0 flex-1 space-y-1">
             <h2 className="text-lg font-semibold text-stone-900">
               {item.name}
             </h2>
@@ -147,21 +147,23 @@ function StashCard({ item, onEdit, onDelete }: StashCardProps) {
               {item.quantity} {item.unit ?? 'items'}
             </p>
           </div>
-          <div className="flex items-center gap-2 self-start">
+          <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
             <StatusBadge status={item.status} />
-            <ActionButton
-              label={`Edit ${item.name}`}
-              onClick={() => onEdit(item)}
-            >
-              <Pencil size={16} />
-            </ActionButton>
-            <ActionButton
-              label={`Delete ${item.name}`}
-              tone="danger"
-              onClick={() => onDelete(item)}
-            >
-              <Trash2 size={16} />
-            </ActionButton>
+            <div className="flex items-center gap-2">
+              <ActionButton
+                label={`Edit ${item.name}`}
+                onClick={() => onEdit(item)}
+              >
+                <Pencil size={16} />
+              </ActionButton>
+              <ActionButton
+                label={`Delete ${item.name}`}
+                tone="danger"
+                onClick={() => onDelete(item)}
+              >
+                <Trash2 size={16} />
+              </ActionButton>
+            </div>
           </div>
         </div>
 
@@ -231,7 +233,7 @@ export default function Stash() {
         category: values.category,
         name: values.name.trim(),
         quantity: Number(values.quantity),
-        status: editingItem?.status ?? 'in-stock',
+        status: values.status,
         brand: values.brand.trim() || undefined,
         color: values.color.trim() || undefined,
         weight: values.weight || undefined,
@@ -381,6 +383,7 @@ export default function Stash() {
                   category: editingItem.category,
                   name: editingItem.name,
                   quantity: editingItem.quantity,
+                  status: editingItem.status ?? 'in-stock',
                   unit: editingItem.unit ?? '',
                   brand: editingItem.brand ?? '',
                   color: editingItem.color ?? '',

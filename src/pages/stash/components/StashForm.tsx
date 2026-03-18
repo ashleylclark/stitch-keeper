@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import type { ItemCategory, YarnWeight } from '../../../types/models';
+import type {
+  ItemCategory,
+  StashStatus,
+  YarnWeight,
+} from '../../../types/models';
 import { FormActions } from '../../../components/forms/FormActions';
 import { FormField } from '../../../components/forms/FormField';
 import { FormSection } from '../../../components/forms/FormSection';
@@ -11,6 +15,7 @@ export type StashFormValues = {
   category: ItemCategory;
   name: string;
   quantity: number | '';
+  status: StashStatus;
   unit: string;
   brand: string;
   color: string;
@@ -53,6 +58,7 @@ export function StashForm({
     category: initialValues?.category ?? 'yarn',
     name: initialValues?.name ?? '',
     quantity: initialValues?.quantity ?? '',
+    status: initialValues?.status ?? 'in-stock',
     unit:
       initialValues?.unit ?? defaultUnits[initialValues?.category ?? 'yarn'],
     brand: initialValues?.brand ?? '',
@@ -80,6 +86,14 @@ export function StashForm({
         if (!showsSize(category)) next.size = '';
         if (!showsMaterial(category)) next.material = '';
         if (!showsNotes(category)) next.notes = '';
+      }
+
+      if (key === 'quantity') {
+        const quantity = value === '' ? undefined : Number(value);
+
+        if (quantity === 0 && next.status !== 'not-replacing') {
+          next.status = 'out-of-stock';
+        }
       }
 
       return next;
@@ -130,23 +144,23 @@ export function StashForm({
       ) : null}
 
       <FormSection title="Basic Info">
-        <FormField label="Category">
-          <SelectInput
-            value={values.category}
-            onChange={(event) =>
-              update('category', event.target.value as ItemCategory)
-            }
-          >
-            <option value="yarn">Yarn</option>
-            <option value="hook">Hook</option>
-            <option value="needle">Needle</option>
-            <option value="eyes">Safety Eyes</option>
-            <option value="stuffing">Stuffing</option>
-            <option value="other">Other</option>
-          </SelectInput>
-        </FormField>
-
         <div className="grid gap-3 sm:grid-cols-2">
+          <FormField label="Category">
+            <SelectInput
+              value={values.category}
+              onChange={(event) =>
+                update('category', event.target.value as ItemCategory)
+              }
+            >
+              <option value="yarn">Yarn</option>
+              <option value="hook">Hook</option>
+              <option value="needle">Needle</option>
+              <option value="eyes">Safety Eyes</option>
+              <option value="stuffing">Stuffing</option>
+              <option value="other">Other</option>
+            </SelectInput>
+          </FormField>
+
           <FormField label="Name">
             <TextInput
               value={values.name}
@@ -174,6 +188,20 @@ export function StashForm({
             {errors.quantity ? (
               <p className="text-sm text-rose-600">{errors.quantity}</p>
             ) : null}
+          </FormField>
+
+          <FormField label="Status">
+            <SelectInput
+              value={values.status}
+              onChange={(event) =>
+                update('status', event.target.value as StashStatus)
+              }
+            >
+              <option value="in-stock">In Stock</option>
+              <option value="low-stock">Low Stock</option>
+              <option value="out-of-stock">Out of Stock</option>
+              <option value="not-replacing">Not Replacing</option>
+            </SelectInput>
           </FormField>
 
           {showUnit ? (
