@@ -53,8 +53,10 @@ const yarnWeightOptions: FilterOption<YarnWeight | 'all'>[] = [
 const statusStyles: Record<StashStatus, string> = {
   'in-stock':
     'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200 dark:ring-emerald-800',
-  'low-stock': 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-800',
-  'out-of-stock': 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:ring-rose-800',
+  'low-stock':
+    'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-800',
+  'out-of-stock':
+    'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:ring-rose-800',
   'not-replacing':
     'bg-stone-200 text-stone-700 ring-1 ring-inset ring-stone-300 dark:bg-stone-800 dark:text-stone-200 dark:ring-stone-700',
 };
@@ -182,7 +184,11 @@ function StashCard({ item, onEdit, onDelete }: StashCardProps) {
 }
 
 function FieldLabel({ label }: { label: string }) {
-  return <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{label}</span>;
+  return (
+    <span className="text-sm font-medium text-stone-700 dark:text-stone-300">
+      {label}
+    </span>
+  );
 }
 
 export default function Stash() {

@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type PropsWithChildren,
-} from 'react';
+import { useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 import {
   ThemeContext,
   THEME_STORAGE_KEY,
@@ -31,7 +26,9 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     [theme],
   );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 function getInitialTheme(): Theme {

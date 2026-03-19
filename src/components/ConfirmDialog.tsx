@@ -33,7 +33,9 @@ export function ConfirmDialog({
       maxWidthClassName="max-w-lg"
     >
       <div className="space-y-6">
-        <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">{description}</p>
+        <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
+          {description}
+        </p>
         {error ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-100">
             {error}

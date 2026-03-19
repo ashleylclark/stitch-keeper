@@ -19,7 +19,8 @@ const statusConfig: Record<
 > = {
   planned: {
     label: 'Planned',
-    badgeClassName: 'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-950/40 dark:text-sky-200 dark:ring-sky-900',
+    badgeClassName:
+      'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-950/40 dark:text-sky-200 dark:ring-sky-900',
   },
   'in-progress': {
     label: 'In Progress',
@@ -38,14 +39,18 @@ const statusConfig: Record<
   },
   completed: {
     label: 'Completed',
-    badgeClassName: 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:ring-rose-800',
+    badgeClassName:
+      'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:ring-rose-800',
   },
 };
 
 const difficultyStyles: Record<NonNullable<Pattern['difficulty']>, string> = {
-  beginner: 'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200 dark:bg-lime-900/40 dark:text-lime-200 dark:ring-lime-800',
-  intermediate: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-800',
-  advanced: 'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200 dark:bg-orange-900/40 dark:text-orange-200 dark:ring-orange-800',
+  beginner:
+    'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200 dark:bg-lime-900/40 dark:text-lime-200 dark:ring-lime-800',
+  intermediate:
+    'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-800',
+  advanced:
+    'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200 dark:bg-orange-900/40 dark:text-orange-200 dark:ring-orange-800',
 };
 
 function titleCase(value: string) {
@@ -154,9 +159,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-400">
         {label}
       </p>
-      <p className="mt-2 text-sm text-stone-800 dark:text-stone-200">
-        {value}
-      </p>
+      <p className="mt-2 text-sm text-stone-800 dark:text-stone-200">{value}</p>
     </div>
   );
 }

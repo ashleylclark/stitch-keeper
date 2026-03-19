@@ -42,7 +42,8 @@ const statusConfig: Record<ProjectStatus, StatusConfig> = {
   planned: {
     label: 'Planned',
     dateLabel: null,
-    badgeClassName: 'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-950/40 dark:text-sky-200 dark:ring-sky-900',
+    badgeClassName:
+      'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-950/40 dark:text-sky-200 dark:ring-sky-900',
   },
   'in-progress': {
     label: 'In Progress',
@@ -65,12 +66,17 @@ const statusConfig: Record<ProjectStatus, StatusConfig> = {
   completed: {
     label: 'Completed',
     dateLabel: 'Completed',
-    badgeClassName: 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:ring-rose-800',
+    badgeClassName:
+      'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:ring-rose-800',
   },
 };
 
 function FieldLabel({ label }: { label: string }) {
-  return <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{label}</span>;
+  return (
+    <span className="text-sm font-medium text-stone-700 dark:text-stone-300">
+      {label}
+    </span>
+  );
 }
 
 function StatusBadge({ status }: { status: ProjectStatus }) {

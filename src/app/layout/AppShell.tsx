@@ -188,7 +188,9 @@ export function AppShell() {
                 <h1 className="font-serif text-3xl text-stone-900 dark:text-stone-100">
                   Could not load app data
                 </h1>
-                <p className="text-base text-stone-700 dark:text-rose-100">{error}</p>
+                <p className="text-base text-stone-700 dark:text-rose-100">
+                  {error}
+                </p>
               </section>
             ) : (
               <Outlet />

@@ -24,9 +24,12 @@ function getErrorMessage(error: unknown) {
 }
 
 const difficultyStyles: Record<NonNullable<Pattern['difficulty']>, string> = {
-  beginner: 'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200 dark:bg-lime-900/40 dark:text-lime-200 dark:ring-lime-800',
-  intermediate: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-800',
-  advanced: 'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200 dark:bg-orange-900/40 dark:text-orange-200 dark:ring-orange-800',
+  beginner:
+    'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200 dark:bg-lime-900/40 dark:text-lime-200 dark:ring-lime-800',
+  intermediate:
+    'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-800',
+  advanced:
+    'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200 dark:bg-orange-900/40 dark:text-orange-200 dark:ring-orange-800',
 };
 
 function titleCase(value: string) {
@@ -270,7 +273,9 @@ export default function PatternDetail() {
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
           <div className="space-y-2">
-            <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">Requirements</h2>
+            <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
+              Requirements
+            </h2>
             <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
               Everything listed for this pattern at a glance.
             </p>
@@ -330,7 +335,9 @@ export default function PatternDetail() {
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
           <div className="space-y-2">
-            <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">Instructions</h2>
+            <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
+              Instructions
+            </h2>
             <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
               Stored exactly as entered so line breaks and spacing are
               preserved.

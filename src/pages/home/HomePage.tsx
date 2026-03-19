@@ -32,7 +32,8 @@ const activeProjectStatusPriority: Record<ProjectStatus, number> = {
 
 const badgeClasses: Record<StatusTone, string> = {
   rose: 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:ring-rose-800',
-  amber: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-800',
+  amber:
+    'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-800',
   emerald:
     'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-900',
   sky: 'bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-950/40 dark:text-sky-200 dark:ring-sky-900',
@@ -69,13 +70,17 @@ function formatDate(date: string) {
 function StatCard({ label, value, helperText }: HomeStat) {
   return (
     <article className="rounded-[1.75rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
-      <p className="text-sm font-medium text-stone-500 dark:text-stone-400">{label}</p>
+      <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
+        {label}
+      </p>
       <div className="mt-4 flex items-end gap-2">
         <span className="font-serif text-4xl leading-none text-stone-900 dark:text-stone-100">
           {value}
         </span>
       </div>
-      <p className="mt-4 text-sm leading-6 text-stone-600 dark:text-stone-400">{helperText}</p>
+      <p className="mt-4 text-sm leading-6 text-stone-600 dark:text-stone-400">
+        {helperText}
+      </p>
     </article>
   );
 }
@@ -108,8 +113,12 @@ function DashboardList({
     <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-100">{title}</h2>
-          <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">{description}</p>
+          <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-100">
+            {title}
+          </h2>
+          <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">
+            {description}
+          </p>
         </div>
         <Link
           to={viewAllHref}

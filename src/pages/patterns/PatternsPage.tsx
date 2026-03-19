@@ -44,9 +44,12 @@ const requirementOptions: { label: string; value: RequirementFilter }[] = [
 ];
 
 const difficultyStyles: Record<NonNullable<Pattern['difficulty']>, string> = {
-  beginner: 'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200 dark:bg-lime-950/40 dark:text-lime-200 dark:ring-lime-900',
-  intermediate: 'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-900',
-  advanced: 'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200 dark:bg-orange-950/40 dark:text-orange-200 dark:ring-orange-900',
+  beginner:
+    'bg-lime-100 text-lime-700 ring-1 ring-inset ring-lime-200 dark:bg-lime-950/40 dark:text-lime-200 dark:ring-lime-900',
+  intermediate:
+    'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-900',
+  advanced:
+    'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200 dark:bg-orange-950/40 dark:text-orange-200 dark:ring-orange-900',
 };
 
 const compactDifficultyLabels: Record<
@@ -412,7 +415,10 @@ export default function Patterns() {
                 const summary = patternMatchById.get(pattern.id);
 
                 return (
-                  <tr key={pattern.id} className="transition hover:bg-stone-50 dark:hover:bg-stone-800/60">
+                  <tr
+                    key={pattern.id}
+                    className="transition hover:bg-stone-50 dark:hover:bg-stone-800/60"
+                  >
                     <td className="px-4 py-5 align-center sm:px-5">
                       <Link
                         to={`/patterns/${pattern.id}`}
