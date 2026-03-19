@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useAppData } from '../../app/state/app-data';
 import type { PatternMatchStatus, ProjectStatus } from '../../types/models';
 import { patternMatchLabels } from '../patterns/lib/patternMatching';
@@ -16,6 +17,17 @@ type DashboardItem = {
   detail: string;
   status: string;
   tone: StatusTone;
+  href: string;
+};
+
+const HOME_SECTION_LIMIT = 3;
+
+const activeProjectStatusPriority: Record<ProjectStatus, number> = {
+  'in-progress': 0,
+  'need-supplies': 1,
+  planned: 2,
+  completed: 3,
+  paused: 4,
 };
 
 const badgeClasses: Record<StatusTone, string> = {
@@ -85,37 +97,56 @@ function DashboardList({
   title,
   description,
   items,
+  viewAllHref,
 }: {
   title: string;
   description: string;
   items: DashboardItem[];
+  viewAllHref: string;
 }) {
   return (
     <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
-      <div className="space-y-2">
-        <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-100">{title}</h2>
-        <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">{description}</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-100">{title}</h2>
+          <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">{description}</p>
+        </div>
+        <Link
+          to={viewAllHref}
+          className="inline-flex shrink-0 items-center rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:hover:border-rose-400 dark:hover:text-stone-50"
+        >
+          View All
+        </Link>
       </div>
 
       <div className="mt-6 space-y-4">
-        {items.map((item) => (
-          <article
-            key={item.id}
-            className="rounded-[1.5rem] border border-stone-100 bg-stone-50/80 px-4 py-4 transition hover:border-rose-100 hover:bg-rose-50/50 dark:border-stone-800 dark:bg-stone-950/70 dark:hover:border-rose-900/70 dark:hover:bg-stone-900"
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-1">
-                <h3 className="text-base font-semibold text-stone-900 dark:text-stone-100">
-                  {item.name}
-                </h3>
-                <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">
-                  {item.detail}
-                </p>
+        {items.length > 0 ? (
+          items.map((item) => (
+            <article
+              key={item.id}
+              className="rounded-[1.5rem] border border-stone-100 bg-stone-50/80 px-4 py-4 transition hover:border-rose-100 hover:bg-rose-50/50 dark:border-stone-800 dark:bg-stone-950/70 dark:hover:border-rose-900/70 dark:hover:bg-stone-900"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <Link
+                  to={item.href}
+                  className="block flex-1 space-y-1 transition hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 dark:hover:text-stone-100 dark:focus-visible:ring-rose-400"
+                >
+                  <h3 className="text-base font-semibold text-stone-900 dark:text-stone-100">
+                    {item.name}
+                  </h3>
+                  <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">
+                    {item.detail}
+                  </p>
+                </Link>
+                <StatusBadge status={item.status} tone={item.tone} />
               </div>
-              <StatusBadge status={item.status} tone={item.tone} />
-            </div>
-          </article>
-        ))}
+            </article>
+          ))
+        ) : (
+          <div className="rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 px-4 py-5 text-sm leading-6 text-stone-600 dark:border-stone-700 dark:bg-stone-800/50 dark:text-stone-300">
+            Nothing to show here yet.
+          </div>
+        )}
       </div>
     </section>
   );
@@ -124,24 +155,59 @@ function DashboardList({
 export default function Home() {
   const { patterns, patternMatchById, projects } = useAppData();
 
-  const activeProjects = projects
+  const activeProjectCount = projects.filter(
+    (project) =>
+      project.status === 'in-progress' ||
+      project.status === 'need-supplies' ||
+      project.status === 'planned',
+  ).length;
+
+  const activeProjects = [...projects]
     .filter(
       (project) =>
-        project.status !== 'completed' && project.status !== 'paused',
+        project.status === 'in-progress' ||
+        project.status === 'need-supplies' ||
+        project.status === 'planned',
     )
+    .sort((left, right) => {
+      const statusDifference =
+        activeProjectStatusPriority[left.status] -
+        activeProjectStatusPriority[right.status];
+
+      if (statusDifference !== 0) {
+        return statusDifference;
+      }
+
+      return (
+        new Date(right.startDate ?? '').getTime() -
+        new Date(left.startDate ?? '').getTime()
+      );
+    })
+    .slice(0, HOME_SECTION_LIMIT)
     .map<DashboardItem>((project) => ({
       id: project.id,
       name: project.name,
       detail: project.notes ?? 'No project notes yet.',
       status: projectStatusConfig[project.status].label,
       tone: projectStatusConfig[project.status].tone,
+      href: `/projects/${project.id}`,
     }));
 
-  const readyPatterns = patterns
+  const readyPatternCount = patterns.filter(
+    (pattern) => patternMatchById.get(pattern.id)?.status === 'ready-to-start',
+  ).length;
+
+  const readyPatterns = [...patterns]
     .filter(
       (pattern) =>
         patternMatchById.get(pattern.id)?.status === 'ready-to-start',
     )
+    .sort(
+      (left, right) =>
+        new Date(right.addedAt ?? '').getTime() -
+        new Date(left.addedAt ?? '').getTime(),
+    )
+    .slice(0, HOME_SECTION_LIMIT)
     .map<DashboardItem>((pattern) => {
       const summary = patternMatchById.get(pattern.id);
       const status = summary?.status ?? 'review-supplies';
@@ -153,6 +219,7 @@ export default function Home() {
           summary?.detail ?? 'Review the requirements against your stash.',
         status: patternStatusConfig[status].label,
         tone: patternStatusConfig[status].tone,
+        href: `/patterns/${pattern.id}`,
       };
     });
 
@@ -175,19 +242,20 @@ export default function Home() {
           : 'Recently added',
         status: summary ? patternMatchLabels[summary.status] : 'New',
         tone: summary ? patternStatusConfig[summary.status].tone : 'rose',
+        href: `/patterns/${pattern.id}`,
       };
     });
 
   const homeStats: HomeStat[] = [
     {
       label: 'Active Projects',
-      value: activeProjects.length,
+      value: activeProjectCount,
       helperText:
         'Projects currently in progress, planned, or waiting on supplies.',
     },
     {
       label: 'Ready Patterns',
-      value: readyPatterns.length,
+      value: readyPatternCount,
       helperText: 'Patterns you can start now with what you already have.',
     },
     {
@@ -229,11 +297,13 @@ export default function Home() {
           title="Active Projects"
           description="Projects that are underway or lined up next."
           items={activeProjects}
+          viewAllHref="/projects"
         />
         <DashboardList
           title="Patterns You Can Make Now"
           description="Patterns matched to yarn and tools you already have."
           items={readyPatterns}
+          viewAllHref="/patterns"
         />
       </div>
 
@@ -242,6 +312,7 @@ export default function Home() {
           title="Recently Added Patterns"
           description="Fresh additions to your library that may be worth queuing up soon."
           items={recentPatterns}
+          viewAllHref="/patterns"
         />
       </div>
     </section>
