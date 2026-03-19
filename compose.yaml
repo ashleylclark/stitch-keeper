@@ -1,0 +1,17 @@
+name: stash-keeper
+version: 0.1.0
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      PORT: 3001
+      SQLITE_PATH: /app/data/stash-keeper.db
+    ports:
+      - '8080:3001'
+    volumes:
+      - stash-keeper-data:/app/data
+
+volumes:
+  stash-keeper-data:

@@ -14,8 +14,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "start:server": "node server/index.js",
-    "prepare": "husky"
+    "start:server": "node server/index.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.1",

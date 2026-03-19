@@ -1,0 +1,37 @@
+node_modules
+dist
+data
+out
+.tmp
+.cache
+.husky
+
+# Vite, webpack, and other react build outputs
+.vite
+.vitepress
+.eslintcache
+.npm
+coverage
+reports
+
+# environment and config files
+.env
+.env.production
+*.log
+
+*.tsbuildinfo
+
+# debug and lockfiles
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# local development files
+.git
+.gitignore
+.vscode
+.idea
+*.swp
+.DS_Store
+Thumbs.db
