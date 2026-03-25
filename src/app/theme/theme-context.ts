@@ -8,7 +8,7 @@ export type ThemeContextValue = {
   toggleTheme: () => void;
 };
 
-export const THEME_STORAGE_KEY = 'stash-keeper-theme';
+export const THEME_STORAGE_KEY = 'stitch-keeper-theme';
 
 export const ThemeContext = createContext<ThemeContextValue | null>(null);
 

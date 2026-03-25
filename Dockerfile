@@ -18,7 +18,7 @@ COPY server ./server
 COPY --from=build /app/dist ./dist
 
 ENV PORT=3001
-ENV SQLITE_PATH=/app/data/stash-keeper.db
+ENV SQLITE_PATH=/app/data/stitch-keeper.db
 
 EXPOSE 3001
 

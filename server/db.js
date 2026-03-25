@@ -5,7 +5,7 @@ import { patterns, projects, stashItems } from './seed-data.js';
 
 const sqlitePath =
   process.env.SQLITE_PATH ??
-  path.join(process.cwd(), 'data', 'stash-keeper.db');
+  path.join(process.cwd(), 'data', 'stitch-keeper.db');
 
 fs.mkdirSync(path.dirname(sqlitePath), { recursive: true });
 

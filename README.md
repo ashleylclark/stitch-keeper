@@ -84,7 +84,7 @@ npm run format:check
 
 ## Persistence
 
-- SQLite database path: `data/stash-keeper.db`
+- SQLite database path: `data/stitch-keeper.db`
 - API entrypoint: `server/index.js`
 - Database schema and seed data are created automatically on first startup
 
