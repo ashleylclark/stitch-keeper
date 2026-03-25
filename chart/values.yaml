@@ -1,0 +1,86 @@
+# Container image configuration
+image:
+  repository: ghcr.io/ashleylclark/stitch-keeper
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+replicaCount: 1
+
+nameOverride: ""
+
+fullnameOverride: ""
+
+deploymentAnnotations: {}
+
+# -- Additional labels for the Deployment.
+extraDeploymentLabels: {}
+
+# -- Pod annotations applied
+podAnnotations: {}
+# -- Pod labels applied
+podLabels: {}
+
+# -- Labels to add to all resources.
+commonLabels: {}
+
+# -- Pod-level security context
+podSecurityContext: {}
+
+# -- Container-level security context
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 3001
+
+resources: {}
+
+env:
+  PORT: "3001"
+  SQLITE_PATH: /data/stitch-keeper.db
+
+envFrom: []
+
+persistence:
+  enabled: true
+  storageClass: ""
+  size: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  mountPath: /data
+  existingClaim: ""
+  annotations: {}
+
+strategy: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: stitch-keeper.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  # -- TLS configuration for ingress
+  tls: []
+
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: 3001
+
+readinessProbe:
+  httpGet:
+    path: /api/health
+    port: 3001
+
+startupProbe: {}
+
+nodeSelector: {}
+
+affinity: {}
+
+tolerations: []
