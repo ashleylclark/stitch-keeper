@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ghcr.io/ashleylclark/stitch-keeper:0.1.0
+    image: ghcr.io/ashleylclark/stitch-keeper:latest
     environment:
       PORT: 3001
       SQLITE_PATH: /app/data/stitch-keeper.db

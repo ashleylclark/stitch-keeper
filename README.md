@@ -82,6 +82,40 @@ npm run format
 npm run format:check
 ```
 
+## Releases
+
+Releases are cut intentionally with `release-it`, not from every push to `main`.
+
+Before releasing, export a GitHub token with permission to create releases:
+
+```bash
+export GITHUB_TOKEN=your_github_token
+```
+
+Then run one of:
+
+```bash
+npm run release
+npm run release:patch
+npm run release:minor
+npm run release:major
+npm run release:dry-run
+```
+
+A release will:
+
+- run the existing lint and build checks
+- bump `package.json`
+- update `chart/Chart.yaml` version and `appVersion`
+- create and push a `vX.Y.Z` git tag
+- create a GitHub Release
+
+The image publish workflow listens for pushed `v*` tags and publishes:
+
+- `ghcr.io/ashleylclark/stitch-keeper:vX.Y.Z`
+- `ghcr.io/ashleylclark/stitch-keeper:latest`
+- a commit `sha` tag
+
 ## Persistence
 
 - SQLite database path: `data/stitch-keeper.db`
