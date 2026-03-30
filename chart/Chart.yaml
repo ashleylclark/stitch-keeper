@@ -2,8 +2,8 @@ apiVersion: v2
 name: stitch-keeper
 description: A simple web app to manage your fiber arts stash.
 type: application
-version: "1.0.0"
-appVersion: "v1.0.0"
+version: "1.1.0"
+appVersion: "v1.1.0"
 home: https://github.com/ashleylclark/stitch-keeper/chart
 sources:
   - https://github.com/ashleylclark/stitch-keeper
