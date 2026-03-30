@@ -1,17 +1,29 @@
+# Default values for Stitch Keeper
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
 # Container image configuration
 image:
+  # -- Image repository
   repository: ghcr.io/ashleylclark/stitch-keeper
+  # -- Image tag (defaults to appVersion)
   tag: ""
+  # -- Image pull policy
   pullPolicy: IfNotPresent
 
+# -- Image pull secrets for private registries
 imagePullSecrets: []
 
+# -- Number of replicas for the mealie deployment
+# SQLite requires a single instance
 replicaCount: 1
 
+# -- Override the chart name
 nameOverride: ""
-
+# -- Override the full release name
 fullnameOverride: ""
 
+# -- Annotations for the Deployment.
 deploymentAnnotations: {}
 
 # -- Additional labels for the Deployment.
@@ -31,34 +43,70 @@ podSecurityContext: {}
 # -- Container-level security context
 securityContext: {}
 
+# Service configuration
 service:
+  # -- Service type (ClusterIP/LoadBalancer/NodePort)
   type: ClusterIP
+  # -- Service port
   port: 3001
 
+# -- Resource requests and limits
 resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
 
+# -- Environment variables for the container
 env:
-  PORT: "3001"
-  SQLITE_PATH: /data/stitch-keeper.db
+  - name: PORT
+    value: "3001"
+  - name: SQLITE_PATH
+    value: /data/stitch-keeper.db
 
+# -- Environment sources (ConfigMap/Secret refs)
 envFrom: []
 
+# Persistence storage configuration
 persistence:
+  # -- Enable persistence
   enabled: true
+  # -- Storage class for PVC
+  # Set to "-" to disable dynamic provisioning and use default storage class
+  # Set to "" to use cluster default storage class
   storageClass: ""
+  # -- Requested PVC size
   size: 1Gi
+  # -- Access modes for the PVC
   accessModes:
     - ReadWriteOnce
+  # -- PVC's mount path
   mountPath: /data
+  # -- Use an existing PVC instead of creating a new one
+  # If defined, PVC must be created manually before volume will be bound
   existingClaim: ""
+  # -- Annotations for PVC
   annotations: {}
 
+
+# -- Deployment update strategy (default: Recreate when persistence enabled and non-RWX or single replica)
 strategy: {}
+  # type: RollingUpdate
+  # rollingUpdate:
+  #   maxSurge: 0
+  #   maxUnavailable: 1
 
+# Ingress configuration
 ingress:
+  # -- Enable ingress
   enabled: false
+  # -- Ingress class name
   className: ""
+  # -- Additional ingress annotations
   annotations: {}
+  # -- Ingress rules configuration
   hosts:
     - host: stitch-keeper.local
       paths:
@@ -67,20 +115,26 @@ ingress:
   # -- TLS configuration for ingress
   tls: []
 
+# -- Liveness probe configuration
 livenessProbe:
   httpGet:
     path: /api/health
     port: 3001
 
+# -- Readiness probe configuration
 readinessProbe:
   httpGet:
     path: /api/health
     port: 3001
 
+# -- Startup probe configuration
 startupProbe: {}
 
+# -- Node selector for scheduling
 nodeSelector: {}
 
+# -- Pod affinity/anti-affinity
 affinity: {}
 
+# -- Pod tolerations
 tolerations: []
