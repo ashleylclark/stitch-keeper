@@ -92,17 +92,7 @@
     "env": {
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name of the environment variable"
-          },
-          "value": {
-            "type": "string",
-            "description": "Value of the environment variable"
-          }
-        }
+        "type": "object"
       },
       "description": "Environment variables for the container"
     },
