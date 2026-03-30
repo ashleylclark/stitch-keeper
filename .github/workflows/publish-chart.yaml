@@ -1,0 +1,42 @@
+name: Publish Helm chart
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  push-chart-to-ghcr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Lint chart
+        run: helm lint ./chart
+
+      - name: Read chart version
+        id: chart
+        run: |
+          version=$(sed -n 's/^version: "\(.*\)"/\1/p' chart/Chart.yaml)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Package chart
+        run: |
+          mkdir -p .artifacts/chart
+          helm package ./chart --destination .artifacts/chart
+
+      - name: Push chart to GHCR
+        run: helm push ".artifacts/chart/stitch-keeper-${{ steps.chart.outputs.version }}.tgz" oci://ghcr.io/ashleylclark/charts
