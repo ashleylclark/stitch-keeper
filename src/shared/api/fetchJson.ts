@@ -3,7 +3,10 @@ export async function fetchJson<T>(
   init?: RequestInit,
   allowEmpty = false,
 ) {
-  const response = await fetch(input, init);
+  const response = await fetch(input, {
+    credentials: 'same-origin',
+    ...init,
+  });
 
   if (!response.ok) {
     const message = await response.text();

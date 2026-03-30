@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   BookMarked,
   HouseHeart,
+  LogOut,
   Menu,
   MoonStar,
   PackageOpen,
@@ -10,6 +11,7 @@ import {
   SunMedium,
   X,
 } from 'lucide-react';
+import { useAuth } from '../state/auth';
 import { useAppData } from '../state/app-data';
 import { useTheme } from '../theme/theme-context';
 
@@ -128,8 +130,21 @@ function Sidebar({
 
 export function AppShell() {
   const { isLoading, error } = useAppData();
+  const {
+    currentUser,
+    error: authError,
+    isLoading: isAuthLoading,
+    login,
+    logout,
+  } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    if (!isAuthLoading && !currentUser && !authError) {
+      login();
+    }
+  }, [authError, currentUser, isAuthLoading, login]);
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#fffaf7_0%,#f7f1eb_100%)] text-stone-900 dark:bg-[linear-gradient(180deg,#1c1917_0%,#292524_100%)] dark:text-stone-100">
@@ -145,10 +160,23 @@ export function AppShell() {
                 Workspace
               </p>
               <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-                Organize your fiber arts world.
+                {currentUser
+                  ? `Signed in as ${currentUser.name ?? currentUser.email ?? 'maker'}`
+                  : 'Organize your fiber arts world.'}
               </p>
             </div>
             <div className="flex items-center gap-3">
+              {currentUser ? (
+                <button
+                  type="button"
+                  aria-label="Log out"
+                  onClick={logout}
+                  className="inline-flex h-11 items-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 text-sm font-medium text-stone-700 shadow-sm transition hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-rose-400 dark:hover:text-stone-50"
+                >
+                  <LogOut color="currentColor" size={18} />
+                  <span className="hidden sm:inline">Log out</span>
+                </button>
+              ) : null}
               <button
                 type="button"
                 aria-label="Toggle dark mode"
@@ -174,7 +202,43 @@ export function AppShell() {
           </header>
 
           <main className="flex-1 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-            {isLoading ? (
+            {isAuthLoading ? (
+              <section className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+                <h1 className="font-serif text-3xl text-stone-900 dark:text-stone-100">
+                  Checking your sign-in...
+                </h1>
+                <p className="text-base text-stone-600 dark:text-stone-400">
+                  Looking for an active Authentik session.
+                </p>
+              </section>
+            ) : authError ? (
+              <section className="mx-auto flex w-full max-w-5xl flex-col gap-4 rounded-[2rem] border border-rose-200 bg-rose-50 p-6 dark:border-rose-900/60 dark:bg-rose-950/40">
+                <h1 className="font-serif text-3xl text-stone-900 dark:text-stone-100">
+                  Could not load authentication
+                </h1>
+                <p className="text-base text-stone-700 dark:text-rose-100">
+                  {authError}
+                </p>
+              </section>
+            ) : !currentUser ? (
+              <section className="mx-auto flex w-full max-w-5xl flex-col gap-4 rounded-[2rem] border border-stone-200/70 bg-white/80 p-6 dark:border-stone-800 dark:bg-stone-950/60">
+                <h1 className="font-serif text-3xl text-stone-900 dark:text-stone-100">
+                  Redirecting to sign in...
+                </h1>
+                <p className="text-base text-stone-600 dark:text-stone-400">
+                  Stitch Keeper uses Authentik for authentication in this deployment.
+                </p>
+                <div>
+                  <button
+                    type="button"
+                    onClick={login}
+                    className="inline-flex rounded-2xl bg-stone-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-rose-400 dark:text-stone-950 dark:hover:bg-rose-300"
+                  >
+                    Sign in
+                  </button>
+                </div>
+              </section>
+            ) : isLoading ? (
               <section className="mx-auto flex w-full max-w-5xl flex-col gap-4">
                 <h1 className="font-serif text-3xl text-stone-900 dark:text-stone-100">
                   Loading your fiber data...

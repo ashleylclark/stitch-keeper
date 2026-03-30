@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 import { AppDataContext, type AppDataContextValue } from '../state/app-data';
 import type { Pattern, Project, StashItem } from '../../types/models';
 import { buildPatternMatchSummaries } from '../../pages/patterns/lib/patternMatching';
+import { useAuth } from '../state/auth';
 import {
   createStashItem,
   fetchStashItems,
@@ -22,6 +23,7 @@ import {
 } from '../../pages/projects/api';
 
 export function AppDataProvider({ children }: PropsWithChildren) {
+  const { currentUser, isLoading: isAuthLoading } = useAuth();
   const [stashItems, setStashItems] = useState<StashItem[]>([]);
   const [patterns, setPatterns] = useState<Pattern[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -29,8 +31,21 @@ export function AppDataProvider({ children }: PropsWithChildren) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isAuthLoading) {
+      return;
+    }
+
+    if (!currentUser) {
+      setStashItems([]);
+      setPatterns([]);
+      setProjects([]);
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+
     void loadInitialData();
-  }, []);
+  }, [currentUser, isAuthLoading]);
 
   async function loadInitialData() {
     try {

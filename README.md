@@ -82,6 +82,30 @@ npm run format
 npm run format:check
 ```
 
+## Authentication
+
+Multi-user mode uses Authentik via OpenID Connect and stores a server-side session cookie.
+
+Required environment variables:
+
+- `AUTHENTIK_ISSUER_URL`
+- `AUTHENTIK_CLIENT_ID`
+- `AUTHENTIK_CLIENT_SECRET`
+- `AUTH_SESSION_SECRET`
+
+Recommended environment variables:
+
+- `APP_BASE_URL`
+- `AUTHENTIK_REDIRECT_URI`
+- `AUTHENTIK_POST_LOGOUT_REDIRECT_URI`
+- `AUTHENTIK_SCOPES` (defaults to `openid profile email`)
+
+Notes:
+
+- Existing single-user data is automatically claimed by the first authenticated user
+- Each signed-in user gets a private stash, pattern library, and project list
+- There is no sharing/workspace model yet
+
 ## Releases
 
 Releases are cut intentionally with `release-it`, not from every push to `main`.

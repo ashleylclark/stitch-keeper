@@ -98,7 +98,15 @@ type ProjectStashUsage = {
   quantityUsed?: number;
 };
 
+type CurrentUser = {
+  id: string;
+  email?: string;
+  name?: string;
+  subject?: string;
+};
+
 export type {
+  CurrentUser,
   ItemCategory,
   MatchStatus,
   Pattern,

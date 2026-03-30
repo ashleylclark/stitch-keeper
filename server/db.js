@@ -15,8 +15,17 @@ db.pragma('foreign_keys = ON');
 
 export function initializeDatabase() {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      subject TEXT NOT NULL UNIQUE,
+      email TEXT,
+      name TEXT,
+      created_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS stash_items (
       id TEXT PRIMARY KEY,
+      user_id TEXT,
       name TEXT NOT NULL,
       category TEXT NOT NULL,
       status TEXT,
@@ -27,11 +36,13 @@ export function initializeDatabase() {
       quantity INTEGER NOT NULL,
       unit TEXT,
       size TEXT,
-      notes TEXT
+      notes TEXT,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS patterns (
       id TEXT PRIMARY KEY,
+      user_id TEXT,
       name TEXT NOT NULL,
       added_at TEXT,
       is_planned INTEGER NOT NULL DEFAULT 0,
@@ -40,7 +51,8 @@ export function initializeDatabase() {
       category TEXT,
       difficulty TEXT,
       notes TEXT,
-      instructions TEXT NOT NULL
+      instructions TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS pattern_requirements (
@@ -58,13 +70,15 @@ export function initializeDatabase() {
 
     CREATE TABLE IF NOT EXISTS projects (
       id TEXT PRIMARY KEY,
+      user_id TEXT,
       name TEXT NOT NULL,
       pattern_id TEXT,
       start_date TEXT,
       end_date TEXT,
       status TEXT NOT NULL,
       notes TEXT,
-      stash_usage_applied_at TEXT
+      stash_usage_applied_at TEXT,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS project_stash_items (
@@ -78,6 +92,9 @@ export function initializeDatabase() {
 
   ensureColumn('projects', 'stash_usage_applied_at', 'TEXT');
   ensureColumn('project_stash_items', 'quantity_used', 'INTEGER');
+  ensureColumn('stash_items', 'user_id', 'TEXT');
+  ensureColumn('patterns', 'user_id', 'TEXT');
+  ensureColumn('projects', 'user_id', 'TEXT');
 
   seedDatabaseIfEmpty();
 }

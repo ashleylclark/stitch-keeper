@@ -4,6 +4,14 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import express from 'express';
+import {
+  getCurrentUser,
+  handleAuthCallback,
+  logout,
+  requireAuthenticatedUser,
+  sessionMiddleware,
+  startLogin,
+} from './auth.js';
 import { db, initializeDatabase } from './db.js';
 
 initializeDatabase();
@@ -17,71 +25,107 @@ const hasBuiltFrontend = fs.existsSync(indexHtmlPath);
 
 app.use(cors());
 app.use(express.json());
+app.use(sessionMiddleware());
 
 app.get('/api/health', (_request, response) => {
   response.json({ ok: true });
 });
 
-app.get('/api/stash', (_request, response) => {
-  response.json(listStashItems());
+app.get('/api/auth/login', (request, response, next) => {
+  void startLogin(request, response).catch(next);
+});
+
+app.get('/api/auth/callback', (request, response, next) => {
+  void handleAuthCallback(request, response).catch(next);
+});
+
+app.get('/api/auth/me', getCurrentUser);
+
+app.get('/api/auth/logout', (request, response, next) => {
+  void logout(request, response).catch(next);
+});
+
+app.use('/api', (request, response, next) => {
+  if (
+    request.path === '/health' ||
+    request.path.startsWith('/auth/')
+  ) {
+    next();
+    return;
+  }
+
+  requireAuthenticatedUser(request, response, next);
+});
+
+app.get('/api/stash', (request, response) => {
+  response.json(listStashItems(request.currentUser.id));
 });
 
 app.post('/api/stash', (request, response) => {
   const item = normalizeStashItem(request.body);
-  saveStashItem(item);
+  saveStashItem(item, request.currentUser.id);
   response.status(201).json(item);
 });
 
 app.put('/api/stash/:id', (request, response) => {
   const item = normalizeStashItem({ ...request.body, id: request.params.id });
-  saveStashItem(item, true);
+  saveStashItem(item, request.currentUser.id, true);
   response.json(item);
 });
 
 app.delete('/api/stash/:id', (request, response) => {
-  db.prepare('DELETE FROM stash_items WHERE id = ?').run(request.params.id);
+  db.prepare('DELETE FROM stash_items WHERE id = ? AND user_id = ?').run(
+    request.params.id,
+    request.currentUser.id,
+  );
   response.status(204).end();
 });
 
-app.get('/api/patterns', (_request, response) => {
-  response.json(listPatterns());
+app.get('/api/patterns', (request, response) => {
+  response.json(listPatterns(request.currentUser.id));
 });
 
 app.post('/api/patterns', (request, response) => {
   const pattern = normalizePattern(request.body);
-  savePattern(pattern);
+  savePattern(pattern, request.currentUser.id);
   response.status(201).json(pattern);
 });
 
 app.put('/api/patterns/:id', (request, response) => {
   const pattern = normalizePattern({ ...request.body, id: request.params.id });
-  savePattern(pattern, true);
+  savePattern(pattern, request.currentUser.id, true);
   response.json(pattern);
 });
 
 app.delete('/api/patterns/:id', (request, response) => {
-  db.prepare('DELETE FROM patterns WHERE id = ?').run(request.params.id);
+  db.prepare('DELETE FROM patterns WHERE id = ? AND user_id = ?').run(
+    request.params.id,
+    request.currentUser.id,
+  );
   response.status(204).end();
 });
 
-app.get('/api/projects', (_request, response) => {
-  response.json(listProjects());
+app.get('/api/projects', (request, response) => {
+  response.json(listProjects(request.currentUser.id));
 });
 
 app.post('/api/projects', (request, response) => {
   const project = normalizeProject(request.body);
-  saveProject(project);
+  saveProject(project, request.currentUser.id);
   response.status(201).json(project);
 });
 
 app.put('/api/projects/:id', (request, response) => {
   const project = normalizeProject({ ...request.body, id: request.params.id });
-  saveProject(project, true);
+  saveProject(project, request.currentUser.id, true);
   response.json(project);
 });
 
 app.delete('/api/projects/:id', (request, response) => {
-  db.prepare('DELETE FROM projects WHERE id = ?').run(request.params.id);
+  db.prepare('DELETE FROM projects WHERE id = ? AND user_id = ?').run(
+    request.params.id,
+    request.currentUser.id,
+  );
   response.status(204).end();
 });
 
@@ -97,19 +141,27 @@ app.listen(port, () => {
   console.log(`Stash Keeper server listening on http://localhost:${port}`);
 });
 
-function listStashItems() {
+app.use((error, _request, response) => {
+  const message =
+    error instanceof Error ? error.message : 'Unexpected server error.';
+
+  response.status(500).send(message);
+});
+
+function listStashItems(userId) {
   return db
     .prepare(
       `
     SELECT id, name, category, status, material, weight, brand, color, quantity, unit, size, notes
     FROM stash_items
+    WHERE user_id = ?
     ORDER BY rowid DESC
   `,
     )
-    .all();
+    .all(userId);
 }
 
-function listPatterns() {
+function listPatterns(userId) {
   const patterns = db
     .prepare(
       `
@@ -125,10 +177,11 @@ function listPatterns() {
       notes,
       instructions
     FROM patterns
+    WHERE user_id = ?
     ORDER BY COALESCE(added_at, '') DESC, rowid DESC
   `,
     )
-    .all();
+    .all(userId);
 
   const requirements = db
     .prepare(
@@ -144,10 +197,11 @@ function listPatterns() {
       size,
       notes
     FROM pattern_requirements
+    WHERE pattern_id IN (SELECT id FROM patterns WHERE user_id = ?)
     ORDER BY rowid ASC
   `,
     )
-    .all();
+    .all(userId);
 
   const requirementsByPatternId = new Map();
 
@@ -173,7 +227,7 @@ function listPatterns() {
   }));
 }
 
-function listProjects() {
+function listProjects(userId) {
   const projects = db
     .prepare(
       `
@@ -187,20 +241,22 @@ function listProjects() {
       notes,
       stash_usage_applied_at AS stashUsageAppliedAt
     FROM projects
+    WHERE user_id = ?
     ORDER BY rowid DESC
   `,
     )
-    .all();
+    .all(userId);
 
   const projectStashItems = db
     .prepare(
       `
     SELECT project_id AS projectId, stash_item_id AS stashItemId, quantity_used AS quantityUsed
     FROM project_stash_items
+    WHERE project_id IN (SELECT id FROM projects WHERE user_id = ?)
     ORDER BY rowid ASC
   `,
     )
-    .all();
+    .all(userId);
 
   const stashItemIdsByProjectId = new Map();
   const stashUsagesByProjectId = new Map();
@@ -313,42 +369,46 @@ function normalizeProject(input) {
   };
 }
 
-function saveStashItem(item, replace = false) {
+function saveStashItem(item, userId, replace = false) {
   const sql = replace
     ? `
         INSERT OR REPLACE INTO stash_items (
-          id, name, category, status, material, weight, brand, color, quantity, unit, size, notes
+          id, user_id, name, category, status, material, weight, brand, color, quantity, unit, size, notes
         ) VALUES (
-          @id, @name, @category, @status, @material, @weight, @brand, @color, @quantity, @unit, @size, @notes
+          @id, @userId, @name, @category, @status, @material, @weight, @brand, @color, @quantity, @unit, @size, @notes
         )
       `
     : `
         INSERT INTO stash_items (
-          id, name, category, status, material, weight, brand, color, quantity, unit, size, notes
+          id, user_id, name, category, status, material, weight, brand, color, quantity, unit, size, notes
         ) VALUES (
-          @id, @name, @category, @status, @material, @weight, @brand, @color, @quantity, @unit, @size, @notes
+          @id, @userId, @name, @category, @status, @material, @weight, @brand, @color, @quantity, @unit, @size, @notes
         )
       `;
 
-  db.prepare(sql).run(item);
+  db.prepare(sql).run({ ...item, userId });
 }
 
-function savePattern(pattern, replace = false) {
+function savePattern(pattern, userId, replace = false) {
   db.transaction(() => {
     if (replace) {
-      db.prepare('DELETE FROM patterns WHERE id = ?').run(pattern.id);
+      db.prepare('DELETE FROM patterns WHERE id = ? AND user_id = ?').run(
+        pattern.id,
+        userId,
+      );
     }
 
     db.prepare(
       `
       INSERT INTO patterns (
-        id, name, added_at, is_planned, source, source_url, category, difficulty, notes, instructions
+        id, user_id, name, added_at, is_planned, source, source_url, category, difficulty, notes, instructions
       ) VALUES (
-        @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @category, @difficulty, @notes, @instructions
+        @id, @userId, @name, @addedAt, @isPlanned, @source, @sourceUrl, @category, @difficulty, @notes, @instructions
       )
     `,
     ).run({
       ...pattern,
+      userId,
       isPlanned: pattern.isPlanned ? 1 : 0,
     });
 
@@ -366,22 +426,27 @@ function savePattern(pattern, replace = false) {
   })();
 }
 
-function saveProject(project, replace = false) {
+function saveProject(project, userId, replace = false) {
   db.transaction(() => {
+    assertProjectReferencesOwnedData(project, userId);
+
     const existingProject = replace
       ? db
           .prepare(
             `
             SELECT id, status, stash_usage_applied_at AS stashUsageAppliedAt
             FROM projects
-            WHERE id = ?
+            WHERE id = ? AND user_id = ?
           `,
           )
-          .get(project.id)
+          .get(project.id, userId)
       : null;
 
     if (replace) {
-      db.prepare('DELETE FROM projects WHERE id = ?').run(project.id);
+      db.prepare('DELETE FROM projects WHERE id = ? AND user_id = ?').run(
+        project.id,
+        userId,
+      );
     }
 
     const shouldApplyStashUsage =
@@ -394,13 +459,14 @@ function saveProject(project, replace = false) {
     db.prepare(
       `
       INSERT INTO projects (
-        id, name, pattern_id, start_date, end_date, status, notes, stash_usage_applied_at
+        id, user_id, name, pattern_id, start_date, end_date, status, notes, stash_usage_applied_at
       ) VALUES (
-        @id, @name, @patternId, @startDate, @endDate, @status, @notes, @stashUsageAppliedAt
+        @id, @userId, @name, @patternId, @startDate, @endDate, @status, @notes, @stashUsageAppliedAt
       )
     `,
     ).run({
       ...project,
+      userId,
       stashUsageAppliedAt,
     });
 
@@ -418,16 +484,38 @@ function saveProject(project, replace = false) {
     }
 
     if (shouldApplyStashUsage) {
-      applyProjectStashUsage(project.stashUsages);
+      applyProjectStashUsage(project.stashUsages, userId);
     }
   })();
 }
 
-function applyProjectStashUsage(stashUsages) {
+function assertProjectReferencesOwnedData(project, userId) {
+  if (project.patternId) {
+    const ownsPattern = db
+      .prepare('SELECT 1 FROM patterns WHERE id = ? AND user_id = ? LIMIT 1')
+      .get(project.patternId, userId);
+
+    if (!ownsPattern) {
+      throw new Error('Projects can only reference patterns owned by the current user.');
+    }
+  }
+
+  for (const usage of project.stashUsages) {
+    const ownsStashItem = db
+      .prepare('SELECT 1 FROM stash_items WHERE id = ? AND user_id = ? LIMIT 1')
+      .get(usage.stashItemId, userId);
+
+    if (!ownsStashItem) {
+      throw new Error('Projects can only reference stash items owned by the current user.');
+    }
+  }
+}
+
+function applyProjectStashUsage(stashUsages, userId) {
   const updateStashQuantity = db.prepare(`
     UPDATE stash_items
     SET quantity = MAX(quantity - @quantityUsed, 0)
-    WHERE id = @stashItemId
+    WHERE id = @stashItemId AND user_id = @userId
   `);
 
   for (const usage of stashUsages) {
@@ -440,8 +528,8 @@ function applyProjectStashUsage(stashUsages) {
     }
 
     const stashItem = db
-      .prepare('SELECT category FROM stash_items WHERE id = ?')
-      .get(usage.stashItemId);
+      .prepare('SELECT category FROM stash_items WHERE id = ? AND user_id = ?')
+      .get(usage.stashItemId, userId);
 
     if (!stashItem || !isConsumableCategory(stashItem.category)) {
       continue;
@@ -450,6 +538,7 @@ function applyProjectStashUsage(stashUsages) {
     updateStashQuantity.run({
       stashItemId: usage.stashItemId,
       quantityUsed: usage.quantityUsed,
+      userId,
     });
   }
 }
