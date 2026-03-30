@@ -226,7 +226,8 @@ export function AppShell() {
                   Redirecting to sign in...
                 </h1>
                 <p className="text-base text-stone-600 dark:text-stone-400">
-                  Stitch Keeper uses Authentik for authentication in this deployment.
+                  Stitch Keeper uses Authentik for authentication in this
+                  deployment.
                 </p>
                 <div>
                   <button

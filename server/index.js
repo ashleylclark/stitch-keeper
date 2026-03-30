@@ -46,10 +46,7 @@ app.get('/api/auth/logout', (request, response, next) => {
 });
 
 app.use('/api', (request, response, next) => {
-  if (
-    request.path === '/health' ||
-    request.path.startsWith('/auth/')
-  ) {
+  if (request.path === '/health' || request.path.startsWith('/auth/')) {
     next();
     return;
   }
@@ -496,7 +493,9 @@ function assertProjectReferencesOwnedData(project, userId) {
       .get(project.patternId, userId);
 
     if (!ownsPattern) {
-      throw new Error('Projects can only reference patterns owned by the current user.');
+      throw new Error(
+        'Projects can only reference patterns owned by the current user.',
+      );
     }
   }
 
@@ -506,7 +505,9 @@ function assertProjectReferencesOwnedData(project, userId) {
       .get(usage.stashItemId, userId);
 
     if (!ownsStashItem) {
-      throw new Error('Projects can only reference stash items owned by the current user.');
+      throw new Error(
+        'Projects can only reference stash items owned by the current user.',
+      );
     }
   }
 }

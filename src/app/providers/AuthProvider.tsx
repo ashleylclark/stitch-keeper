@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type PropsWithChildren,
+} from 'react';
 import { AuthContext, type AuthContextValue } from '../state/auth';
 import type { CurrentUser } from '../../types/models';
 

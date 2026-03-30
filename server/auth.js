@@ -18,11 +18,15 @@ function getRequiredEnv(name) {
 }
 
 function getAppBaseUrl() {
-  return process.env.APP_BASE_URL ?? `http://localhost:${process.env.PORT ?? 3001}`;
+  return (
+    process.env.APP_BASE_URL ?? `http://localhost:${process.env.PORT ?? 3001}`
+  );
 }
 
 function getRedirectUri() {
-  return process.env.AUTHENTIK_REDIRECT_URI ?? `${getAppBaseUrl()}/api/auth/callback`;
+  return (
+    process.env.AUTHENTIK_REDIRECT_URI ?? `${getAppBaseUrl()}/api/auth/callback`
+  );
 }
 
 function getPostLogoutRedirectUri() {
@@ -85,15 +89,16 @@ export function getAuthenticatedUser(request) {
 
 function claimLegacyDataForUser(userId) {
   db.transaction(() => {
-    const hasClaimedLegacyData =
-      db.prepare(
+    const hasClaimedLegacyData = db
+      .prepare(
         `
         SELECT
           EXISTS(SELECT 1 FROM stash_items WHERE user_id IS NOT NULL) AS hasOwnedStash,
           EXISTS(SELECT 1 FROM patterns WHERE user_id IS NOT NULL) AS hasOwnedPatterns,
           EXISTS(SELECT 1 FROM projects WHERE user_id IS NOT NULL) AS hasOwnedProjects
       `,
-      ).get();
+      )
+      .get();
 
     if (
       hasClaimedLegacyData.hasOwnedStash ||
@@ -119,10 +124,7 @@ function upsertUser(profile) {
   const subject = String(profile.sub);
   const email = profile.email ? String(profile.email) : null;
   const name =
-    profile.name ??
-    profile.preferred_username ??
-    profile.email ??
-    profile.sub;
+    profile.name ?? profile.preferred_username ?? profile.email ?? profile.sub;
 
   const existingUser = db
     .prepare(
