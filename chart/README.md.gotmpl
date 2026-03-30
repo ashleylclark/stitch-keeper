@@ -1,0 +1,56 @@
+{{- define "chart.header" -}}
+# {{ .Name | title }} Helm Chart
+
+[![Version: {{ .Version }}](https://img.shields.io/badge/Version-{{ .Version }}-informational?style=flat-square)](Chart.yaml)
+[![AppVersion: {{ .AppVersion }}](https://img.shields.io/badge/AppVersion-{{ .AppVersion }}-informational?style=flat-square)](Chart.yaml)
+
+{{ .Description }}
+{{- end -}}
+
+{{ template "chart.header" . }}
+
+## Overview
+
+This chart deploys Stitch Keeper as a single-replica web application backed by SQLite.
+
+## Installing
+
+### From GHCR (OCI)
+
+```bash
+helm install stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper --version {{ .Version }}
+```
+
+To override values during install:
+
+```bash
+helm install stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper \
+  --version {{ .Version }} \
+  --set ingress.enabled=true
+```
+
+### From source
+
+```bash
+helm install stitch-keeper ./chart
+```
+
+## Upgrading
+
+```bash
+helm upgrade stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper --version {{ .Version }}
+```
+
+## Uninstalling
+
+```bash
+helm uninstall stitch-keeper
+```
+
+## Configuration
+
+{{ template "chart.valuesTable" . }}
+
+## License
+
+MIT - see [LICENSE](../LICENSE).
