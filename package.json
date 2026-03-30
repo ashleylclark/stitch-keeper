@@ -14,9 +14,6 @@
     "format:check": "prettier --check .",
     "release": "release-it",
     "release:dry-run": "release-it --dry-run",
-    "release:major": "release-it major",
-    "release:minor": "release-it minor",
-    "release:patch": "release-it patch",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "start:server": "node server/index.js"
