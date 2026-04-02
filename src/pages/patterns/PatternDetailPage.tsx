@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Modal } from '../../components/Modal';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -172,6 +172,8 @@ export default function PatternDetail() {
 
   const currentPattern = pattern;
   const patternSummary = patternMatchById.get(currentPattern.id);
+  const sourceLabel = currentPattern.source?.trim();
+  const sourceUrl = currentPattern.sourceUrl?.trim();
   const requirementMatchesById = new Map(
     patternSummary?.requirementMatches.map((match) => [
       match.requirementId,
@@ -240,6 +242,25 @@ export default function PatternDetail() {
                 <h1 className="font-serif text-4xl tracking-tight text-stone-900 dark:text-stone-50 sm:text-5xl">
                   {currentPattern.name}
                 </h1>
+                {sourceLabel || sourceUrl ? (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-stone-600 dark:text-stone-300">
+                    <span className="font-medium text-stone-700 dark:text-stone-200">
+                      Source: {sourceLabel ?? 'Original pattern'}
+                    </span>
+                    {sourceUrl ? (
+                      <a
+                        href={sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Open source for ${currentPattern.name}`}
+                        title="View source"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 transition hover:border-rose-200 hover:text-rose-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-rose-500/50 dark:hover:text-rose-300"
+                      >
+                        <ExternalLink size={14} />
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
                 <p className="max-w-3xl text-base leading-7 text-stone-600 dark:text-stone-300">
                   {currentPattern.notes ??
                     'No notes have been added for this pattern yet.'}
