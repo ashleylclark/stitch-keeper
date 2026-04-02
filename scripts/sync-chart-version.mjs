@@ -12,9 +12,10 @@ if (!version) {
 const chartPath = new URL('../chart/Chart.yaml', import.meta.url);
 const currentChart = readFileSync(chartPath, 'utf8');
 
-const nextChart = currentChart
-  .replace(/^version:\s*.*$/m, `version: "${version}"`)
-  .replace(/^appVersion:\s*.*$/m, `appVersion: "v${version}"`);
+const nextChart = currentChart.replace(
+  /^appVersion:\s*.*$/m,
+  `appVersion: "v${version}"`,
+);
 
 if (nextChart === currentChart) {
   console.error('Unable to update chart/Chart.yaml version fields.');
