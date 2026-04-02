@@ -13,17 +13,13 @@
   },
   "plugins": {
     "@release-it/conventional-changelog": {
-      "infile": "CHANGELOG.md",
       "preset": {
         "name": "conventionalcommits"
       }
     }
   },
   "hooks": {
-    "before:init": [
-      "npm run lint",
-      "npm run build"
-    ],
+    "before:init": ["npm run lint", "npm run build"],
     "after:bump": "node ./scripts/sync-chart-version.mjs ${version}",
     "after:release": "echo Released v${version}. Container publishing will run from the pushed tag."
   }
