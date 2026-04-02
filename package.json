@@ -10,6 +10,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "chart:lint": "helm lint chart",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "release": "release-it",
