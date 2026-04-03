@@ -414,6 +414,10 @@ export function PatternForm({
             onChange={(event) => update('instructions', event.target.value)}
             placeholder="Paste or type the pattern instructions here."
           />
+          <p className="text-sm leading-6 text-stone-500 dark:text-stone-400">
+            Put each round or step on its own line to make it trackable inside
+            linked projects.
+          </p>
           {errors.instructions ? (
             <p className="text-sm text-rose-600 dark:text-rose-300">
               {errors.instructions}
