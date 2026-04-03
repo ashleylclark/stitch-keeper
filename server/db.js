@@ -64,6 +64,7 @@ export function initializeDatabase() {
       end_date TEXT,
       status TEXT NOT NULL,
       notes TEXT,
+      completed_instruction_steps TEXT NOT NULL DEFAULT '[]',
       stash_usage_applied_at TEXT
     );
 
@@ -77,6 +78,11 @@ export function initializeDatabase() {
   `);
 
   ensureColumn('projects', 'stash_usage_applied_at', 'TEXT');
+  ensureColumn(
+    'projects',
+    'completed_instruction_steps',
+    "TEXT NOT NULL DEFAULT '[]'",
+  );
   ensureColumn('project_stash_items', 'quantity_used', 'INTEGER');
 
   seedDatabaseIfEmpty();
@@ -115,9 +121,9 @@ function seedDatabaseIfEmpty() {
 
   const insertProject = db.prepare(`
     INSERT INTO projects (
-      id, name, pattern_id, start_date, end_date, status, notes
+      id, name, pattern_id, start_date, end_date, status, notes, completed_instruction_steps
     ) VALUES (
-      @id, @name, @patternId, @startDate, @endDate, @status, @notes
+      @id, @name, @patternId, @startDate, @endDate, @status, @notes, @completedInstructionSteps
     )
   `);
 
@@ -182,7 +188,9 @@ function seedDatabaseIfEmpty() {
         endDate: project.endDate ?? null,
         status: project.status,
         notes: project.notes ?? null,
-        stashUsageAppliedAt: null,
+        completedInstructionSteps: JSON.stringify(
+          project.completedInstructionSteps ?? [],
+        ),
       });
 
       for (const stashItemId of project.stashItemIds ?? []) {
