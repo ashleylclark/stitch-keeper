@@ -89,6 +89,7 @@ type Project = {
   endDate?: string;
   stashItemIds: string[];
   stashUsages: ProjectStashUsage[];
+  completedInstructionSteps: number[];
   status: ProjectStatus;
   notes?: string;
 };
