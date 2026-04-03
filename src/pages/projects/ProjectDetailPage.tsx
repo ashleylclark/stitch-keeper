@@ -6,6 +6,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ProjectForm, type ProjectFormValues } from './components/ProjectForm';
 import { useAppData } from '../../app/state/app-data';
 import type { Pattern, Project, ProjectStatus } from '../../types/models';
+import { parseInstructionSteps } from '../patterns/lib/instructionSteps';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error
@@ -174,8 +175,12 @@ export default function ProjectDetail() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [instructionProgressError, setInstructionProgressError] = useState<
+    string | null
+  >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [stepPendingIndex, setStepPendingIndex] = useState<number | null>(null);
 
   if (!project) {
     return <NotFoundState />;
@@ -188,18 +193,35 @@ export default function ProjectDetail() {
   const linkedStashItems = stashItems.filter((item) =>
     currentProject.stashItemIds.includes(item.id),
   );
+  const instructionSteps = linkedPattern
+    ? parseInstructionSteps(linkedPattern.instructions)
+    : [];
+  const hasTrackableInstructionSteps =
+    instructionSteps.length > 1 ||
+    Boolean(linkedPattern?.instructions.match(/\r?\n/));
+  const completedInstructionSteps = new Set(
+    currentProject.completedInstructionSteps,
+  );
+  const completedStepCount = instructionSteps.filter((step) =>
+    completedInstructionSteps.has(step.index),
+  ).length;
 
   async function handleSubmit(values: ProjectFormValues) {
     setSubmitError(null);
     setIsSubmitting(true);
 
     try {
+      const shouldResetInstructionProgress =
+        currentProject.patternId !== values.patternId;
       const nextProject: Project = {
         ...currentProject,
         name: values.name.trim(),
         patternId: values.patternId,
         stashItemIds: values.stashItemIds,
         stashUsages: values.stashUsages,
+        completedInstructionSteps: shouldResetInstructionProgress
+          ? []
+          : currentProject.completedInstructionSteps,
         status: values.status,
         startDate: values.startDate || undefined,
         endDate: values.endDate || undefined,
@@ -212,6 +234,30 @@ export default function ProjectDetail() {
       setSubmitError(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function toggleInstructionStep(stepIndex: number) {
+    setInstructionProgressError(null);
+    setStepPendingIndex(stepIndex);
+
+    const nextCompletedInstructionSteps = completedInstructionSteps.has(stepIndex)
+      ? currentProject.completedInstructionSteps.filter(
+          (existingStepIndex) => existingStepIndex !== stepIndex,
+        )
+      : [...currentProject.completedInstructionSteps, stepIndex].sort(
+          (left, right) => left - right,
+        );
+
+    try {
+      await updateProject({
+        ...currentProject,
+        completedInstructionSteps: nextCompletedInstructionSteps,
+      });
+    } catch (error) {
+      setInstructionProgressError(getErrorMessage(error));
+    } finally {
+      setStepPendingIndex(null);
     }
   }
 
@@ -329,6 +375,95 @@ export default function ProjectDetail() {
           ) : (
             <div className="mt-6 rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 px-5 py-5 text-sm leading-6 text-stone-600 dark:border-stone-700 dark:bg-stone-800/50 dark:text-stone-300">
               No stash items are linked to this project yet.
+            </div>
+          )}
+        </section>
+
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
+          <div className="space-y-2">
+            <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
+              Pattern Instructions
+            </h2>
+            <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
+              Track progress here when the linked pattern is written one step
+              or round per line.
+            </p>
+          </div>
+
+          {!linkedPattern ? (
+            <div className="mt-6 rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 px-5 py-5 text-sm leading-6 text-stone-600 dark:border-stone-700 dark:bg-stone-800/50 dark:text-stone-300">
+              Link a pattern to this project to track instruction progress.
+            </div>
+          ) : hasTrackableInstructionSteps ? (
+            <div className="mt-6 space-y-4">
+              <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50/70 px-5 py-4 text-sm text-stone-700 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-stone-200">
+                <span className="font-semibold text-stone-900 dark:text-stone-50">
+                  {completedStepCount} / {instructionSteps.length}
+                </span>{' '}
+                steps completed
+              </div>
+
+              {instructionProgressError ? (
+                <div className="rounded-[1.5rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-100">
+                  {instructionProgressError}
+                </div>
+              ) : null}
+
+              <div className="space-y-3">
+                {instructionSteps.map((step) => {
+                  const isChecked = completedInstructionSteps.has(step.index);
+                  const isPending = stepPendingIndex === step.index;
+
+                  return (
+                    <label
+                      key={step.id}
+                      className={[
+                        'flex cursor-pointer items-start gap-3 rounded-[1.5rem] border px-4 py-4 transition',
+                        isChecked
+                          ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/50 dark:bg-emerald-950/20'
+                          : 'border-stone-200 bg-stone-50/80 dark:border-stone-700 dark:bg-stone-800/60',
+                      ].join(' ')}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        disabled={isPending}
+                        onChange={() => {
+                          void toggleInstructionStep(step.index);
+                        }}
+                        className="mt-1 h-4 w-4 rounded border-stone-300 text-rose-500 focus:ring-rose-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-rose-400"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-400">
+                          Step {step.index + 1}
+                        </p>
+                        <p
+                          className={[
+                            'mt-2 text-sm leading-7 text-stone-700 dark:text-stone-200',
+                            isChecked ? 'line-through opacity-70' : '',
+                          ].join(' ')}
+                        >
+                          {step.text}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="mt-6 space-y-4">
+              <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50/80 px-5 py-4 text-sm leading-6 text-stone-700 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-stone-200">
+                This pattern’s instructions are stored as freeform text right
+                now. Put each step on its own line in the pattern editor to
+                enable checkbox tracking.
+              </div>
+
+              <div className="rounded-[1.5rem] border border-rose-100 bg-rose-50/60 p-5 dark:border-rose-900/50 dark:bg-rose-950/20">
+                <div className="whitespace-pre-wrap text-sm leading-7 text-stone-700 dark:text-stone-200">
+                  {linkedPattern.instructions}
+                </div>
+              </div>
             </div>
           )}
         </section>
