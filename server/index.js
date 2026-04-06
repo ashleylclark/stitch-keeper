@@ -185,6 +185,7 @@ function listProjects() {
       end_date AS endDate,
       status,
       notes,
+      completed_instruction_steps AS completedInstructionSteps,
       stash_usage_applied_at AS stashUsageAppliedAt
     FROM projects
     ORDER BY rowid DESC
@@ -224,6 +225,9 @@ function listProjects() {
     startDate: project.startDate ?? undefined,
     endDate: project.endDate ?? undefined,
     notes: project.notes ?? undefined,
+    completedInstructionSteps: parseCompletedInstructionSteps(
+      project.completedInstructionSteps,
+    ),
     stashItemIds: stashItemIdsByProjectId.get(project.id) ?? [],
     stashUsages: stashUsagesByProjectId.get(project.id) ?? [],
     stashUsageAppliedAt: project.stashUsageAppliedAt ?? undefined,
@@ -300,6 +304,18 @@ function normalizeProject(input) {
         }))
       : [];
 
+  const completedInstructionSteps = Array.isArray(input.completedInstructionSteps)
+    ? input.completedInstructionSteps
+        .map((stepIndex) => Number(stepIndex))
+        .filter(
+          (stepIndex, index, current) =>
+            Number.isInteger(stepIndex) &&
+            stepIndex >= 0 &&
+            current.indexOf(stepIndex) === index,
+        )
+        .sort((left, right) => left - right)
+    : [];
+
   return {
     id: String(input.id ?? `project-${randomUUID()}`),
     name: String(input.name ?? '').trim(),
@@ -310,6 +326,7 @@ function normalizeProject(input) {
     notes: emptyToUndefined(input.notes),
     stashItemIds: normalizedStashUsages.map((usage) => usage.stashItemId),
     stashUsages: normalizedStashUsages,
+    completedInstructionSteps,
   };
 }
 
@@ -394,13 +411,14 @@ function saveProject(project, replace = false) {
     db.prepare(
       `
       INSERT INTO projects (
-        id, name, pattern_id, start_date, end_date, status, notes, stash_usage_applied_at
+        id, name, pattern_id, start_date, end_date, status, notes, completed_instruction_steps, stash_usage_applied_at
       ) VALUES (
-        @id, @name, @patternId, @startDate, @endDate, @status, @notes, @stashUsageAppliedAt
+        @id, @name, @patternId, @startDate, @endDate, @status, @notes, @completedInstructionSteps, @stashUsageAppliedAt
       )
     `,
     ).run({
       ...project,
+      completedInstructionSteps: JSON.stringify(project.completedInstructionSteps),
       stashUsageAppliedAt,
     });
 
@@ -470,4 +488,24 @@ function emptyToUndefined(value) {
 
   const trimmed = String(value).trim();
   return trimmed === '' ? undefined : trimmed;
+}
+
+function parseCompletedInstructionSteps(value) {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? parsed.filter(
+          (stepIndex, index, current) =>
+            Number.isInteger(stepIndex) &&
+            stepIndex >= 0 &&
+            current.indexOf(stepIndex) === index,
+        )
+      : [];
+  } catch {
+    return [];
+  }
 }

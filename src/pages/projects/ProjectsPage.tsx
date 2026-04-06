@@ -296,6 +296,10 @@ export default function Projects() {
         patternId: values.patternId,
         stashItemIds: values.stashItemIds,
         stashUsages: values.stashUsages,
+        completedInstructionSteps:
+          editingProject && editingProject.patternId === values.patternId
+            ? editingProject.completedInstructionSteps
+            : [],
         status: values.status,
         startDate: values.startDate || undefined,
         endDate: values.endDate || undefined,

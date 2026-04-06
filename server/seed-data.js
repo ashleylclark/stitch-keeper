@@ -71,6 +71,7 @@ export const projects = [
       { stashItemId: 's1', quantityUsed: 1 },
       { stashItemId: 's2' },
     ],
+    completedInstructionSteps: [],
     status: 'in-progress',
     notes: 'On round 12',
   },
