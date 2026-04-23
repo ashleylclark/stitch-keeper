@@ -16,6 +16,7 @@ import {
   requirementMatchBadgeClasses,
   requirementMatchLabels,
 } from './lib/patternMatching';
+import { countInstructionSteps } from './lib/instructionSections';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error
@@ -195,6 +196,7 @@ export default function PatternDetail() {
         difficulty: values.difficulty || undefined,
         notes: values.notes.trim() || undefined,
         instructions: values.instructions,
+        instructionSections: values.instructionSections,
         requirements: values.requirements,
       };
 
@@ -360,15 +362,48 @@ export default function PatternDetail() {
               Instructions
             </h2>
             <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
-              Stored exactly as entered so line breaks and spacing are
-              preserved.
+              Organized by section so pattern headers stay separate from
+              trackable steps.
             </p>
           </div>
 
-          <div className="mt-6 rounded-[1.5rem] border border-rose-100 bg-rose-50/60 p-5 dark:border-rose-900/50 dark:bg-rose-950/20">
-            <div className="whitespace-pre-wrap text-sm leading-7 text-stone-700 dark:text-stone-200">
-              {currentPattern.instructions}
-            </div>
+          <div className="mt-6 space-y-4">
+            {currentPattern.instructionSections.map((section) => (
+              <article
+                key={section.id}
+                className="rounded-[1.5rem] border border-rose-100 bg-rose-50/60 p-5 dark:border-rose-900/50 dark:bg-rose-950/20"
+              >
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 className="font-serif text-xl text-stone-900 dark:text-stone-50">
+                      {section.title}
+                    </h3>
+                    {section.notes ? (
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-stone-600 dark:text-stone-300">
+                        {section.notes}
+                      </p>
+                    ) : null}
+                  </div>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-stone-600 ring-1 ring-inset ring-rose-100 dark:bg-stone-900 dark:text-stone-300 dark:ring-rose-900/70">
+                    {countInstructionSteps(section)} steps
+                  </span>
+                </div>
+
+                <ol className="mt-4 space-y-3">
+                  {section.steps.map((step, index) => (
+                    <li
+                      key={step.id}
+                      className="rounded-2xl bg-white/70 px-4 py-3 text-sm leading-7 text-stone-700 dark:bg-stone-950/50 dark:text-stone-200"
+                    >
+                      <span className="mr-2 font-semibold text-stone-900 dark:text-stone-50">
+                        {index + 1}.
+                      </span>
+                      {step.text}
+                    </li>
+                  ))}
+                </ol>
+              </article>
+            ))}
           </div>
         </section>
       </section>
@@ -391,6 +426,7 @@ export default function PatternDetail() {
             difficulty: currentPattern.difficulty ?? '',
             notes: currentPattern.notes ?? '',
             instructions: currentPattern.instructions,
+            instructionSections: currentPattern.instructionSections,
             requirements: currentPattern.requirements,
           }}
           submitLabel="Save Changes"
