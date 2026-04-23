@@ -261,6 +261,7 @@ export default function Patterns() {
         sourceUrl: values.sourceUrl.trim() || undefined,
         notes: values.notes.trim() || undefined,
         instructions: values.instructions,
+        instructionSections: values.instructionSections,
         requirements: values.requirements,
       };
 
@@ -488,6 +489,7 @@ export default function Patterns() {
                   difficulty: editingPattern.difficulty ?? '',
                   notes: editingPattern.notes ?? '',
                   instructions: editingPattern.instructions,
+                  instructionSections: editingPattern.instructionSections,
                   requirements: editingPattern.requirements,
                 }
               : undefined

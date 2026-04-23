@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type {
   ItemCategory,
   Pattern,
+  PatternInstructionSection,
   PatternRequirement,
   YarnWeight,
 } from '../../../types/models';
@@ -11,6 +12,14 @@ import { FormSection } from '../../../components/forms/FormSection';
 import { SelectInput } from '../../../components/forms/SelectInput';
 import { TextArea } from '../../../components/forms/TextArea';
 import { TextInput } from '../../../components/forms/TextInput';
+import {
+  createInstructionSection,
+  createStepsFromText,
+  deriveInstructionsFromSections,
+  getInstructionStepsText,
+  getPatternInstructionSections,
+  normalizeInstructionSections,
+} from '../lib/instructionSections';
 
 export type PatternFormValues = {
   name: string;
@@ -20,6 +29,7 @@ export type PatternFormValues = {
   difficulty: NonNullable<Pattern['difficulty']> | '';
   notes: string;
   instructions: string;
+  instructionSections: PatternInstructionSection[];
   requirements: PatternRequirement[];
 };
 
@@ -42,7 +52,7 @@ type PatternFormProps = {
   isSubmitting?: boolean;
 };
 
-type FormErrors = Partial<Record<'name' | 'instructions', string>>;
+type FormErrors = Partial<Record<'name' | 'instructionSections', string>>;
 
 const defaultRequirementUnits: Record<ItemCategory, string> = {
   yarn: 'yrds',
@@ -81,6 +91,10 @@ export function PatternForm({
     difficulty: initialValues?.difficulty ?? '',
     notes: initialValues?.notes ?? '',
     instructions: initialValues?.instructions ?? '',
+    instructionSections: getPatternInstructionSections({
+      instructions: initialValues?.instructions,
+      instructionSections: initialValues?.instructionSections,
+    }),
     requirements: initialValues?.requirements ?? [],
   });
   const [newRequirement, setNewRequirement] = useState<RequirementFormValues>(
@@ -97,9 +111,74 @@ export function PatternForm({
   ) {
     setValues((prev) => ({ ...prev, [key]: value }));
 
-    if (key === 'name' || key === 'instructions') {
+    if (key === 'name' || key === 'instructionSections') {
       setErrors((prev) => ({ ...prev, [key]: undefined }));
     }
+  }
+
+  function updateInstructionSection(
+    sectionId: string,
+    nextValues: Partial<PatternInstructionSection>,
+  ) {
+    update(
+      'instructionSections',
+      values.instructionSections.map((section) =>
+        section.id === sectionId ? { ...section, ...nextValues } : section,
+      ),
+    );
+  }
+
+  function addInstructionSection() {
+    update('instructionSections', [
+      ...values.instructionSections,
+      createInstructionSection(values.instructionSections.length),
+    ]);
+  }
+
+  function removeInstructionSection(sectionId: string) {
+    if (values.instructionSections.length === 1) {
+      update('instructionSections', [createInstructionSection(0)]);
+      return;
+    }
+
+    update(
+      'instructionSections',
+      values.instructionSections.filter((section) => section.id !== sectionId),
+    );
+  }
+
+  function moveInstructionSection(sectionId: string, direction: -1 | 1) {
+    const currentIndex = values.instructionSections.findIndex(
+      (section) => section.id === sectionId,
+    );
+    const nextIndex = currentIndex + direction;
+
+    if (
+      currentIndex < 0 ||
+      nextIndex < 0 ||
+      nextIndex >= values.instructionSections.length
+    ) {
+      return;
+    }
+
+    const nextSections = [...values.instructionSections];
+    const [section] = nextSections.splice(currentIndex, 1);
+    nextSections.splice(nextIndex, 0, section);
+    update('instructionSections', nextSections);
+  }
+
+  function updateInstructionStepsFromText(sectionId: string, text: string) {
+    update(
+      'instructionSections',
+      values.instructionSections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              steps: createStepsFromText(text),
+            }
+          : section,
+      ),
+    );
   }
 
   function addRequirement() {
@@ -147,8 +226,17 @@ export function PatternForm({
       nextErrors.name = 'Pattern name is required.';
     }
 
-    if (!values.instructions.trim()) {
-      nextErrors.instructions = 'Instructions are required.';
+    const normalizedInstructionSections = normalizeInstructionSections(
+      values.instructionSections,
+    );
+
+    if (
+      normalizedInstructionSections.length === 0 ||
+      normalizedInstructionSections.every(
+        (section) => section.steps.length === 0,
+      )
+    ) {
+      nextErrors.instructionSections = 'Add at least one instruction step.';
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -156,7 +244,13 @@ export function PatternForm({
       return;
     }
 
-    onSubmit(values);
+    onSubmit({
+      ...values,
+      instructions: deriveInstructionsFromSections(
+        normalizedInstructionSections,
+      ),
+      instructionSections: normalizedInstructionSections,
+    });
   }
 
   return (
@@ -408,23 +502,111 @@ export function PatternForm({
       </FormSection>
 
       <FormSection title="Instructions">
-        <FormField label="Instructions">
-          <TextArea
-            value={values.instructions}
-            onChange={(event) => update('instructions', event.target.value)}
-            placeholder="Paste or type the pattern instructions here."
-            className="min-h-64 resize-y"
-          />
+        <div className="space-y-4">
           <p className="text-sm leading-6 text-stone-500 dark:text-stone-400">
-            Put each round or step on its own line to make it trackable inside
-            linked projects.
+            Organize the pattern into sections like Body, Sleeves, or Neckline.
+            Section notes are shown as reference text, and each non-empty line
+            in a section becomes a trackable step inside linked projects.
           </p>
-          {errors.instructions ? (
+
+          {errors.instructionSections ? (
             <p className="text-sm text-rose-600 dark:text-rose-300">
-              {errors.instructions}
+              {errors.instructionSections}
             </p>
           ) : null}
-        </FormField>
+
+          {values.instructionSections.map((section, sectionIndex) => (
+            <div
+              key={section.id}
+              className="space-y-4 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-950"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex-1 space-y-3">
+                  <FormField label={`Section ${sectionIndex + 1} title`}>
+                    <TextInput
+                      value={section.title}
+                      onChange={(event) =>
+                        updateInstructionSection(section.id, {
+                          title: event.target.value,
+                        })
+                      }
+                      placeholder="Body, Sleeves, Neckline"
+                    />
+                  </FormField>
+
+                  <FormField label="Section notes">
+                    <TextArea
+                      value={section.notes ?? ''}
+                      onChange={(event) =>
+                        updateInstructionSection(section.id, {
+                          notes: event.target.value,
+                        })
+                      }
+                      placeholder="Optional setup notes, stitch counts, or reminders."
+                      className="min-h-20"
+                    />
+                  </FormField>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => moveInstructionSection(section.id, -1)}
+                    disabled={sectionIndex === 0}
+                    className="cursor-pointer rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-700 dark:text-stone-200"
+                  >
+                    Up
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveInstructionSection(section.id, 1)}
+                    disabled={
+                      sectionIndex === values.instructionSections.length - 1
+                    }
+                    className="cursor-pointer rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-700 dark:text-stone-200"
+                  >
+                    Down
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeInstructionSection(section.id)}
+                    className="cursor-pointer rounded-lg border border-rose-200 px-3 py-2 text-sm font-medium text-rose-600 dark:border-rose-500/40 dark:text-rose-300"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <FormField label="Steps">
+                  <TextArea
+                    value={getInstructionStepsText(section.steps)}
+                    onChange={(event) =>
+                      updateInstructionStepsFromText(
+                        section.id,
+                        event.target.value,
+                      )
+                    }
+                    placeholder="Paste this section here with one step or round per line."
+                    className="min-h-48 resize-y"
+                  />
+                </FormField>
+                <p className="text-xs leading-6 text-stone-500 dark:text-stone-400">
+                  {section.steps.filter((step) => step.text.trim()).length}{' '}
+                  steps detected from line breaks.
+                </p>
+              </div>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={addInstructionSection}
+            className="cursor-pointer rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 dark:border-stone-700 dark:text-stone-200"
+          >
+            Add Section
+          </button>
+        </div>
       </FormSection>
 
       <FormActions
