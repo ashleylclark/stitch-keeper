@@ -123,7 +123,8 @@ function listPatterns() {
       category,
       difficulty,
       notes,
-      instructions
+      instructions,
+      instruction_sections AS instructionSections
     FROM patterns
     ORDER BY COALESCE(added_at, '') DESC, rowid DESC
   `,
@@ -169,6 +170,10 @@ function listPatterns() {
   return patterns.map((pattern) => ({
     ...pattern,
     isPlanned: Boolean(pattern.isPlanned),
+    instructionSections: parseInstructionSections(
+      pattern.instructionSections,
+      pattern.instructions,
+    ),
     requirements: requirementsByPatternId.get(pattern.id) ?? [],
   }));
 }
@@ -252,6 +257,11 @@ function normalizeStashItem(input) {
 }
 
 function normalizePattern(input) {
+  const instructionSections = normalizeInstructionSections(
+    input.instructionSections,
+    input.instructions,
+  );
+
   return {
     id: String(input.id ?? `pattern-${randomUUID()}`),
     name: String(input.name ?? '').trim(),
@@ -263,7 +273,8 @@ function normalizePattern(input) {
     category: emptyToUndefined(input.category),
     difficulty: emptyToUndefined(input.difficulty),
     notes: emptyToUndefined(input.notes),
-    instructions: String(input.instructions ?? ''),
+    instructions: deriveInstructionsFromSections(instructionSections),
+    instructionSections,
     requirements: Array.isArray(input.requirements)
       ? input.requirements.map((requirement) => ({
           id: String(requirement.id ?? `requirement-${randomUUID()}`),
@@ -304,17 +315,9 @@ function normalizeProject(input) {
         }))
       : [];
 
-  const completedInstructionSteps = Array.isArray(input.completedInstructionSteps)
-    ? input.completedInstructionSteps
-        .map((stepIndex) => Number(stepIndex))
-        .filter(
-          (stepIndex, index, current) =>
-            Number.isInteger(stepIndex) &&
-            stepIndex >= 0 &&
-            current.indexOf(stepIndex) === index,
-        )
-        .sort((left, right) => left - right)
-    : [];
+  const completedInstructionSteps = normalizeCompletedInstructionSteps(
+    input.completedInstructionSteps,
+  );
 
   return {
     id: String(input.id ?? `project-${randomUUID()}`),
@@ -359,14 +362,15 @@ function savePattern(pattern, replace = false) {
     db.prepare(
       `
       INSERT INTO patterns (
-        id, name, added_at, is_planned, source, source_url, category, difficulty, notes, instructions
+        id, name, added_at, is_planned, source, source_url, category, difficulty, notes, instructions, instruction_sections
       ) VALUES (
-        @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @category, @difficulty, @notes, @instructions
+        @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @category, @difficulty, @notes, @instructions, @instructionSectionsJson
       )
     `,
     ).run({
       ...pattern,
       isPlanned: pattern.isPlanned ? 1 : 0,
+      instructionSectionsJson: JSON.stringify(pattern.instructionSections),
     });
 
     const insertRequirement = db.prepare(`
@@ -418,7 +422,9 @@ function saveProject(project, replace = false) {
     `,
     ).run({
       ...project,
-      completedInstructionSteps: JSON.stringify(project.completedInstructionSteps),
+      completedInstructionSteps: JSON.stringify(
+        project.completedInstructionSteps,
+      ),
       stashUsageAppliedAt,
     });
 
@@ -490,6 +496,78 @@ function emptyToUndefined(value) {
   return trimmed === '' ? undefined : trimmed;
 }
 
+function parseInstructionSections(value, legacyInstructions = '') {
+  if (value) {
+    try {
+      return normalizeInstructionSections(
+        JSON.parse(value),
+        legacyInstructions,
+      );
+    } catch {
+      return createInstructionSectionsFromText(legacyInstructions);
+    }
+  }
+
+  return createInstructionSectionsFromText(legacyInstructions);
+}
+
+function normalizeInstructionSections(value, legacyInstructions = '') {
+  const sections = Array.isArray(value)
+    ? value
+    : createInstructionSectionsFromText(String(legacyInstructions ?? ''));
+
+  return sections.map((section, sectionIndex) => {
+    const sectionId = String(section?.id ?? `section-${randomUUID()}`);
+    const steps = Array.isArray(section?.steps)
+      ? section.steps
+          .map((step) => ({
+            id: String(step?.id ?? `step-${randomUUID()}`),
+            text: String(step?.text ?? '').trim(),
+          }))
+          .filter((step) => step.text)
+      : [];
+
+    return {
+      id: sectionId,
+      title: emptyToUndefined(section?.title) ?? `Section ${sectionIndex + 1}`,
+      notes: emptyToUndefined(section?.notes),
+      steps,
+    };
+  });
+}
+
+function createInstructionSectionsFromText(instructions) {
+  const steps = String(instructions ?? '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((text, index) => ({
+      id: `legacy-step-${index}`,
+      text,
+    }));
+
+  return [
+    {
+      id: 'legacy-section-0',
+      title: 'Instructions',
+      notes: undefined,
+      steps,
+    },
+  ];
+}
+
+function deriveInstructionsFromSections(sections) {
+  return sections
+    .map((section) =>
+      [section.title, section.notes, ...section.steps.map((step) => step.text)]
+        .map((value) => emptyToUndefined(value))
+        .filter(Boolean)
+        .join('\n'),
+    )
+    .filter(Boolean)
+    .join('\n\n');
+}
+
 function parseCompletedInstructionSteps(value) {
   if (!value) {
     return [];
@@ -497,15 +575,28 @@ function parseCompletedInstructionSteps(value) {
 
   try {
     const parsed = JSON.parse(value);
-    return Array.isArray(parsed)
-      ? parsed.filter(
-          (stepIndex, index, current) =>
-            Number.isInteger(stepIndex) &&
-            stepIndex >= 0 &&
-            current.indexOf(stepIndex) === index,
-        )
-      : [];
+    return normalizeCompletedInstructionSteps(parsed);
   } catch {
     return [];
   }
+}
+
+function normalizeCompletedInstructionSteps(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((stepId) => {
+      if (Number.isInteger(stepId) && stepId >= 0) {
+        return `legacy-step-${stepId}`;
+      }
+
+      return emptyToUndefined(stepId);
+    })
+    .filter(
+      (stepId, index, current) =>
+        typeof stepId === 'string' && current.indexOf(stepId) === index,
+    )
+    .sort();
 }

@@ -36,6 +36,18 @@ type PatternRequirement = {
   notes?: string;
 };
 
+type PatternInstructionStep = {
+  id: string;
+  text: string;
+};
+
+type PatternInstructionSection = {
+  id: string;
+  title: string;
+  notes?: string;
+  steps: PatternInstructionStep[];
+};
+
 type Pattern = {
   id: string;
   name: string;
@@ -48,6 +60,7 @@ type Pattern = {
   requirements: PatternRequirement[];
   notes?: string;
   instructions: string;
+  instructionSections: PatternInstructionSection[];
 };
 
 type MatchStatus = 'owned' | 'missing' | 'partial';
@@ -89,7 +102,7 @@ type Project = {
   endDate?: string;
   stashItemIds: string[];
   stashUsages: ProjectStashUsage[];
-  completedInstructionSteps: number[];
+  completedInstructionSteps: string[];
   status: ProjectStatus;
   notes?: string;
 };
@@ -103,6 +116,8 @@ export type {
   ItemCategory,
   MatchStatus,
   Pattern,
+  PatternInstructionSection,
+  PatternInstructionStep,
   PatternMatchStatus,
   PatternMatchSummary,
   PatternRequirement,
