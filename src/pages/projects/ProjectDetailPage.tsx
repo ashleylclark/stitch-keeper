@@ -6,7 +6,10 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ProjectForm, type ProjectFormValues } from './components/ProjectForm';
 import { useAppData } from '../../app/state/app-data';
 import type { Pattern, Project, ProjectStatus } from '../../types/models';
-import { parseInstructionSteps } from '../patterns/lib/instructionSteps';
+import {
+  countInstructionSteps,
+  flattenInstructionSteps,
+} from '../patterns/lib/instructionSections';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error
@@ -180,7 +183,7 @@ export default function ProjectDetail() {
   >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [stepPendingIndex, setStepPendingIndex] = useState<number | null>(null);
+  const [stepPendingId, setStepPendingId] = useState<string | null>(null);
 
   if (!project) {
     return <NotFoundState />;
@@ -193,17 +196,14 @@ export default function ProjectDetail() {
   const linkedStashItems = stashItems.filter((item) =>
     currentProject.stashItemIds.includes(item.id),
   );
-  const instructionSteps = linkedPattern
-    ? parseInstructionSteps(linkedPattern.instructions)
-    : [];
-  const hasTrackableInstructionSteps =
-    instructionSteps.length > 1 ||
-    Boolean(linkedPattern?.instructions.match(/\r?\n/));
+  const instructionSections = linkedPattern?.instructionSections ?? [];
+  const instructionSteps = flattenInstructionSteps(instructionSections);
+  const hasTrackableInstructionSteps = instructionSteps.length > 0;
   const completedInstructionSteps = new Set(
     currentProject.completedInstructionSteps,
   );
   const completedStepCount = instructionSteps.filter((step) =>
-    completedInstructionSteps.has(step.index),
+    completedInstructionSteps.has(step.id),
   ).length;
 
   async function handleSubmit(values: ProjectFormValues) {
@@ -237,17 +237,15 @@ export default function ProjectDetail() {
     }
   }
 
-  async function toggleInstructionStep(stepIndex: number) {
+  async function toggleInstructionStep(stepId: string) {
     setInstructionProgressError(null);
-    setStepPendingIndex(stepIndex);
+    setStepPendingId(stepId);
 
-    const nextCompletedInstructionSteps = completedInstructionSteps.has(stepIndex)
+    const nextCompletedInstructionSteps = completedInstructionSteps.has(stepId)
       ? currentProject.completedInstructionSteps.filter(
-          (existingStepIndex) => existingStepIndex !== stepIndex,
+          (existingStepId) => existingStepId !== stepId,
         )
-      : [...currentProject.completedInstructionSteps, stepIndex].sort(
-          (left, right) => left - right,
-        );
+      : [...currentProject.completedInstructionSteps, stepId].sort();
 
     try {
       await updateProject({
@@ -257,7 +255,7 @@ export default function ProjectDetail() {
     } catch (error) {
       setInstructionProgressError(getErrorMessage(error));
     } finally {
-      setStepPendingIndex(null);
+      setStepPendingId(null);
     }
   }
 
@@ -385,8 +383,8 @@ export default function ProjectDetail() {
               Pattern Instructions
             </h2>
             <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
-              Track progress here when the linked pattern is written one step
-              or round per line.
+              Track only the actual steps while section headers and notes stay
+              as reference text.
             </p>
           </div>
 
@@ -409,44 +407,78 @@ export default function ProjectDetail() {
                 </div>
               ) : null}
 
-              <div className="space-y-3">
-                {instructionSteps.map((step) => {
-                  const isChecked = completedInstructionSteps.has(step.index);
-                  const isPending = stepPendingIndex === step.index;
+              <div className="space-y-4">
+                {instructionSections.map((section) => {
+                  const sectionCompletedCount = section.steps.filter((step) =>
+                    completedInstructionSteps.has(step.id),
+                  ).length;
 
                   return (
-                    <label
-                      key={step.id}
-                      className={[
-                        'flex cursor-pointer items-start gap-3 rounded-[1.5rem] border px-4 py-4 transition',
-                        isChecked
-                          ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/50 dark:bg-emerald-950/20'
-                          : 'border-stone-200 bg-stone-50/80 dark:border-stone-700 dark:bg-stone-800/60',
-                      ].join(' ')}
+                    <article
+                      key={section.id}
+                      className="rounded-[1.75rem] border border-stone-200 bg-stone-50/70 p-4 dark:border-stone-700 dark:bg-stone-800/50"
                     >
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        disabled={isPending}
-                        onChange={() => {
-                          void toggleInstructionStep(step.index);
-                        }}
-                        className="mt-1 h-4 w-4 rounded border-stone-300 text-rose-500 focus:ring-rose-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-rose-400"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-400">
-                          Step {step.index + 1}
-                        </p>
-                        <p
-                          className={[
-                            'mt-2 text-sm leading-7 text-stone-700 dark:text-stone-200',
-                            isChecked ? 'line-through opacity-70' : '',
-                          ].join(' ')}
-                        >
-                          {step.text}
-                        </p>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <h3 className="font-serif text-xl text-stone-900 dark:text-stone-50">
+                            {section.title}
+                          </h3>
+                          {section.notes ? (
+                            <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-stone-600 dark:text-stone-300">
+                              {section.notes}
+                            </p>
+                          ) : null}
+                        </div>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-stone-600 ring-1 ring-inset ring-stone-200 dark:bg-stone-900 dark:text-stone-300 dark:ring-stone-700">
+                          {sectionCompletedCount} /{' '}
+                          {countInstructionSteps(section)}
+                        </span>
                       </div>
-                    </label>
+
+                      <div className="mt-4 space-y-3">
+                        {section.steps.map((step, stepIndex) => {
+                          const isChecked = completedInstructionSteps.has(
+                            step.id,
+                          );
+                          const isPending = stepPendingId === step.id;
+
+                          return (
+                            <label
+                              key={step.id}
+                              className={[
+                                'flex cursor-pointer items-start gap-3 rounded-[1.5rem] border px-4 py-4 transition',
+                                isChecked
+                                  ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/50 dark:bg-emerald-950/20'
+                                  : 'border-stone-200 bg-white/80 dark:border-stone-700 dark:bg-stone-900/60',
+                              ].join(' ')}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                disabled={isPending}
+                                onChange={() => {
+                                  void toggleInstructionStep(step.id);
+                                }}
+                                className="mt-1 h-4 w-4 rounded border-stone-300 text-rose-500 focus:ring-rose-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-rose-400"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-400">
+                                  Step {stepIndex + 1}
+                                </p>
+                                <p
+                                  className={[
+                                    'mt-2 text-sm leading-7 text-stone-700 dark:text-stone-200',
+                                    isChecked ? 'line-through opacity-70' : '',
+                                  ].join(' ')}
+                                >
+                                  {step.text}
+                                </p>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </article>
                   );
                 })}
               </div>
@@ -454,15 +486,8 @@ export default function ProjectDetail() {
           ) : (
             <div className="mt-6 space-y-4">
               <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50/80 px-5 py-4 text-sm leading-6 text-stone-700 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-stone-200">
-                This pattern’s instructions are stored as freeform text right
-                now. Put each step on its own line in the pattern editor to
+                Add at least one instruction step to the linked pattern to
                 enable checkbox tracking.
-              </div>
-
-              <div className="rounded-[1.5rem] border border-rose-100 bg-rose-50/60 p-5 dark:border-rose-900/50 dark:bg-rose-950/20">
-                <div className="whitespace-pre-wrap text-sm leading-7 text-stone-700 dark:text-stone-200">
-                  {linkedPattern.instructions}
-                </div>
               </div>
             </div>
           )}

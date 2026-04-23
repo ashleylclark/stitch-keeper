@@ -40,7 +40,8 @@ export function initializeDatabase() {
       category TEXT,
       difficulty TEXT,
       notes TEXT,
-      instructions TEXT NOT NULL
+      instructions TEXT NOT NULL,
+      instruction_sections TEXT
     );
 
     CREATE TABLE IF NOT EXISTS pattern_requirements (
@@ -83,6 +84,7 @@ export function initializeDatabase() {
     'completed_instruction_steps',
     "TEXT NOT NULL DEFAULT '[]'",
   );
+  ensureColumn('patterns', 'instruction_sections', 'TEXT');
   ensureColumn('project_stash_items', 'quantity_used', 'INTEGER');
 
   seedDatabaseIfEmpty();
@@ -105,9 +107,9 @@ function seedDatabaseIfEmpty() {
 
   const insertPattern = db.prepare(`
     INSERT INTO patterns (
-      id, name, added_at, is_planned, source, source_url, category, difficulty, notes, instructions
+      id, name, added_at, is_planned, source, source_url, category, difficulty, notes, instructions, instruction_sections
     ) VALUES (
-      @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @category, @difficulty, @notes, @instructions
+      @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @category, @difficulty, @notes, @instructions, @instructionSections
     )
   `);
 
@@ -162,6 +164,7 @@ function seedDatabaseIfEmpty() {
         difficulty: pattern.difficulty ?? null,
         notes: pattern.notes ?? null,
         instructions: pattern.instructions,
+        instructionSections: null,
       });
 
       for (const requirement of pattern.requirements ?? []) {
