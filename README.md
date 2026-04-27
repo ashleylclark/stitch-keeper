@@ -78,9 +78,17 @@ Useful scripts:
 npm run build
 npm run lint
 npm run typecheck
+npm run chart:lint
+npm run chart:docs
 npm run format
 npm run format:check
 ```
+
+## Persistence
+
+- SQLite database path: `data/stitch-keeper.db`
+- API entrypoint: `server/index.js`
+- Database schema and seed data are created automatically on first startup
 
 ## Releases
 
@@ -102,15 +110,25 @@ A release will:
 
 - run the existing lint and build checks
 - bump `package.json`
-- update `chart/Chart.yaml` version and `appVersion`
 - create and push a `vX.Y.Z` git tag
 - create a GitHub Release
 
-## Persistence
+Pushing a release tag also starts the GitHub Actions workflows that publish the
+container image and Helm chart to GHCR. `release-it` does not currently update
+the chart metadata, so update `chart/Chart.yaml` separately when the chart
+version or default app image tag should change.
 
-- SQLite database path: `data/stitch-keeper.db`
-- API entrypoint: `server/index.js`
-- Database schema and seed data are created automatically on first startup
+## Helm Chart
+
+The Helm chart lives in `chart/` and has its own generated README:
+[`chart/README.md`](chart/README.md).
+
+Useful chart commands:
+
+```bash
+npm run chart:lint
+npm run chart:docs
+```
 
 ## Docker
 

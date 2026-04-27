@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "chart:lint": "helm lint chart",
+    "chart:docs": "helm-docs chart/ --sort-values-order file",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "release": "release-it",
