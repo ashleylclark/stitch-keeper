@@ -97,6 +97,9 @@ export function PatternForm({
     }),
     requirements: initialValues?.requirements ?? [],
   });
+  const [instructionStepDrafts, setInstructionStepDrafts] = useState<
+    Record<string, string>
+  >(() => createInstructionStepDrafts(values.instructionSections));
   const [newRequirement, setNewRequirement] = useState<RequirementFormValues>(
     initialRequirementValues,
   );
@@ -129,15 +132,25 @@ export function PatternForm({
   }
 
   function addInstructionSection() {
-    update('instructionSections', [
-      ...values.instructionSections,
-      createInstructionSection(values.instructionSections.length),
-    ]);
+    const nextSection = createInstructionSection(
+      values.instructionSections.length,
+    );
+
+    update('instructionSections', [...values.instructionSections, nextSection]);
+    setInstructionStepDrafts((prev) => ({
+      ...prev,
+      [nextSection.id]: getInstructionStepsText(nextSection.steps),
+    }));
   }
 
   function removeInstructionSection(sectionId: string) {
     if (values.instructionSections.length === 1) {
-      update('instructionSections', [createInstructionSection(0)]);
+      const nextSection = createInstructionSection(0);
+
+      update('instructionSections', [nextSection]);
+      setInstructionStepDrafts({
+        [nextSection.id]: getInstructionStepsText(nextSection.steps),
+      });
       return;
     }
 
@@ -145,6 +158,11 @@ export function PatternForm({
       'instructionSections',
       values.instructionSections.filter((section) => section.id !== sectionId),
     );
+    setInstructionStepDrafts((prev) => {
+      const nextDrafts = { ...prev };
+      delete nextDrafts[sectionId];
+      return nextDrafts;
+    });
   }
 
   function moveInstructionSection(sectionId: string, direction: -1 | 1) {
@@ -168,17 +186,8 @@ export function PatternForm({
   }
 
   function updateInstructionStepsFromText(sectionId: string, text: string) {
-    update(
-      'instructionSections',
-      values.instructionSections.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              steps: createStepsFromText(text),
-            }
-          : section,
-      ),
-    );
+    setInstructionStepDrafts((prev) => ({ ...prev, [sectionId]: text }));
+    setErrors((prev) => ({ ...prev, instructionSections: undefined }));
   }
 
   function addRequirement() {
@@ -226,8 +235,18 @@ export function PatternForm({
       nextErrors.name = 'Pattern name is required.';
     }
 
+    const sectionsWithDraftSteps = values.instructionSections.map((section) => {
+      const stepDraft =
+        instructionStepDrafts[section.id] ??
+        getInstructionStepsText(section.steps);
+
+      return {
+        ...section,
+        steps: createStepsFromText(stepDraft, section.steps),
+      };
+    });
     const normalizedInstructionSections = normalizeInstructionSections(
-      values.instructionSections,
+      sectionsWithDraftSteps,
     );
 
     if (
@@ -580,7 +599,10 @@ export function PatternForm({
               <div className="space-y-3">
                 <FormField label="Steps">
                   <TextArea
-                    value={getInstructionStepsText(section.steps)}
+                    value={
+                      instructionStepDrafts[section.id] ??
+                      getInstructionStepsText(section.steps)
+                    }
                     onChange={(event) =>
                       updateInstructionStepsFromText(
                         section.id,
@@ -592,7 +614,10 @@ export function PatternForm({
                   />
                 </FormField>
                 <p className="text-xs leading-6 text-stone-500 dark:text-stone-400">
-                  {section.steps.filter((step) => step.text.trim()).length}{' '}
+                  {countStepsFromText(
+                    instructionStepDrafts[section.id] ??
+                      getInstructionStepsText(section.steps),
+                  )}{' '}
                   steps detected from line breaks.
                 </p>
               </div>
@@ -616,6 +641,21 @@ export function PatternForm({
       />
     </form>
   );
+}
+
+function createInstructionStepDrafts(
+  sections: PatternInstructionSection[],
+): Record<string, string> {
+  return Object.fromEntries(
+    sections.map((section) => [
+      section.id,
+      getInstructionStepsText(section.steps),
+    ]),
+  );
+}
+
+function countStepsFromText(text: string) {
+  return text.split(/\r?\n/).filter((line) => line.trim()).length;
 }
 
 function getNextRequirementValues(

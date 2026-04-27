@@ -27,13 +27,16 @@ export function createInstructionStep(): PatternInstructionStep {
   };
 }
 
-export function createStepsFromText(text: string): PatternInstructionStep[] {
+export function createStepsFromText(
+  text: string,
+  existingSteps: PatternInstructionStep[] = [],
+): PatternInstructionStep[] {
   const steps = text
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((line) => ({
-      id: createInstructionId('step'),
+    .map((line, index) => ({
+      id: existingSteps[index]?.id ?? createInstructionId('step'),
       text: line,
     }));
 
