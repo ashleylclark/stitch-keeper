@@ -175,6 +175,7 @@ export default function PatternDetail() {
   const patternSummary = patternMatchById.get(currentPattern.id);
   const sourceLabel = currentPattern.source?.trim();
   const sourceUrl = currentPattern.sourceUrl?.trim();
+  const coverImageUrl = currentPattern.coverImageUrl?.trim();
   const requirementMatchesById = new Map(
     patternSummary?.requirementMatches.map((match) => [
       match.requirementId,
@@ -192,6 +193,7 @@ export default function PatternDetail() {
         name: values.name.trim(),
         source: values.source.trim() || undefined,
         sourceUrl: values.sourceUrl.trim() || undefined,
+        coverImageUrl: values.coverImageUrl.trim() || undefined,
         category: values.category || undefined,
         difficulty: values.difficulty || undefined,
         notes: values.notes.trim() || undefined,
@@ -235,62 +237,80 @@ export default function PatternDetail() {
         </Link>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
-          <div className="space-y-4">
-            <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500 dark:text-rose-300">
-              Stitch Keeper
-            </p>
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="space-y-3">
-                <h1 className="font-serif text-4xl tracking-tight text-stone-900 dark:text-stone-50 sm:text-5xl">
-                  {currentPattern.name}
-                </h1>
-                {sourceLabel || sourceUrl ? (
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-stone-600 dark:text-stone-300">
-                    <span className="font-medium text-stone-700 dark:text-stone-200">
-                      Source: {sourceLabel ?? 'Original pattern'}
+          <div
+            className={[
+              'grid gap-6',
+              coverImageUrl
+                ? 'lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)] lg:items-start'
+                : '',
+            ].join(' ')}
+          >
+            <div className="space-y-4">
+              <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500 dark:text-rose-300">
+                Stitch Keeper
+              </p>
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <div className="space-y-3">
+                  <h1 className="font-serif text-4xl tracking-tight text-stone-900 dark:text-stone-50 sm:text-5xl">
+                    {currentPattern.name}
+                  </h1>
+                  {sourceLabel || sourceUrl ? (
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-stone-600 dark:text-stone-300">
+                      <span className="font-medium text-stone-700 dark:text-stone-200">
+                        Source: {sourceLabel ?? 'Original pattern'}
+                      </span>
+                      {sourceUrl ? (
+                        <a
+                          href={sourceUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={`Open source for ${currentPattern.name}`}
+                          title="View source"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 transition hover:border-rose-200 hover:text-rose-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-rose-500/50 dark:hover:text-rose-300"
+                        >
+                          <ExternalLink size={14} />
+                        </a>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <p className="max-w-3xl text-base leading-7 text-stone-600 dark:text-stone-300">
+                    {currentPattern.notes ??
+                      'No notes have been added for this pattern yet.'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {currentPattern.category ? (
+                    <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-700 dark:bg-stone-800 dark:text-stone-200">
+                      {titleCase(currentPattern.category)}
                     </span>
-                    {sourceUrl ? (
-                      <a
-                        href={sourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={`Open source for ${currentPattern.name}`}
-                        title="View source"
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 transition hover:border-rose-200 hover:text-rose-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-rose-500/50 dark:hover:text-rose-300"
-                      >
-                        <ExternalLink size={14} />
-                      </a>
-                    ) : null}
-                  </div>
-                ) : null}
-                <p className="max-w-3xl text-base leading-7 text-stone-600 dark:text-stone-300">
-                  {currentPattern.notes ??
-                    'No notes have been added for this pattern yet.'}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {currentPattern.category ? (
-                  <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-700 dark:bg-stone-800 dark:text-stone-200">
-                    {titleCase(currentPattern.category)}
-                  </span>
-                ) : null}
-                <DifficultyBadge difficulty={currentPattern.difficulty} />
-                <RequirementBadge status={patternSummary?.status} />
-                <ActionButton
-                  label={`Edit ${currentPattern.name}`}
-                  onClick={() => setIsEditOpen(true)}
-                >
-                  <Pencil size={16} />
-                </ActionButton>
-                <ActionButton
-                  label={`Delete ${currentPattern.name}`}
-                  tone="danger"
-                  onClick={() => setIsDeleteOpen(true)}
-                >
-                  <Trash2 size={16} />
-                </ActionButton>
+                  ) : null}
+                  <DifficultyBadge difficulty={currentPattern.difficulty} />
+                  <RequirementBadge status={patternSummary?.status} />
+                  <ActionButton
+                    label={`Edit ${currentPattern.name}`}
+                    onClick={() => setIsEditOpen(true)}
+                  >
+                    <Pencil size={16} />
+                  </ActionButton>
+                  <ActionButton
+                    label={`Delete ${currentPattern.name}`}
+                    tone="danger"
+                    onClick={() => setIsDeleteOpen(true)}
+                  >
+                    <Trash2 size={16} />
+                  </ActionButton>
+                </div>
               </div>
             </div>
+            {coverImageUrl ? (
+              <div className="overflow-hidden rounded-[1.5rem] border border-stone-200/70 bg-stone-100 dark:border-stone-700 dark:bg-stone-800">
+                <img
+                  src={coverImageUrl}
+                  alt={`${currentPattern.name} cover`}
+                  className="aspect-[4/3] w-full object-cover"
+                />
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -422,6 +442,7 @@ export default function PatternDetail() {
             name: currentPattern.name,
             source: currentPattern.source ?? '',
             sourceUrl: currentPattern.sourceUrl ?? '',
+            coverImageUrl: currentPattern.coverImageUrl ?? '',
             category: currentPattern.category ?? '',
             difficulty: currentPattern.difficulty ?? '',
             notes: currentPattern.notes ?? '',

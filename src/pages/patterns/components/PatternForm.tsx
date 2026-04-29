@@ -25,6 +25,7 @@ export type PatternFormValues = {
   name: string;
   source: string;
   sourceUrl: string;
+  coverImageUrl: string;
   category: NonNullable<Pattern['category']> | '';
   difficulty: NonNullable<Pattern['difficulty']> | '';
   notes: string;
@@ -87,6 +88,7 @@ export function PatternForm({
     name: initialValues?.name ?? '',
     source: initialValues?.source ?? '',
     sourceUrl: initialValues?.sourceUrl ?? '',
+    coverImageUrl: initialValues?.coverImageUrl ?? '',
     category: initialValues?.category ?? '',
     difficulty: initialValues?.difficulty ?? '',
     notes: initialValues?.notes ?? '',
@@ -347,6 +349,17 @@ export function PatternForm({
               type="url"
               value={values.sourceUrl}
               onChange={(event) => update('sourceUrl', event.target.value)}
+              placeholder="https://"
+            />
+          </FormField>
+
+          <FormField label="Cover Image URL">
+            <TextInput
+              type="url"
+              value={values.coverImageUrl}
+              onChange={(event) =>
+                update('coverImageUrl', event.target.value)
+              }
               placeholder="https://"
             />
           </FormField>
