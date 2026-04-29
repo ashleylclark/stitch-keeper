@@ -121,6 +121,7 @@ function listPatterns() {
       source,
       source_url AS sourceUrl,
       cover_image_url AS coverImageUrl,
+      illustration_image_url AS illustrationImageUrl,
       category,
       difficulty,
       notes,
@@ -272,6 +273,7 @@ function normalizePattern(input) {
     source: emptyToUndefined(input.source),
     sourceUrl: emptyToUndefined(input.sourceUrl),
     coverImageUrl: emptyToUndefined(input.coverImageUrl),
+    illustrationImageUrl: emptyToUndefined(input.illustrationImageUrl),
     category: emptyToUndefined(input.category),
     difficulty: emptyToUndefined(input.difficulty),
     notes: emptyToUndefined(input.notes),
@@ -364,9 +366,9 @@ function savePattern(pattern, replace = false) {
     db.prepare(
       `
       INSERT INTO patterns (
-        id, name, added_at, is_planned, source, source_url, cover_image_url, category, difficulty, notes, instructions, instruction_sections
+        id, name, added_at, is_planned, source, source_url, cover_image_url, illustration_image_url, category, difficulty, notes, instructions, instruction_sections
       ) VALUES (
-        @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @coverImageUrl, @category, @difficulty, @notes, @instructions, @instructionSectionsJson
+        @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @coverImageUrl, @illustrationImageUrl, @category, @difficulty, @notes, @instructions, @instructionSectionsJson
       )
     `,
     ).run({
@@ -525,6 +527,7 @@ function normalizeInstructionSections(value, legacyInstructions = '') {
           .map((step) => ({
             id: String(step?.id ?? `step-${randomUUID()}`),
             text: String(step?.text ?? '').trim(),
+            imageUrl: emptyToUndefined(step?.imageUrl),
           }))
           .filter((step) => step.text)
       : [];
