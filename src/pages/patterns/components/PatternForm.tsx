@@ -26,6 +26,7 @@ export type PatternFormValues = {
   source: string;
   sourceUrl: string;
   coverImageUrl: string;
+  illustrationImageUrl: string;
   category: NonNullable<Pattern['category']> | '';
   difficulty: NonNullable<Pattern['difficulty']> | '';
   notes: string;
@@ -89,6 +90,7 @@ export function PatternForm({
     source: initialValues?.source ?? '',
     sourceUrl: initialValues?.sourceUrl ?? '',
     coverImageUrl: initialValues?.coverImageUrl ?? '',
+    illustrationImageUrl: initialValues?.illustrationImageUrl ?? '',
     category: initialValues?.category ?? '',
     difficulty: initialValues?.difficulty ?? '',
     notes: initialValues?.notes ?? '',
@@ -190,6 +192,31 @@ export function PatternForm({
   function updateInstructionStepsFromText(sectionId: string, text: string) {
     setInstructionStepDrafts((prev) => ({ ...prev, [sectionId]: text }));
     setErrors((prev) => ({ ...prev, instructionSections: undefined }));
+  }
+
+  function updateInstructionStepImageUrl(
+    sectionId: string,
+    stepIndex: number,
+    imageUrl: string,
+  ) {
+    const section = values.instructionSections.find(
+      (currentSection) => currentSection.id === sectionId,
+    );
+
+    if (!section) {
+      return;
+    }
+
+    const stepDraft =
+      instructionStepDrafts[sectionId] ?? getInstructionStepsText(section.steps);
+    const nextSteps = createStepsFromText(stepDraft, section.steps).map(
+      (step, index) =>
+        index === stepIndex
+          ? { ...step, imageUrl: imageUrl.trim() || undefined }
+          : step,
+    );
+
+    updateInstructionSection(sectionId, { steps: nextSteps });
   }
 
   function addRequirement() {
@@ -359,6 +386,17 @@ export function PatternForm({
               value={values.coverImageUrl}
               onChange={(event) =>
                 update('coverImageUrl', event.target.value)
+              }
+              placeholder="https://"
+            />
+          </FormField>
+
+          <FormField label="Illustration Image URL">
+            <TextInput
+              type="url"
+              value={values.illustrationImageUrl}
+              onChange={(event) =>
+                update('illustrationImageUrl', event.target.value)
               }
               placeholder="https://"
             />
@@ -633,6 +671,44 @@ export function PatternForm({
                   )}{' '}
                   steps detected from line breaks.
                 </p>
+                <div className="space-y-3 rounded-2xl border border-stone-100 bg-stone-50 p-3 dark:border-stone-800 dark:bg-stone-900/60">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-400">
+                    Step Images
+                  </p>
+                  {getDetectedInstructionSteps(
+                    instructionStepDrafts[section.id] ??
+                      getInstructionStepsText(section.steps),
+                    section.steps,
+                  ).map((step, stepIndex) => (
+                    <div
+                      key={step.id}
+                      className="grid gap-2 rounded-xl border border-stone-200 bg-white p-3 dark:border-stone-700 dark:bg-stone-950 sm:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)] sm:items-start"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-stone-400">
+                          Step {stepIndex + 1}
+                        </p>
+                        <p className="mt-1 line-clamp-2 text-sm leading-6 text-stone-700 dark:text-stone-200">
+                          {step.text || 'Empty step'}
+                        </p>
+                      </div>
+                      <FormField label="Image URL">
+                        <TextInput
+                          type="url"
+                          value={step.imageUrl ?? ''}
+                          onChange={(event) =>
+                            updateInstructionStepImageUrl(
+                              section.id,
+                              stepIndex,
+                              event.target.value,
+                            )
+                          }
+                          placeholder="https://"
+                        />
+                      </FormField>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           ))}
@@ -669,6 +745,13 @@ function createInstructionStepDrafts(
 
 function countStepsFromText(text: string) {
   return text.split(/\r?\n/).filter((line) => line.trim()).length;
+}
+
+function getDetectedInstructionSteps(
+  text: string,
+  existingSteps: PatternInstructionSection['steps'],
+) {
+  return createStepsFromText(text, existingSteps);
 }
 
 function getNextRequirementValues(

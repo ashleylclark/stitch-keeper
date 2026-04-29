@@ -260,6 +260,7 @@ export default function Patterns() {
         source: values.source.trim() || undefined,
         sourceUrl: values.sourceUrl.trim() || undefined,
         coverImageUrl: values.coverImageUrl.trim() || undefined,
+        illustrationImageUrl: values.illustrationImageUrl.trim() || undefined,
         notes: values.notes.trim() || undefined,
         instructions: values.instructions,
         instructionSections: values.instructionSections,
@@ -487,6 +488,8 @@ export default function Patterns() {
                   source: editingPattern.source ?? '',
                   sourceUrl: editingPattern.sourceUrl ?? '',
                   coverImageUrl: editingPattern.coverImageUrl ?? '',
+                  illustrationImageUrl:
+                    editingPattern.illustrationImageUrl ?? '',
                   category: editingPattern.category ?? '',
                   difficulty: editingPattern.difficulty ?? '',
                   notes: editingPattern.notes ?? '',
