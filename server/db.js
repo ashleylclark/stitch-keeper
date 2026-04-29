@@ -37,6 +37,7 @@ export function initializeDatabase() {
       is_planned INTEGER NOT NULL DEFAULT 0,
       source TEXT,
       source_url TEXT,
+      cover_image_url TEXT,
       category TEXT,
       difficulty TEXT,
       notes TEXT,
@@ -85,6 +86,7 @@ export function initializeDatabase() {
     "TEXT NOT NULL DEFAULT '[]'",
   );
   ensureColumn('patterns', 'instruction_sections', 'TEXT');
+  ensureColumn('patterns', 'cover_image_url', 'TEXT');
   ensureColumn('project_stash_items', 'quantity_used', 'INTEGER');
 
   seedDatabaseIfEmpty();
@@ -107,9 +109,9 @@ function seedDatabaseIfEmpty() {
 
   const insertPattern = db.prepare(`
     INSERT INTO patterns (
-      id, name, added_at, is_planned, source, source_url, category, difficulty, notes, instructions, instruction_sections
+      id, name, added_at, is_planned, source, source_url, cover_image_url, category, difficulty, notes, instructions, instruction_sections
     ) VALUES (
-      @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @category, @difficulty, @notes, @instructions, @instructionSections
+      @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @coverImageUrl, @category, @difficulty, @notes, @instructions, @instructionSections
     )
   `);
 
@@ -160,6 +162,7 @@ function seedDatabaseIfEmpty() {
         isPlanned: pattern.isPlanned ? 1 : 0,
         source: pattern.source ?? null,
         sourceUrl: pattern.sourceUrl ?? null,
+        coverImageUrl: pattern.coverImageUrl ?? null,
         category: pattern.category ?? null,
         difficulty: pattern.difficulty ?? null,
         notes: pattern.notes ?? null,

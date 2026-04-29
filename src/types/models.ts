@@ -55,6 +55,7 @@ type Pattern = {
   isPlanned?: boolean;
   source?: string;
   sourceUrl?: string;
+  coverImageUrl?: string;
   category?: string;
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
   requirements: PatternRequirement[];
