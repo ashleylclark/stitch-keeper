@@ -273,7 +273,7 @@ export function PatternForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="flex min-h-full flex-col gap-4">
       {submitError ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-100">
           {submitError}
@@ -638,6 +638,7 @@ export function PatternForm({
         submitLabel={submitLabel}
         onCancel={onCancel}
         isSubmitting={isSubmitting}
+        sticky
       />
     </form>
   );
