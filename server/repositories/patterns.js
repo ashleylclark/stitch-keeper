@@ -1,46 +1,20 @@
 import { randomUUID } from 'node:crypto';
-import { db } from '../db.js';
+import { desc, eq, sql } from 'drizzle-orm';
+import { orm } from '../db.js';
+import { patternRequirements, patterns } from '../schema.js';
 import { emptyToUndefined } from './utils.js';
 
 export function listPatterns() {
-  const patterns = db
-    .prepare(
-      `
-    SELECT
-      id,
-      name,
-      added_at AS addedAt,
-      is_planned AS isPlanned,
-      source,
-      source_url AS sourceUrl,
-      category,
-      difficulty,
-      notes,
-      instructions,
-      instruction_sections AS instructionSections
-    FROM patterns
-    ORDER BY COALESCE(added_at, '') DESC, rowid DESC
-  `,
-    )
+  const patternRows = orm
+    .select()
+    .from(patterns)
+    .orderBy(desc(sql`COALESCE(${patterns.addedAt}, '')`), desc(sql`rowid`))
     .all();
 
-  const requirements = db
-    .prepare(
-      `
-    SELECT
-      id,
-      pattern_id AS patternId,
-      category,
-      name,
-      weight,
-      quantity_needed AS quantityNeeded,
-      unit,
-      size,
-      notes
-    FROM pattern_requirements
-    ORDER BY rowid ASC
-  `,
-    )
+  const requirements = orm
+    .select()
+    .from(patternRequirements)
+    .orderBy(sql`rowid`)
     .all();
 
   const requirementsByPatternId = new Map();
@@ -60,7 +34,7 @@ export function listPatterns() {
     requirementsByPatternId.set(requirement.patternId, current);
   }
 
-  return patterns.map((pattern) => ({
+  return patternRows.map((pattern) => ({
     ...pattern,
     isPlanned: Boolean(pattern.isPlanned),
     instructionSections: parseInstructionSections(
@@ -72,41 +46,53 @@ export function listPatterns() {
 }
 
 export function savePattern(pattern, replace = false) {
-  db.transaction(() => {
+  orm.transaction((tx) => {
     if (replace) {
-      db.prepare('DELETE FROM patterns WHERE id = ?').run(pattern.id);
+      tx.delete(patterns).where(eq(patterns.id, pattern.id)).run();
     }
 
-    db.prepare(
-      `
-      INSERT INTO patterns (
-        id, name, added_at, is_planned, source, source_url, category, difficulty, notes, instructions, instruction_sections
-      ) VALUES (
-        @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @category, @difficulty, @notes, @instructions, @instructionSectionsJson
-      )
-    `,
-    ).run({
-      ...pattern,
-      isPlanned: pattern.isPlanned ? 1 : 0,
-      instructionSectionsJson: JSON.stringify(pattern.instructionSections),
-    });
-
-    const insertRequirement = db.prepare(`
-      INSERT INTO pattern_requirements (
-        id, pattern_id, category, name, weight, quantity_needed, unit, size, notes
-      ) VALUES (
-        @id, @patternId, @category, @name, @weight, @quantityNeeded, @unit, @size, @notes
-      )
-    `);
+    tx.insert(patterns).values(toPatternRow(pattern)).run();
 
     for (const requirement of pattern.requirements) {
-      insertRequirement.run({ ...requirement, patternId: pattern.id });
+      tx.insert(patternRequirements)
+        .values(toRequirementRow(requirement, pattern.id))
+        .run();
     }
-  })();
+  });
 }
 
 export function deletePattern(id) {
-  db.prepare('DELETE FROM patterns WHERE id = ?').run(id);
+  orm.delete(patterns).where(eq(patterns.id, id)).run();
+}
+
+function toPatternRow(pattern) {
+  return {
+    id: pattern.id,
+    name: pattern.name,
+    addedAt: pattern.addedAt ?? null,
+    isPlanned: pattern.isPlanned ? 1 : 0,
+    source: pattern.source ?? null,
+    sourceUrl: pattern.sourceUrl ?? null,
+    category: pattern.category ?? null,
+    difficulty: pattern.difficulty ?? null,
+    notes: pattern.notes ?? null,
+    instructions: pattern.instructions,
+    instructionSections: JSON.stringify(pattern.instructionSections),
+  };
+}
+
+function toRequirementRow(requirement, patternId) {
+  return {
+    id: requirement.id,
+    patternId,
+    category: requirement.category,
+    name: requirement.name,
+    weight: requirement.weight ?? null,
+    quantityNeeded: requirement.quantityNeeded ?? null,
+    unit: requirement.unit ?? null,
+    size: requirement.size ?? null,
+    notes: requirement.notes ?? null,
+  };
 }
 
 function parseInstructionSections(value, legacyInstructions = '') {
