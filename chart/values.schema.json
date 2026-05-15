@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Stash Keeper Helm Chart Values",
+  "title": "Stitch Keeper Helm Chart Values",
   "type": "object",
   "properties": {
     "image": {
@@ -30,7 +30,7 @@
     },
     "replicaCount": {
       "type": "integer",
-      "description": "Number of replicas for the Stash Keeper deployment"
+      "description": "Number of replicas for the Stitch Keeper deployment"
     },
     "nameOverride": {
       "type": "string",

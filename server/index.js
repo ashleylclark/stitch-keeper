@@ -109,7 +109,7 @@ if (hasBuiltFrontend) {
 }
 
 app.listen(port, () => {
-  console.log(`Stash Keeper server listening on http://localhost:${port}`);
+  console.log(`Stitch Keeper server listening on http://localhost:${port}`);
 });
 
 function normalizeStashItem(input) {
