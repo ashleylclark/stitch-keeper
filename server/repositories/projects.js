@@ -1,40 +1,25 @@
-import { db } from '../db.js';
+import { desc, eq, sql } from 'drizzle-orm';
+import { orm } from '../db.js';
+import { projects, projectStashItems, stashItems } from '../schema.js';
 import { emptyToUndefined } from './utils.js';
 
 export function listProjects() {
-  const projects = db
-    .prepare(
-      `
-    SELECT
-      id,
-      name,
-      pattern_id AS patternId,
-      start_date AS startDate,
-      end_date AS endDate,
-      status,
-      notes,
-      completed_instruction_steps AS completedInstructionSteps,
-      stash_usage_applied_at AS stashUsageAppliedAt
-    FROM projects
-    ORDER BY rowid DESC
-  `,
-    )
+  const projectRows = orm
+    .select()
+    .from(projects)
+    .orderBy(desc(sql`rowid`))
     .all();
 
-  const projectStashItems = db
-    .prepare(
-      `
-    SELECT project_id AS projectId, stash_item_id AS stashItemId, quantity_used AS quantityUsed
-    FROM project_stash_items
-    ORDER BY rowid ASC
-  `,
-    )
+  const linkedStashItems = orm
+    .select()
+    .from(projectStashItems)
+    .orderBy(sql`rowid`)
     .all();
 
   const stashItemIdsByProjectId = new Map();
   const stashUsagesByProjectId = new Map();
 
-  for (const row of projectStashItems) {
+  for (const row of linkedStashItems) {
     const current = stashItemIdsByProjectId.get(row.projectId) ?? [];
     current.push(row.stashItemId);
     stashItemIdsByProjectId.set(row.projectId, current);
@@ -47,7 +32,7 @@ export function listProjects() {
     stashUsagesByProjectId.set(row.projectId, usageCurrent);
   }
 
-  return projects.map((project) => ({
+  return projectRows.map((project) => ({
     ...project,
     patternId: project.patternId ?? undefined,
     startDate: project.startDate ?? undefined,
@@ -63,21 +48,21 @@ export function listProjects() {
 }
 
 export function saveProject(project, replace = false) {
-  db.transaction(() => {
+  orm.transaction((tx) => {
     const existingProject = replace
-      ? db
-          .prepare(
-            `
-            SELECT id, status, stash_usage_applied_at AS stashUsageAppliedAt
-            FROM projects
-            WHERE id = ?
-          `,
-          )
-          .get(project.id)
+      ? tx
+          .select({
+            id: projects.id,
+            status: projects.status,
+            stashUsageAppliedAt: projects.stashUsageAppliedAt,
+          })
+          .from(projects)
+          .where(eq(projects.id, project.id))
+          .get()
       : null;
 
     if (replace) {
-      db.prepare('DELETE FROM projects WHERE id = ?').run(project.id);
+      tx.delete(projects).where(eq(projects.id, project.id)).run();
     }
 
     const shouldApplyStashUsage =
@@ -87,52 +72,47 @@ export function saveProject(project, replace = false) {
       ? new Date().toISOString()
       : (existingProject?.stashUsageAppliedAt ?? null);
 
-    db.prepare(
-      `
-      INSERT INTO projects (
-        id, name, pattern_id, start_date, end_date, status, notes, completed_instruction_steps, stash_usage_applied_at
-      ) VALUES (
-        @id, @name, @patternId, @startDate, @endDate, @status, @notes, @completedInstructionSteps, @stashUsageAppliedAt
-      )
-    `,
-    ).run({
-      ...project,
-      completedInstructionSteps: JSON.stringify(
-        project.completedInstructionSteps,
-      ),
-      stashUsageAppliedAt,
-    });
-
-    const insertLinkedItem = db.prepare(`
-      INSERT INTO project_stash_items (project_id, stash_item_id, quantity_used)
-      VALUES (@projectId, @stashItemId, @quantityUsed)
-    `);
+    tx.insert(projects)
+      .values(toProjectRow(project, stashUsageAppliedAt))
+      .run();
 
     for (const usage of project.stashUsages) {
-      insertLinkedItem.run({
-        projectId: project.id,
-        stashItemId: usage.stashItemId,
-        quantityUsed: usage.quantityUsed ?? null,
-      });
+      tx.insert(projectStashItems).values(toProjectStashRow(project, usage)).run();
     }
 
     if (shouldApplyStashUsage) {
-      applyProjectStashUsage(project.stashUsages);
+      applyProjectStashUsage(tx, project.stashUsages);
     }
-  })();
+  });
 }
 
 export function deleteProject(id) {
-  db.prepare('DELETE FROM projects WHERE id = ?').run(id);
+  orm.delete(projects).where(eq(projects.id, id)).run();
 }
 
-function applyProjectStashUsage(stashUsages) {
-  const updateStashQuantity = db.prepare(`
-    UPDATE stash_items
-    SET quantity = MAX(quantity - @quantityUsed, 0)
-    WHERE id = @stashItemId
-  `);
+function toProjectRow(project, stashUsageAppliedAt) {
+  return {
+    id: project.id,
+    name: project.name,
+    patternId: project.patternId ?? null,
+    startDate: project.startDate ?? null,
+    endDate: project.endDate ?? null,
+    status: project.status,
+    notes: project.notes ?? null,
+    completedInstructionSteps: JSON.stringify(project.completedInstructionSteps),
+    stashUsageAppliedAt,
+  };
+}
 
+function toProjectStashRow(project, usage) {
+  return {
+    projectId: project.id,
+    stashItemId: usage.stashItemId,
+    quantityUsed: usage.quantityUsed ?? null,
+  };
+}
+
+function applyProjectStashUsage(tx, stashUsages) {
   for (const usage of stashUsages) {
     if (
       typeof usage.quantityUsed !== 'number' ||
@@ -142,18 +122,22 @@ function applyProjectStashUsage(stashUsages) {
       continue;
     }
 
-    const stashItem = db
-      .prepare('SELECT category FROM stash_items WHERE id = ?')
-      .get(usage.stashItemId);
+    const stashItem = tx
+      .select({ category: stashItems.category })
+      .from(stashItems)
+      .where(eq(stashItems.id, usage.stashItemId))
+      .get();
 
     if (!stashItem || !isConsumableCategory(stashItem.category)) {
       continue;
     }
 
-    updateStashQuantity.run({
-      stashItemId: usage.stashItemId,
-      quantityUsed: usage.quantityUsed,
-    });
+    tx.update(stashItems)
+      .set({
+        quantity: sql`MAX(${stashItems.quantity} - ${usage.quantityUsed}, 0)`,
+      })
+      .where(eq(stashItems.id, usage.stashItemId))
+      .run();
   }
 }
 
