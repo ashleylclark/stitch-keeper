@@ -1,37 +1,45 @@
-import { db } from '../db.js';
+import { desc, eq, sql } from 'drizzle-orm';
+import { orm } from '../db.js';
+import { stashItems } from '../schema.js';
 
 export function listStashItems() {
-  return db
-    .prepare(
-      `
-    SELECT id, name, category, status, material, weight, brand, color, quantity, unit, size, notes
-    FROM stash_items
-    ORDER BY rowid DESC
-  `,
-    )
-    .all();
+  return orm.select().from(stashItems).orderBy(desc(sql`rowid`)).all();
 }
 
 export function saveStashItem(item, replace = false) {
-  const sql = replace
-    ? `
-        INSERT OR REPLACE INTO stash_items (
-          id, name, category, status, material, weight, brand, color, quantity, unit, size, notes
-        ) VALUES (
-          @id, @name, @category, @status, @material, @weight, @brand, @color, @quantity, @unit, @size, @notes
-        )
-      `
-    : `
-        INSERT INTO stash_items (
-          id, name, category, status, material, weight, brand, color, quantity, unit, size, notes
-        ) VALUES (
-          @id, @name, @category, @status, @material, @weight, @brand, @color, @quantity, @unit, @size, @notes
-        )
-      `;
+  const values = toStashRow(item);
+  const insert = orm.insert(stashItems).values(values);
 
-  db.prepare(sql).run(item);
+  if (replace) {
+    insert
+      .onConflictDoUpdate({
+        target: stashItems.id,
+        set: values,
+      })
+      .run();
+    return;
+  }
+
+  insert.run();
 }
 
 export function deleteStashItem(id) {
-  db.prepare('DELETE FROM stash_items WHERE id = ?').run(id);
+  orm.delete(stashItems).where(eq(stashItems.id, id)).run();
+}
+
+function toStashRow(item) {
+  return {
+    id: item.id,
+    name: item.name,
+    category: item.category,
+    status: item.status ?? null,
+    material: item.material ?? null,
+    weight: item.weight ?? null,
+    brand: item.brand ?? null,
+    color: item.color ?? null,
+    quantity: item.quantity,
+    unit: item.unit ?? null,
+    size: item.size ?? null,
+    notes: item.notes ?? null,
+  };
 }

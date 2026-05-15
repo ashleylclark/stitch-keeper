@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { runMigrations } from './migrations.js';
+import * as schema from './schema.js';
 import { patterns, projects, stashItems } from './seed-data.js';
 
 const sqlitePath =
@@ -11,6 +13,7 @@ const sqlitePath =
 fs.mkdirSync(path.dirname(sqlitePath), { recursive: true });
 
 export const db = new Database(sqlitePath);
+export const orm = drizzle(db, { schema });
 
 db.pragma('foreign_keys = ON');
 
