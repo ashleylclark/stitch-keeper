@@ -16,18 +16,18 @@ const sqlitePath =
 
 fs.mkdirSync(path.dirname(sqlitePath), { recursive: true });
 
-export const db = new Database(sqlitePath);
-export const orm = drizzle(db, { schema });
+export const sqlite = new Database(sqlitePath);
+export const orm = drizzle(sqlite, { schema });
 
-db.pragma('foreign_keys = ON');
+sqlite.pragma('foreign_keys = ON');
 
 export function initializeDatabase() {
-  runMigrations(db);
+  runMigrations(sqlite);
   seedDatabaseIfEmpty();
 }
 
 function seedDatabaseIfEmpty() {
-  const row = db.prepare('SELECT COUNT(*) AS count FROM stash_items').get();
+  const row = sqlite.prepare('SELECT COUNT(*) AS count FROM stash_items').get();
 
   if (row.count > 0) {
     return;
