@@ -1,0 +1,156 @@
+import { randomUUID } from 'node:crypto';
+import { desc, eq, sql } from 'drizzle-orm';
+import { orm } from '../db.js';
+import { patternRequirements, patterns } from '../schema.js';
+import { emptyToUndefined } from './utils.js';
+
+export function listPatterns() {
+  const patternRows = orm
+    .select()
+    .from(patterns)
+    .orderBy(desc(sql`COALESCE(${patterns.addedAt}, '')`), desc(sql`rowid`))
+    .all();
+
+  const requirements = orm
+    .select()
+    .from(patternRequirements)
+    .orderBy(sql`rowid`)
+    .all();
+
+  const requirementsByPatternId = new Map();
+
+  for (const requirement of requirements) {
+    const current = requirementsByPatternId.get(requirement.patternId) ?? [];
+    current.push({
+      id: requirement.id,
+      category: requirement.category,
+      name: requirement.name,
+      weight: requirement.weight ?? undefined,
+      quantityNeeded: requirement.quantityNeeded ?? undefined,
+      unit: requirement.unit ?? undefined,
+      size: requirement.size ?? undefined,
+      notes: requirement.notes ?? undefined,
+    });
+    requirementsByPatternId.set(requirement.patternId, current);
+  }
+
+  return patternRows.map((pattern) => ({
+    ...pattern,
+    isPlanned: Boolean(pattern.isPlanned),
+    instructionSections: parseInstructionSections(
+      pattern.instructionSections,
+      pattern.instructions,
+    ),
+    requirements: requirementsByPatternId.get(pattern.id) ?? [],
+  }));
+}
+
+export function savePattern(pattern, replace = false) {
+  orm.transaction((tx) => {
+    if (replace) {
+      tx.delete(patterns).where(eq(patterns.id, pattern.id)).run();
+    }
+
+    tx.insert(patterns).values(toPatternRow(pattern)).run();
+
+    for (const requirement of pattern.requirements) {
+      tx.insert(patternRequirements)
+        .values(toRequirementRow(requirement, pattern.id))
+        .run();
+    }
+  });
+}
+
+export function deletePattern(id) {
+  orm.delete(patterns).where(eq(patterns.id, id)).run();
+}
+
+function toPatternRow(pattern) {
+  return {
+    id: pattern.id,
+    name: pattern.name,
+    addedAt: pattern.addedAt ?? null,
+    isPlanned: pattern.isPlanned ? 1 : 0,
+    source: pattern.source ?? null,
+    sourceUrl: pattern.sourceUrl ?? null,
+    category: pattern.category ?? null,
+    difficulty: pattern.difficulty ?? null,
+    notes: pattern.notes ?? null,
+    instructions: pattern.instructions,
+    instructionSections: JSON.stringify(pattern.instructionSections),
+  };
+}
+
+function toRequirementRow(requirement, patternId) {
+  return {
+    id: requirement.id,
+    patternId,
+    category: requirement.category,
+    name: requirement.name,
+    weight: requirement.weight ?? null,
+    quantityNeeded: requirement.quantityNeeded ?? null,
+    unit: requirement.unit ?? null,
+    size: requirement.size ?? null,
+    notes: requirement.notes ?? null,
+  };
+}
+
+function parseInstructionSections(value, legacyInstructions = '') {
+  if (value) {
+    try {
+      return normalizeInstructionSections(
+        JSON.parse(value),
+        legacyInstructions,
+      );
+    } catch {
+      return createInstructionSectionsFromText(legacyInstructions);
+    }
+  }
+
+  return createInstructionSectionsFromText(legacyInstructions);
+}
+
+function normalizeInstructionSections(value, legacyInstructions = '') {
+  const sections = Array.isArray(value)
+    ? value
+    : createInstructionSectionsFromText(String(legacyInstructions ?? ''));
+
+  return sections.map((section, sectionIndex) => {
+    const sectionId = String(section?.id ?? `section-${randomUUID()}`);
+    const steps = Array.isArray(section?.steps)
+      ? section.steps
+          .map((step) => ({
+            id: String(step?.id ?? `step-${randomUUID()}`),
+            text: String(step?.text ?? '').trim(),
+          }))
+          .filter((step) => step.text)
+      : [];
+
+    return {
+      id: sectionId,
+      title: emptyToUndefined(section?.title) ?? `Section ${sectionIndex + 1}`,
+      notes: emptyToUndefined(section?.notes),
+      steps,
+    };
+  });
+}
+
+function createInstructionSectionsFromText(instructions) {
+  const steps = String(instructions ?? '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((text, index) => ({
+      id: `legacy-step-${index}`,
+      text,
+    }));
+
+  return [
+    {
+      id: 'legacy-section-0',
+      title: 'Instructions',
+      notes: undefined,
+      steps,
+    },
+  ];
+}

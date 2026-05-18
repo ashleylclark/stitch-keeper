@@ -4,7 +4,22 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import express from 'express';
-import { db, initializeDatabase } from './db.js';
+import { initializeDatabase } from './db.js';
+import {
+  deletePattern,
+  listPatterns,
+  savePattern,
+} from './repositories/patterns.js';
+import {
+  deleteProject,
+  listProjects,
+  saveProject,
+} from './repositories/projects.js';
+import {
+  deleteStashItem,
+  listStashItems,
+  saveStashItem,
+} from './repositories/stash.js';
 
 initializeDatabase();
 
@@ -39,7 +54,7 @@ app.put('/api/stash/:id', (request, response) => {
 });
 
 app.delete('/api/stash/:id', (request, response) => {
-  db.prepare('DELETE FROM stash_items WHERE id = ?').run(request.params.id);
+  deleteStashItem(request.params.id);
   response.status(204).end();
 });
 
@@ -60,7 +75,7 @@ app.put('/api/patterns/:id', (request, response) => {
 });
 
 app.delete('/api/patterns/:id', (request, response) => {
-  db.prepare('DELETE FROM patterns WHERE id = ?').run(request.params.id);
+  deletePattern(request.params.id);
   response.status(204).end();
 });
 
@@ -81,7 +96,7 @@ app.put('/api/projects/:id', (request, response) => {
 });
 
 app.delete('/api/projects/:id', (request, response) => {
-  db.prepare('DELETE FROM projects WHERE id = ?').run(request.params.id);
+  deleteProject(request.params.id);
   response.status(204).end();
 });
 
@@ -94,150 +109,8 @@ if (hasBuiltFrontend) {
 }
 
 app.listen(port, () => {
-  console.log(`Stash Keeper server listening on http://localhost:${port}`);
+  console.log(`Stitch Keeper server listening on http://localhost:${port}`);
 });
-
-function listStashItems() {
-  return db
-    .prepare(
-      `
-    SELECT id, name, category, status, material, weight, brand, color, quantity, unit, size, notes
-    FROM stash_items
-    ORDER BY rowid DESC
-  `,
-    )
-    .all();
-}
-
-function listPatterns() {
-  const patterns = db
-    .prepare(
-      `
-    SELECT
-      id,
-      name,
-      added_at AS addedAt,
-      is_planned AS isPlanned,
-      source,
-      source_url AS sourceUrl,
-      category,
-      difficulty,
-      notes,
-      instructions,
-      instruction_sections AS instructionSections
-    FROM patterns
-    ORDER BY COALESCE(added_at, '') DESC, rowid DESC
-  `,
-    )
-    .all();
-
-  const requirements = db
-    .prepare(
-      `
-    SELECT
-      id,
-      pattern_id AS patternId,
-      category,
-      name,
-      weight,
-      quantity_needed AS quantityNeeded,
-      unit,
-      size,
-      notes
-    FROM pattern_requirements
-    ORDER BY rowid ASC
-  `,
-    )
-    .all();
-
-  const requirementsByPatternId = new Map();
-
-  for (const requirement of requirements) {
-    const current = requirementsByPatternId.get(requirement.patternId) ?? [];
-    current.push({
-      id: requirement.id,
-      category: requirement.category,
-      name: requirement.name,
-      weight: requirement.weight ?? undefined,
-      quantityNeeded: requirement.quantityNeeded ?? undefined,
-      unit: requirement.unit ?? undefined,
-      size: requirement.size ?? undefined,
-      notes: requirement.notes ?? undefined,
-    });
-    requirementsByPatternId.set(requirement.patternId, current);
-  }
-
-  return patterns.map((pattern) => ({
-    ...pattern,
-    isPlanned: Boolean(pattern.isPlanned),
-    instructionSections: parseInstructionSections(
-      pattern.instructionSections,
-      pattern.instructions,
-    ),
-    requirements: requirementsByPatternId.get(pattern.id) ?? [],
-  }));
-}
-
-function listProjects() {
-  const projects = db
-    .prepare(
-      `
-    SELECT
-      id,
-      name,
-      pattern_id AS patternId,
-      start_date AS startDate,
-      end_date AS endDate,
-      status,
-      notes,
-      completed_instruction_steps AS completedInstructionSteps,
-      stash_usage_applied_at AS stashUsageAppliedAt
-    FROM projects
-    ORDER BY rowid DESC
-  `,
-    )
-    .all();
-
-  const projectStashItems = db
-    .prepare(
-      `
-    SELECT project_id AS projectId, stash_item_id AS stashItemId, quantity_used AS quantityUsed
-    FROM project_stash_items
-    ORDER BY rowid ASC
-  `,
-    )
-    .all();
-
-  const stashItemIdsByProjectId = new Map();
-  const stashUsagesByProjectId = new Map();
-
-  for (const row of projectStashItems) {
-    const current = stashItemIdsByProjectId.get(row.projectId) ?? [];
-    current.push(row.stashItemId);
-    stashItemIdsByProjectId.set(row.projectId, current);
-
-    const usageCurrent = stashUsagesByProjectId.get(row.projectId) ?? [];
-    usageCurrent.push({
-      stashItemId: row.stashItemId,
-      quantityUsed: row.quantityUsed ?? undefined,
-    });
-    stashUsagesByProjectId.set(row.projectId, usageCurrent);
-  }
-
-  return projects.map((project) => ({
-    ...project,
-    patternId: project.patternId ?? undefined,
-    startDate: project.startDate ?? undefined,
-    endDate: project.endDate ?? undefined,
-    notes: project.notes ?? undefined,
-    completedInstructionSteps: parseCompletedInstructionSteps(
-      project.completedInstructionSteps,
-    ),
-    stashItemIds: stashItemIdsByProjectId.get(project.id) ?? [],
-    stashUsages: stashUsagesByProjectId.get(project.id) ?? [],
-    stashUsageAppliedAt: project.stashUsageAppliedAt ?? undefined,
-  }));
-}
 
 function normalizeStashItem(input) {
   return {
@@ -333,160 +206,6 @@ function normalizeProject(input) {
   };
 }
 
-function saveStashItem(item, replace = false) {
-  const sql = replace
-    ? `
-        INSERT OR REPLACE INTO stash_items (
-          id, name, category, status, material, weight, brand, color, quantity, unit, size, notes
-        ) VALUES (
-          @id, @name, @category, @status, @material, @weight, @brand, @color, @quantity, @unit, @size, @notes
-        )
-      `
-    : `
-        INSERT INTO stash_items (
-          id, name, category, status, material, weight, brand, color, quantity, unit, size, notes
-        ) VALUES (
-          @id, @name, @category, @status, @material, @weight, @brand, @color, @quantity, @unit, @size, @notes
-        )
-      `;
-
-  db.prepare(sql).run(item);
-}
-
-function savePattern(pattern, replace = false) {
-  db.transaction(() => {
-    if (replace) {
-      db.prepare('DELETE FROM patterns WHERE id = ?').run(pattern.id);
-    }
-
-    db.prepare(
-      `
-      INSERT INTO patterns (
-        id, name, added_at, is_planned, source, source_url, category, difficulty, notes, instructions, instruction_sections
-      ) VALUES (
-        @id, @name, @addedAt, @isPlanned, @source, @sourceUrl, @category, @difficulty, @notes, @instructions, @instructionSectionsJson
-      )
-    `,
-    ).run({
-      ...pattern,
-      isPlanned: pattern.isPlanned ? 1 : 0,
-      instructionSectionsJson: JSON.stringify(pattern.instructionSections),
-    });
-
-    const insertRequirement = db.prepare(`
-      INSERT INTO pattern_requirements (
-        id, pattern_id, category, name, weight, quantity_needed, unit, size, notes
-      ) VALUES (
-        @id, @patternId, @category, @name, @weight, @quantityNeeded, @unit, @size, @notes
-      )
-    `);
-
-    for (const requirement of pattern.requirements) {
-      insertRequirement.run({ ...requirement, patternId: pattern.id });
-    }
-  })();
-}
-
-function saveProject(project, replace = false) {
-  db.transaction(() => {
-    const existingProject = replace
-      ? db
-          .prepare(
-            `
-            SELECT id, status, stash_usage_applied_at AS stashUsageAppliedAt
-            FROM projects
-            WHERE id = ?
-          `,
-          )
-          .get(project.id)
-      : null;
-
-    if (replace) {
-      db.prepare('DELETE FROM projects WHERE id = ?').run(project.id);
-    }
-
-    const shouldApplyStashUsage =
-      project.status === 'completed' && !existingProject?.stashUsageAppliedAt;
-
-    const stashUsageAppliedAt = shouldApplyStashUsage
-      ? new Date().toISOString()
-      : (existingProject?.stashUsageAppliedAt ?? null);
-
-    db.prepare(
-      `
-      INSERT INTO projects (
-        id, name, pattern_id, start_date, end_date, status, notes, completed_instruction_steps, stash_usage_applied_at
-      ) VALUES (
-        @id, @name, @patternId, @startDate, @endDate, @status, @notes, @completedInstructionSteps, @stashUsageAppliedAt
-      )
-    `,
-    ).run({
-      ...project,
-      completedInstructionSteps: JSON.stringify(
-        project.completedInstructionSteps,
-      ),
-      stashUsageAppliedAt,
-    });
-
-    const insertLinkedItem = db.prepare(`
-      INSERT INTO project_stash_items (project_id, stash_item_id, quantity_used)
-      VALUES (@projectId, @stashItemId, @quantityUsed)
-    `);
-
-    for (const usage of project.stashUsages) {
-      insertLinkedItem.run({
-        projectId: project.id,
-        stashItemId: usage.stashItemId,
-        quantityUsed: usage.quantityUsed ?? null,
-      });
-    }
-
-    if (shouldApplyStashUsage) {
-      applyProjectStashUsage(project.stashUsages);
-    }
-  })();
-}
-
-function applyProjectStashUsage(stashUsages) {
-  const updateStashQuantity = db.prepare(`
-    UPDATE stash_items
-    SET quantity = MAX(quantity - @quantityUsed, 0)
-    WHERE id = @stashItemId
-  `);
-
-  for (const usage of stashUsages) {
-    if (
-      typeof usage.quantityUsed !== 'number' ||
-      Number.isNaN(usage.quantityUsed) ||
-      usage.quantityUsed <= 0
-    ) {
-      continue;
-    }
-
-    const stashItem = db
-      .prepare('SELECT category FROM stash_items WHERE id = ?')
-      .get(usage.stashItemId);
-
-    if (!stashItem || !isConsumableCategory(stashItem.category)) {
-      continue;
-    }
-
-    updateStashQuantity.run({
-      stashItemId: usage.stashItemId,
-      quantityUsed: usage.quantityUsed,
-    });
-  }
-}
-
-function isConsumableCategory(category) {
-  return (
-    category === 'yarn' ||
-    category === 'eyes' ||
-    category === 'stuffing' ||
-    category === 'other'
-  );
-}
-
 function emptyToUndefined(value) {
   if (value === undefined || value === null) {
     return undefined;
@@ -494,21 +213,6 @@ function emptyToUndefined(value) {
 
   const trimmed = String(value).trim();
   return trimmed === '' ? undefined : trimmed;
-}
-
-function parseInstructionSections(value, legacyInstructions = '') {
-  if (value) {
-    try {
-      return normalizeInstructionSections(
-        JSON.parse(value),
-        legacyInstructions,
-      );
-    } catch {
-      return createInstructionSectionsFromText(legacyInstructions);
-    }
-  }
-
-  return createInstructionSectionsFromText(legacyInstructions);
 }
 
 function normalizeInstructionSections(value, legacyInstructions = '') {
@@ -566,19 +270,6 @@ function deriveInstructionsFromSections(sections) {
     )
     .filter(Boolean)
     .join('\n\n');
-}
-
-function parseCompletedInstructionSteps(value) {
-  if (!value) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(value);
-    return normalizeCompletedInstructionSteps(parsed);
-  } catch {
-    return [];
-  }
 }
 
 function normalizeCompletedInstructionSteps(value) {
