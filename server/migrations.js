@@ -71,7 +71,9 @@ function readMigrationFiles() {
 
   for (const migration of migrations) {
     if (seenVersions.has(migration.version)) {
-      throw new Error(`Duplicate database migration version ${migration.version}`);
+      throw new Error(
+        `Duplicate database migration version ${migration.version}`,
+      );
     }
 
     seenVersions.add(migration.version);
@@ -96,7 +98,9 @@ function adoptLegacyDatabase(db, existingAppTables, migrationFiles) {
   const initialMigration = migrationFiles[0];
 
   if (!initialMigration) {
-    throw new Error('Cannot adopt legacy database without an initial migration');
+    throw new Error(
+      'Cannot adopt legacy database without an initial migration',
+    );
   }
 
   db.transaction(() => {

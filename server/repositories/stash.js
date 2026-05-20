@@ -1,35 +1,58 @@
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { orm } from '../db.js';
 import { stashItems } from '../schema.js';
 
-export function listStashItems() {
-  return orm.select().from(stashItems).orderBy(desc(sql`rowid`)).all();
+export function listStashItems(ownerContext) {
+  return orm
+    .select()
+    .from(stashItems)
+    .where(eq(stashItems.householdId, ownerContext.householdId))
+    .orderBy(desc(sql`rowid`))
+    .all()
+    .map(toStashItem);
 }
 
-export function saveStashItem(item, replace = false) {
-  const values = toStashRow(item);
-  const insert = orm.insert(stashItems).values(values);
+export function saveStashItem(ownerContext, item, replace = false) {
+  const values = toStashRow(ownerContext, item);
 
   if (replace) {
-    insert
-      .onConflictDoUpdate({
-        target: stashItems.id,
-        set: values,
-      })
+    const result = orm
+      .update(stashItems)
+      .set(values)
+      .where(
+        and(
+          eq(stashItems.id, item.id),
+          eq(stashItems.householdId, ownerContext.householdId),
+        ),
+      )
       .run();
+
+    if (result.changes === 0) {
+      orm.insert(stashItems).values(values).run();
+    }
+
     return;
   }
 
-  insert.run();
+  orm.insert(stashItems).values(values).run();
 }
 
-export function deleteStashItem(id) {
-  orm.delete(stashItems).where(eq(stashItems.id, id)).run();
+export function deleteStashItem(ownerContext, id) {
+  orm
+    .delete(stashItems)
+    .where(
+      and(
+        eq(stashItems.id, id),
+        eq(stashItems.householdId, ownerContext.householdId),
+      ),
+    )
+    .run();
 }
 
-function toStashRow(item) {
+function toStashRow(ownerContext, item) {
   return {
     id: item.id,
+    householdId: ownerContext.householdId,
     name: item.name,
     category: item.category,
     status: item.status ?? null,
@@ -42,4 +65,10 @@ function toStashRow(item) {
     size: item.size ?? null,
     notes: item.notes ?? null,
   };
+}
+
+function toStashItem(row) {
+  const item = { ...row };
+  delete item.householdId;
+  return item;
 }

@@ -1,7 +1,70 @@
-import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import {
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/sqlite-core';
+
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  displayName: text('display_name').notNull(),
+  avatarUrl: text('avatar_url'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
+export const identities = sqliteTable(
+  'identities',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(),
+    providerSubject: text('provider_subject').notNull(),
+    email: text('email'),
+    displayName: text('display_name'),
+    avatarUrl: text('avatar_url'),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('identities_provider_subject_unique').on(
+      table.provider,
+      table.providerSubject,
+    ),
+  ],
+);
+
+export const households = sqliteTable('households', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
+export const householdMembers = sqliteTable(
+  'household_members',
+  {
+    householdId: text('household_id')
+      .notNull()
+      .references(() => households.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: text('role').notNull(),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.householdId, table.userId] })],
+);
 
 export const stashItems = sqliteTable('stash_items', {
   id: text('id').primaryKey(),
+  householdId: text('household_id')
+    .notNull()
+    .references(() => households.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   category: text('category').notNull(),
   status: text('status'),
@@ -17,6 +80,9 @@ export const stashItems = sqliteTable('stash_items', {
 
 export const patterns = sqliteTable('patterns', {
   id: text('id').primaryKey(),
+  householdId: text('household_id')
+    .notNull()
+    .references(() => households.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   addedAt: text('added_at'),
   isPlanned: integer('is_planned').notNull().default(0),
@@ -45,6 +111,9 @@ export const patternRequirements = sqliteTable('pattern_requirements', {
 
 export const projects = sqliteTable('projects', {
   id: text('id').primaryKey(),
+  householdId: text('household_id')
+    .notNull()
+    .references(() => households.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   patternId: text('pattern_id'),
   startDate: text('start_date'),
@@ -68,9 +137,7 @@ export const projectStashItems = sqliteTable(
       .references(() => stashItems.id, { onDelete: 'cascade' }),
     quantityUsed: integer('quantity_used'),
   },
-  (table) => [
-    primaryKey({ columns: [table.projectId, table.stashItemId] }),
-  ],
+  (table) => [primaryKey({ columns: [table.projectId, table.stashItemId] })],
 );
 
 export const schemaMigrations = sqliteTable('schema_migrations', {
