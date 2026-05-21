@@ -1,21 +1,27 @@
 import { randomUUID } from 'node:crypto';
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { orm } from '../db.js';
 import { patternRequirements, patterns } from '../schema.js';
 import { emptyToUndefined } from './utils.js';
 
-export function listPatterns() {
+export function listPatterns(ownerContext) {
   const patternRows = orm
     .select()
     .from(patterns)
+    .where(eq(patterns.householdId, ownerContext.householdId))
     .orderBy(desc(sql`COALESCE(${patterns.addedAt}, '')`), desc(sql`rowid`))
     .all();
 
-  const requirements = orm
-    .select()
-    .from(patternRequirements)
-    .orderBy(sql`rowid`)
-    .all();
+  const patternIds = patternRows.map((pattern) => pattern.id);
+  const requirements =
+    patternIds.length === 0
+      ? []
+      : orm
+          .select()
+          .from(patternRequirements)
+          .where(inArray(patternRequirements.patternId, patternIds))
+          .orderBy(sql`rowid`)
+          .all();
 
   const requirementsByPatternId = new Map();
 
@@ -34,24 +40,36 @@ export function listPatterns() {
     requirementsByPatternId.set(requirement.patternId, current);
   }
 
-  return patternRows.map((pattern) => ({
-    ...pattern,
-    isPlanned: Boolean(pattern.isPlanned),
-    instructionSections: parseInstructionSections(
-      pattern.instructionSections,
-      pattern.instructions,
-    ),
-    requirements: requirementsByPatternId.get(pattern.id) ?? [],
-  }));
+  return patternRows.map((pattern) => {
+    const patternFields = { ...pattern };
+    delete patternFields.householdId;
+
+    return {
+      ...patternFields,
+      isPlanned: Boolean(pattern.isPlanned),
+      instructionSections: parseInstructionSections(
+        pattern.instructionSections,
+        pattern.instructions,
+      ),
+      requirements: requirementsByPatternId.get(pattern.id) ?? [],
+    };
+  });
 }
 
-export function savePattern(pattern, replace = false) {
+export function savePattern(ownerContext, pattern, replace = false) {
   orm.transaction((tx) => {
     if (replace) {
-      tx.delete(patterns).where(eq(patterns.id, pattern.id)).run();
+      tx.delete(patterns)
+        .where(
+          and(
+            eq(patterns.id, pattern.id),
+            eq(patterns.householdId, ownerContext.householdId),
+          ),
+        )
+        .run();
     }
 
-    tx.insert(patterns).values(toPatternRow(pattern)).run();
+    tx.insert(patterns).values(toPatternRow(ownerContext, pattern)).run();
 
     for (const requirement of pattern.requirements) {
       tx.insert(patternRequirements)
@@ -61,13 +79,22 @@ export function savePattern(pattern, replace = false) {
   });
 }
 
-export function deletePattern(id) {
-  orm.delete(patterns).where(eq(patterns.id, id)).run();
+export function deletePattern(ownerContext, id) {
+  orm
+    .delete(patterns)
+    .where(
+      and(
+        eq(patterns.id, id),
+        eq(patterns.householdId, ownerContext.householdId),
+      ),
+    )
+    .run();
 }
 
-function toPatternRow(pattern) {
+function toPatternRow(ownerContext, pattern) {
   return {
     id: pattern.id,
+    householdId: ownerContext.householdId,
     name: pattern.name,
     addedAt: pattern.addedAt ?? null,
     isPlanned: pattern.isPlanned ? 1 : 0,

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import express from 'express';
 import { initializeDatabase } from './db.js';
+import { getOwnerContext } from './owner-context.js';
 import {
   deletePattern,
   listPatterns,
@@ -37,66 +38,66 @@ app.get('/api/health', (_request, response) => {
   response.json({ ok: true });
 });
 
-app.get('/api/stash', (_request, response) => {
-  response.json(listStashItems());
+app.get('/api/stash', (request, response) => {
+  response.json(listStashItems(getOwnerContext(request)));
 });
 
 app.post('/api/stash', (request, response) => {
   const item = normalizeStashItem(request.body);
-  saveStashItem(item);
+  saveStashItem(getOwnerContext(request), item);
   response.status(201).json(item);
 });
 
 app.put('/api/stash/:id', (request, response) => {
   const item = normalizeStashItem({ ...request.body, id: request.params.id });
-  saveStashItem(item, true);
+  saveStashItem(getOwnerContext(request), item, true);
   response.json(item);
 });
 
 app.delete('/api/stash/:id', (request, response) => {
-  deleteStashItem(request.params.id);
+  deleteStashItem(getOwnerContext(request), request.params.id);
   response.status(204).end();
 });
 
-app.get('/api/patterns', (_request, response) => {
-  response.json(listPatterns());
+app.get('/api/patterns', (request, response) => {
+  response.json(listPatterns(getOwnerContext(request)));
 });
 
 app.post('/api/patterns', (request, response) => {
   const pattern = normalizePattern(request.body);
-  savePattern(pattern);
+  savePattern(getOwnerContext(request), pattern);
   response.status(201).json(pattern);
 });
 
 app.put('/api/patterns/:id', (request, response) => {
   const pattern = normalizePattern({ ...request.body, id: request.params.id });
-  savePattern(pattern, true);
+  savePattern(getOwnerContext(request), pattern, true);
   response.json(pattern);
 });
 
 app.delete('/api/patterns/:id', (request, response) => {
-  deletePattern(request.params.id);
+  deletePattern(getOwnerContext(request), request.params.id);
   response.status(204).end();
 });
 
-app.get('/api/projects', (_request, response) => {
-  response.json(listProjects());
+app.get('/api/projects', (request, response) => {
+  response.json(listProjects(getOwnerContext(request)));
 });
 
 app.post('/api/projects', (request, response) => {
   const project = normalizeProject(request.body);
-  saveProject(project);
+  saveProject(getOwnerContext(request), project);
   response.status(201).json(project);
 });
 
 app.put('/api/projects/:id', (request, response) => {
   const project = normalizeProject({ ...request.body, id: request.params.id });
-  saveProject(project, true);
+  saveProject(getOwnerContext(request), project, true);
   response.json(project);
 });
 
 app.delete('/api/projects/:id', (request, response) => {
-  deleteProject(request.params.id);
+  deleteProject(getOwnerContext(request), request.params.id);
   response.status(204).end();
 });
 

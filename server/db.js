@@ -13,6 +13,7 @@ import {
 const sqlitePath =
   process.env.SQLITE_PATH ??
   path.join(process.cwd(), 'data', 'stitch-keeper.db');
+const defaultHouseholdId = 'household-local-default';
 
 fs.mkdirSync(path.dirname(sqlitePath), { recursive: true });
 
@@ -35,72 +36,85 @@ function seedDatabaseIfEmpty() {
 
   orm.transaction((tx) => {
     for (const item of stashItemSeeds) {
-      tx.insert(schema.stashItems).values({
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        status: item.status ?? null,
-        material: item.material ?? null,
-        weight: item.weight ?? null,
-        brand: item.brand ?? null,
-        color: item.color ?? null,
-        quantity: item.quantity,
-        unit: item.unit ?? null,
-        size: item.size ?? null,
-        notes: item.notes ?? null,
-      }).run();
+      tx.insert(schema.stashItems)
+        .values({
+          id: item.id,
+          householdId: defaultHouseholdId,
+          name: item.name,
+          category: item.category,
+          status: item.status ?? null,
+          material: item.material ?? null,
+          weight: item.weight ?? null,
+          brand: item.brand ?? null,
+          color: item.color ?? null,
+          quantity: item.quantity,
+          unit: item.unit ?? null,
+          size: item.size ?? null,
+          notes: item.notes ?? null,
+        })
+        .run();
     }
 
     for (const pattern of patternSeeds) {
-      tx.insert(schema.patterns).values({
-        id: pattern.id,
-        name: pattern.name,
-        addedAt: pattern.addedAt ?? null,
-        isPlanned: pattern.isPlanned ? 1 : 0,
-        source: pattern.source ?? null,
-        sourceUrl: pattern.sourceUrl ?? null,
-        category: pattern.category ?? null,
-        difficulty: pattern.difficulty ?? null,
-        notes: pattern.notes ?? null,
-        instructions: pattern.instructions,
-        instructionSections: null,
-      }).run();
+      tx.insert(schema.patterns)
+        .values({
+          id: pattern.id,
+          householdId: defaultHouseholdId,
+          name: pattern.name,
+          addedAt: pattern.addedAt ?? null,
+          isPlanned: pattern.isPlanned ? 1 : 0,
+          source: pattern.source ?? null,
+          sourceUrl: pattern.sourceUrl ?? null,
+          category: pattern.category ?? null,
+          difficulty: pattern.difficulty ?? null,
+          notes: pattern.notes ?? null,
+          instructions: pattern.instructions,
+          instructionSections: null,
+        })
+        .run();
 
       for (const requirement of pattern.requirements ?? []) {
-        tx.insert(schema.patternRequirements).values({
-          id: requirement.id,
-          patternId: pattern.id,
-          category: requirement.category,
-          name: requirement.name,
-          weight: requirement.weight ?? null,
-          quantityNeeded: requirement.quantityNeeded ?? null,
-          unit: requirement.unit ?? null,
-          size: requirement.size ?? null,
-          notes: requirement.notes ?? null,
-        }).run();
+        tx.insert(schema.patternRequirements)
+          .values({
+            id: requirement.id,
+            patternId: pattern.id,
+            category: requirement.category,
+            name: requirement.name,
+            weight: requirement.weight ?? null,
+            quantityNeeded: requirement.quantityNeeded ?? null,
+            unit: requirement.unit ?? null,
+            size: requirement.size ?? null,
+            notes: requirement.notes ?? null,
+          })
+          .run();
       }
     }
 
     for (const project of projectSeeds) {
-      tx.insert(schema.projects).values({
-        id: project.id,
-        name: project.name,
-        patternId: project.patternId ?? null,
-        startDate: project.startDate ?? null,
-        endDate: project.endDate ?? null,
-        status: project.status,
-        notes: project.notes ?? null,
-        completedInstructionSteps: JSON.stringify(
-          project.completedInstructionSteps ?? [],
-        ),
-      }).run();
+      tx.insert(schema.projects)
+        .values({
+          id: project.id,
+          householdId: defaultHouseholdId,
+          name: project.name,
+          patternId: project.patternId ?? null,
+          startDate: project.startDate ?? null,
+          endDate: project.endDate ?? null,
+          status: project.status,
+          notes: project.notes ?? null,
+          completedInstructionSteps: JSON.stringify(
+            project.completedInstructionSteps ?? [],
+          ),
+        })
+        .run();
 
       for (const stashItemId of project.stashItemIds ?? []) {
-        tx.insert(schema.projectStashItems).values({
-          projectId: project.id,
-          stashItemId,
-          quantityUsed: null,
-        }).run();
+        tx.insert(schema.projectStashItems)
+          .values({
+            projectId: project.id,
+            stashItemId,
+            quantityUsed: null,
+          })
+          .run();
       }
     }
   });

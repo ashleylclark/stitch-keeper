@@ -1,20 +1,26 @@
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { orm } from '../db.js';
 import { projects, projectStashItems, stashItems } from '../schema.js';
 import { emptyToUndefined } from './utils.js';
 
-export function listProjects() {
+export function listProjects(ownerContext) {
   const projectRows = orm
     .select()
     .from(projects)
+    .where(eq(projects.householdId, ownerContext.householdId))
     .orderBy(desc(sql`rowid`))
     .all();
 
-  const linkedStashItems = orm
-    .select()
-    .from(projectStashItems)
-    .orderBy(sql`rowid`)
-    .all();
+  const projectIds = projectRows.map((project) => project.id);
+  const linkedStashItems =
+    projectIds.length === 0
+      ? []
+      : orm
+          .select()
+          .from(projectStashItems)
+          .where(inArray(projectStashItems.projectId, projectIds))
+          .orderBy(sql`rowid`)
+          .all();
 
   const stashItemIdsByProjectId = new Map();
   const stashUsagesByProjectId = new Map();
@@ -32,22 +38,27 @@ export function listProjects() {
     stashUsagesByProjectId.set(row.projectId, usageCurrent);
   }
 
-  return projectRows.map((project) => ({
-    ...project,
-    patternId: project.patternId ?? undefined,
-    startDate: project.startDate ?? undefined,
-    endDate: project.endDate ?? undefined,
-    notes: project.notes ?? undefined,
-    completedInstructionSteps: parseCompletedInstructionSteps(
-      project.completedInstructionSteps,
-    ),
-    stashItemIds: stashItemIdsByProjectId.get(project.id) ?? [],
-    stashUsages: stashUsagesByProjectId.get(project.id) ?? [],
-    stashUsageAppliedAt: project.stashUsageAppliedAt ?? undefined,
-  }));
+  return projectRows.map((project) => {
+    const projectFields = { ...project };
+    delete projectFields.householdId;
+
+    return {
+      ...projectFields,
+      patternId: project.patternId ?? undefined,
+      startDate: project.startDate ?? undefined,
+      endDate: project.endDate ?? undefined,
+      notes: project.notes ?? undefined,
+      completedInstructionSteps: parseCompletedInstructionSteps(
+        project.completedInstructionSteps,
+      ),
+      stashItemIds: stashItemIdsByProjectId.get(project.id) ?? [],
+      stashUsages: stashUsagesByProjectId.get(project.id) ?? [],
+      stashUsageAppliedAt: project.stashUsageAppliedAt ?? undefined,
+    };
+  });
 }
 
-export function saveProject(project, replace = false) {
+export function saveProject(ownerContext, project, replace = false) {
   orm.transaction((tx) => {
     const existingProject = replace
       ? tx
@@ -57,12 +68,24 @@ export function saveProject(project, replace = false) {
             stashUsageAppliedAt: projects.stashUsageAppliedAt,
           })
           .from(projects)
-          .where(eq(projects.id, project.id))
+          .where(
+            and(
+              eq(projects.id, project.id),
+              eq(projects.householdId, ownerContext.householdId),
+            ),
+          )
           .get()
       : null;
 
     if (replace) {
-      tx.delete(projects).where(eq(projects.id, project.id)).run();
+      tx.delete(projects)
+        .where(
+          and(
+            eq(projects.id, project.id),
+            eq(projects.householdId, ownerContext.householdId),
+          ),
+        )
+        .run();
     }
 
     const shouldApplyStashUsage =
@@ -73,33 +96,52 @@ export function saveProject(project, replace = false) {
       : (existingProject?.stashUsageAppliedAt ?? null);
 
     tx.insert(projects)
-      .values(toProjectRow(project, stashUsageAppliedAt))
+      .values(toProjectRow(ownerContext, project, stashUsageAppliedAt))
       .run();
 
-    for (const usage of project.stashUsages) {
-      tx.insert(projectStashItems).values(toProjectStashRow(project, usage)).run();
+    const ownedStashUsages = filterOwnedStashUsages(
+      tx,
+      ownerContext,
+      project.stashUsages,
+    );
+
+    for (const usage of ownedStashUsages) {
+      tx.insert(projectStashItems)
+        .values(toProjectStashRow(project, usage))
+        .run();
     }
 
     if (shouldApplyStashUsage) {
-      applyProjectStashUsage(tx, project.stashUsages);
+      applyProjectStashUsage(tx, ownerContext, ownedStashUsages);
     }
   });
 }
 
-export function deleteProject(id) {
-  orm.delete(projects).where(eq(projects.id, id)).run();
+export function deleteProject(ownerContext, id) {
+  orm
+    .delete(projects)
+    .where(
+      and(
+        eq(projects.id, id),
+        eq(projects.householdId, ownerContext.householdId),
+      ),
+    )
+    .run();
 }
 
-function toProjectRow(project, stashUsageAppliedAt) {
+function toProjectRow(ownerContext, project, stashUsageAppliedAt) {
   return {
     id: project.id,
+    householdId: ownerContext.householdId,
     name: project.name,
     patternId: project.patternId ?? null,
     startDate: project.startDate ?? null,
     endDate: project.endDate ?? null,
     status: project.status,
     notes: project.notes ?? null,
-    completedInstructionSteps: JSON.stringify(project.completedInstructionSteps),
+    completedInstructionSteps: JSON.stringify(
+      project.completedInstructionSteps,
+    ),
     stashUsageAppliedAt,
   };
 }
@@ -112,7 +154,30 @@ function toProjectStashRow(project, usage) {
   };
 }
 
-function applyProjectStashUsage(tx, stashUsages) {
+function filterOwnedStashUsages(tx, ownerContext, stashUsages) {
+  if (stashUsages.length === 0) {
+    return [];
+  }
+
+  const stashItemIds = stashUsages.map((usage) => usage.stashItemId);
+  const ownedStashItems = tx
+    .select({ id: stashItems.id })
+    .from(stashItems)
+    .where(
+      and(
+        eq(stashItems.householdId, ownerContext.householdId),
+        inArray(stashItems.id, stashItemIds),
+      ),
+    )
+    .all();
+  const ownedStashItemIds = new Set(ownedStashItems.map((item) => item.id));
+
+  return stashUsages.filter((usage) =>
+    ownedStashItemIds.has(usage.stashItemId),
+  );
+}
+
+function applyProjectStashUsage(tx, ownerContext, stashUsages) {
   for (const usage of stashUsages) {
     if (
       typeof usage.quantityUsed !== 'number' ||
@@ -125,7 +190,12 @@ function applyProjectStashUsage(tx, stashUsages) {
     const stashItem = tx
       .select({ category: stashItems.category })
       .from(stashItems)
-      .where(eq(stashItems.id, usage.stashItemId))
+      .where(
+        and(
+          eq(stashItems.id, usage.stashItemId),
+          eq(stashItems.householdId, ownerContext.householdId),
+        ),
+      )
       .get();
 
     if (!stashItem || !isConsumableCategory(stashItem.category)) {
@@ -136,7 +206,12 @@ function applyProjectStashUsage(tx, stashUsages) {
       .set({
         quantity: sql`MAX(${stashItems.quantity} - ${usage.quantityUsed}, 0)`,
       })
-      .where(eq(stashItems.id, usage.stashItemId))
+      .where(
+        and(
+          eq(stashItems.id, usage.stashItemId),
+          eq(stashItems.householdId, ownerContext.householdId),
+        ),
+      )
       .run();
   }
 }
