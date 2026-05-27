@@ -1,12 +1,24 @@
 import { createContext, useContext } from 'react';
 import type {
+  AuthSettings,
+  AuthSession,
+  LoginCredentials,
   Pattern,
   PatternMatchSummary,
   Project,
+  RegistrationCredentials,
   StashItem,
 } from '../../types/models';
 
+export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
+
 export type AppDataContextValue = {
+  authStatus: AuthStatus;
+  authSettings: AuthSettings;
+  session: AuthSession | null;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (credentials: RegistrationCredentials) => Promise<void>;
+  logout: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
   stashItems: StashItem[];

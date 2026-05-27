@@ -14,6 +14,7 @@ const sqlitePath =
   process.env.SQLITE_PATH ??
   path.join(process.cwd(), 'data', 'stitch-keeper.db');
 const defaultHouseholdId = 'household-local-default';
+const defaultUserId = 'user-local-default';
 
 fs.mkdirSync(path.dirname(sqlitePath), { recursive: true });
 
@@ -95,6 +96,7 @@ function seedDatabaseIfEmpty() {
         .values({
           id: project.id,
           householdId: defaultHouseholdId,
+          userId: defaultUserId,
           name: project.name,
           patternId: project.patternId ?? null,
           startDate: project.startDate ?? null,

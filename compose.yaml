@@ -8,6 +8,12 @@ services:
     environment:
       PORT: 3001
       SQLITE_PATH: /app/data/stitch-keeper.db
+      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+      SESSION_SECRET: ${SESSION_SECRET}
+      ALLOW_SIGNUPS: ${ALLOW_SIGNUPS:-false}
     ports:
       - '8080:3001'
     volumes:

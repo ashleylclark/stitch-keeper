@@ -1,7 +1,28 @@
-import { useEffect, useMemo, useState, type PropsWithChildren } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type PropsWithChildren,
+} from 'react';
 import { AppDataContext, type AppDataContextValue } from '../state/app-data';
-import type { Pattern, Project, StashItem } from '../../types/models';
+import type {
+  AuthSettings,
+  AuthSession,
+  LoginCredentials,
+  Pattern,
+  Project,
+  RegistrationCredentials,
+  StashItem,
+} from '../../types/models';
 import { buildPatternMatchSummaries } from '../../pages/patterns/lib/patternMatching';
+import {
+  fetchAuthSettings,
+  fetchCurrentSession,
+  login as loginWithServer,
+  logout as logoutFromServer,
+  register as registerWithServer,
+} from '../auth/api';
 import {
   createStashItem,
   fetchStashItems,
@@ -25,17 +46,27 @@ export function AppDataProvider({ children }: PropsWithChildren) {
   const [stashItems, setStashItems] = useState<StashItem[]>([]);
   const [patterns, setPatterns] = useState<Pattern[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [authSettings, setAuthSettings] = useState<AuthSettings>({
+    oidcEnabled: false,
+    registrationEnabled: false,
+  });
+  const [authStatus, setAuthStatus] =
+    useState<AppDataContextValue['authStatus']>('loading');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    void loadInitialData();
-  }, []);
-
-  async function loadInitialData() {
+  const loadInitialData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
+
+      const nextAuthSettings = await fetchAuthSettings();
+      setAuthSettings(nextAuthSettings);
+
+      const nextSession = await fetchCurrentSession();
+      setSession(nextSession);
+      setAuthStatus('authenticated');
 
       const [nextStashItems, nextPatterns, nextProjects] = await Promise.all([
         fetchStashItems(),
@@ -47,6 +78,15 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       setPatterns(nextPatterns);
       setProjects(nextProjects);
     } catch (loadError) {
+      if (loadError instanceof Error && loadError.message.includes('401')) {
+        setSession(null);
+        setAuthStatus('unauthenticated');
+        setStashItems([]);
+        setPatterns([]);
+        setProjects([]);
+        return;
+      }
+
       setError(
         loadError instanceof Error
           ? loadError.message
@@ -55,7 +95,38 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    void loadInitialData();
+  }, [loadInitialData]);
+
+  const login = useCallback(
+    async (credentials: LoginCredentials) => {
+      await loginWithServer(credentials);
+      await loadInitialData();
+    },
+    [loadInitialData],
+  );
+
+  const register = useCallback(
+    async (credentials: RegistrationCredentials) => {
+      await registerWithServer(credentials);
+      await loadInitialData();
+    },
+    [loadInitialData],
+  );
+
+  const logout = useCallback(async () => {
+    await logoutFromServer();
+    const nextAuthSettings = await fetchAuthSettings();
+    setAuthSettings(nextAuthSettings);
+    setSession(null);
+    setAuthStatus('unauthenticated');
+    setStashItems([]);
+    setPatterns([]);
+    setProjects([]);
+  }, []);
 
   const patternMatchSummaries = useMemo(
     () => buildPatternMatchSummaries(patterns, stashItems),
@@ -72,6 +143,12 @@ export function AppDataProvider({ children }: PropsWithChildren) {
 
   const value = useMemo<AppDataContextValue>(
     () => ({
+      authStatus,
+      authSettings,
+      session,
+      login,
+      register,
+      logout,
       isLoading,
       error,
       stashItems,
@@ -139,6 +216,11 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       patternMatchById,
     }),
     [
+      authStatus,
+      authSettings,
+      session,
+      login,
+      register,
       isLoading,
       error,
       stashItems,
@@ -146,6 +228,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       projects,
       patternMatchSummaries,
       patternMatchById,
+      logout,
     ],
   );
 

@@ -3,11 +3,18 @@ export async function fetchJson<T>(
   init?: RequestInit,
   allowEmpty = false,
 ) {
-  const response = await fetch(input, init);
+  const response = await fetch(input, {
+    credentials: 'include',
+    ...init,
+  });
 
   if (!response.ok) {
     const message = await response.text();
-    throw new Error(message || `Request failed with status ${response.status}`);
+    throw new Error(
+      message
+        ? `${message} (${response.status})`
+        : `Request failed with status ${response.status}`,
+    );
   }
 
   if (allowEmpty || response.status === 204) {

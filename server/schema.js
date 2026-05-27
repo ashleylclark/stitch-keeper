@@ -38,6 +38,15 @@ export const identities = sqliteTable(
   ],
 );
 
+export const localCredentials = sqliteTable('local_credentials', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
 export const households = sqliteTable('households', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
@@ -114,6 +123,9 @@ export const projects = sqliteTable('projects', {
   householdId: text('household_id')
     .notNull()
     .references(() => households.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   patternId: text('pattern_id'),
   startDate: text('start_date'),

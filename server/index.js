@@ -4,8 +4,20 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import express from 'express';
+import { handleLocalLogin, handleLocalRegistration } from './auth/local.js';
+import { handleCallback, handleLogin } from './auth/oidc.js';
+import {
+  clearAuthCookie,
+  clearSessionCookie,
+  readAuthConfig,
+  readSessionCookie,
+} from './auth/session.js';
 import { initializeDatabase } from './db.js';
 import { getOwnerContext } from './owner-context.js';
+import {
+  findSessionUser,
+  isLocalRegistrationEnabled,
+} from './repositories/users.js';
 import {
   deletePattern,
   listPatterns,
@@ -22,6 +34,8 @@ import {
   saveStashItem,
 } from './repositories/stash.js';
 
+const authConfig = readAuthConfig();
+
 initializeDatabase();
 
 const app = express();
@@ -31,11 +45,103 @@ const distDir = path.resolve(serverDir, '../dist');
 const indexHtmlPath = path.join(distDir, 'index.html');
 const hasBuiltFrontend = fs.existsSync(indexHtmlPath);
 
-app.use(cors());
+app.set('trust proxy', 1);
+app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 
 app.get('/api/health', (_request, response) => {
   response.json({ ok: true });
+});
+
+app.get('/api/auth/config', (_request, response) => {
+  response.json({
+    oidcEnabled: Boolean(authConfig.oidc),
+    registrationEnabled: isLocalRegistrationEnabled(authConfig),
+  });
+});
+
+app.post('/auth/login', async (request, response, next) => {
+  try {
+    await handleLocalLogin(request, response, authConfig);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/auth/register', async (request, response, next) => {
+  try {
+    await handleLocalRegistration(request, response, authConfig);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/auth/login', (_request, response, next) => {
+  if (!authConfig.oidc) {
+    response.redirect('/');
+    return;
+  }
+
+  next();
+});
+
+app.get('/auth/login', async (request, response, next) => {
+  try {
+    await handleLogin(request, response, authConfig);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/auth/oidc/login', async (request, response, next) => {
+  try {
+    await handleLogin(request, response, authConfig);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/auth/callback', async (_request, response, next) => {
+  if (!authConfig.oidc) {
+    response.redirect('/');
+    return;
+  }
+
+  next();
+});
+
+app.get('/auth/callback', async (request, response, next) => {
+  try {
+    await handleCallback(request, response, authConfig);
+  } catch (error) {
+    clearAuthCookie(response, authConfig);
+    next(error);
+  }
+});
+
+app.get('/auth/oidc/callback', async (request, response, next) => {
+  try {
+    await handleCallback(request, response, authConfig);
+  } catch (error) {
+    clearAuthCookie(response, authConfig);
+    next(error);
+  }
+});
+
+app.post('/auth/logout', (_request, response) => {
+  clearSessionCookie(response, authConfig);
+  response.status(204).end();
+});
+
+app.get('/auth/logout', (_request, response) => {
+  clearSessionCookie(response, authConfig);
+  response.redirect('/');
+});
+
+app.use('/api', requireAuthenticatedUser);
+
+app.get('/api/me', (request, response) => {
+  response.json(request.sessionUser);
 });
 
 app.get('/api/stash', (request, response) => {
@@ -112,6 +218,26 @@ if (hasBuiltFrontend) {
 app.listen(port, () => {
   console.log(`Stitch Keeper server listening on http://localhost:${port}`);
 });
+
+function requireAuthenticatedUser(request, response, next) {
+  const session = readSessionCookie(request, authConfig);
+
+  if (!session) {
+    response.status(401).send('Authentication required.');
+    return;
+  }
+
+  const sessionUser = findSessionUser(session);
+
+  if (!sessionUser) {
+    clearSessionCookie(response, authConfig);
+    response.status(401).send('Authentication required.');
+    return;
+  }
+
+  request.sessionUser = sessionUser;
+  next();
+}
 
 function normalizeStashItem(input) {
   return {

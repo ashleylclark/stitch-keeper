@@ -7,7 +7,12 @@ export function listProjects(ownerContext) {
   const projectRows = orm
     .select()
     .from(projects)
-    .where(eq(projects.householdId, ownerContext.householdId))
+    .where(
+      and(
+        eq(projects.householdId, ownerContext.householdId),
+        eq(projects.userId, ownerContext.userId),
+      ),
+    )
     .orderBy(desc(sql`rowid`))
     .all();
 
@@ -41,6 +46,7 @@ export function listProjects(ownerContext) {
   return projectRows.map((project) => {
     const projectFields = { ...project };
     delete projectFields.householdId;
+    delete projectFields.userId;
 
     return {
       ...projectFields,
@@ -72,6 +78,7 @@ export function saveProject(ownerContext, project, replace = false) {
             and(
               eq(projects.id, project.id),
               eq(projects.householdId, ownerContext.householdId),
+              eq(projects.userId, ownerContext.userId),
             ),
           )
           .get()
@@ -83,6 +90,7 @@ export function saveProject(ownerContext, project, replace = false) {
           and(
             eq(projects.id, project.id),
             eq(projects.householdId, ownerContext.householdId),
+            eq(projects.userId, ownerContext.userId),
           ),
         )
         .run();
@@ -124,6 +132,7 @@ export function deleteProject(ownerContext, id) {
       and(
         eq(projects.id, id),
         eq(projects.householdId, ownerContext.householdId),
+        eq(projects.userId, ownerContext.userId),
       ),
     )
     .run();
@@ -133,6 +142,7 @@ function toProjectRow(ownerContext, project, stashUsageAppliedAt) {
   return {
     id: project.id,
     householdId: ownerContext.householdId,
+    userId: ownerContext.userId,
     name: project.name,
     patternId: project.patternId ?? null,
     startDate: project.startDate ?? null,
