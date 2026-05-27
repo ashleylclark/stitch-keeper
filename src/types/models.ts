@@ -112,7 +112,44 @@ type ProjectStashUsage = {
   quantityUsed?: number;
 };
 
+type AuthUser = {
+  id: string;
+  email: string;
+  displayName: string;
+  avatarUrl?: string;
+};
+
+type Household = {
+  id: string;
+  name: string;
+  role: string;
+};
+
+type AuthSession = {
+  user: AuthUser;
+  households: Household[];
+  activeHousehold: Household;
+};
+
+type AuthSettings = {
+  oidcEnabled: boolean;
+  registrationEnabled: boolean;
+};
+
+type LoginCredentials = {
+  email: string;
+  password: string;
+};
+
+type RegistrationCredentials = LoginCredentials & {
+  displayName: string;
+};
+
 export type {
+  AuthSettings,
+  AuthSession,
+  AuthUser,
+  Household,
   ItemCategory,
   MatchStatus,
   Pattern,
@@ -124,7 +161,9 @@ export type {
   Project,
   ProjectStashUsage,
   ProjectStatus,
+  LoginCredentials,
   RequirementMatch,
+  RegistrationCredentials,
   StashItem,
   StashStatus,
   YarnWeight,
