@@ -1,7 +1,7 @@
 # Stitch-Keeper Helm Chart
 
-[![Version: 0.1.2](https://img.shields.io/badge/Version-0.1.2-informational?style=flat-square)](Chart.yaml)
-[![AppVersion: v0.4.0](https://img.shields.io/badge/AppVersion-v0.4.0-informational?style=flat-square)](Chart.yaml)
+[![Version: 0.1.3](https://img.shields.io/badge/Version-0.1.3-informational?style=flat-square)](Chart.yaml)
+[![AppVersion: v0.5.0](https://img.shields.io/badge/AppVersion-v0.5.0-informational?style=flat-square)](Chart.yaml)
 
 A simple web app to manage your fiber arts stash.
 
@@ -14,14 +14,14 @@ This chart deploys Stitch Keeper as a single-replica web application backed by S
 ### From GHCR (OCI)
 
 ```bash
-helm install stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper --version 0.1.2
+helm install stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper --version 0.1.3
 ```
 
 To override values during install:
 
 ```bash
 helm install stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper \
-  --version 0.1.2 \
+  --version 0.1.3 \
   --set ingress.enabled=true
 ```
 
@@ -34,7 +34,7 @@ helm install stitch-keeper ./chart
 ## Upgrading
 
 ```bash
-helm upgrade stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper --version 0.1.2
+helm upgrade stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper --version 0.1.3
 ```
 
 ## Uninstalling
