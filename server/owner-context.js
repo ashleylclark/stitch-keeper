@@ -1,8 +1,12 @@
-export const defaultOwnerContext = {
-  userId: 'user-local-default',
-  householdId: 'household-local-default',
-};
+export function getOwnerContext(request) {
+  const sessionUser = request.sessionUser;
 
-export function getOwnerContext() {
-  return defaultOwnerContext;
+  if (!sessionUser) {
+    throw new Error('Request user has not been resolved.');
+  }
+
+  return {
+    userId: sessionUser.user.id,
+    householdId: sessionUser.activeHousehold.id,
+  };
 }
