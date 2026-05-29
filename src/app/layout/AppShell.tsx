@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   BookMarked,
@@ -143,6 +143,25 @@ function AuthPanel() {
 
   const isRegistering = mode === 'register';
 
+  useEffect(() => {
+    if (authSettings.oidcEnabled) {
+      window.location.assign('/auth/oidc/login');
+    }
+  }, [authSettings.oidcEnabled]);
+
+  if (authSettings.oidcEnabled) {
+    return (
+      <section className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-rose-500 dark:text-rose-300">
+          Welcome
+        </p>
+        <h1 className="font-serif text-3xl text-stone-900 dark:text-stone-100">
+          Redirecting to sign in...
+        </h1>
+      </section>
+    );
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
@@ -255,16 +274,6 @@ function AuthPanel() {
           ) : null}
         </div>
       </form>
-
-      {authSettings.oidcEnabled ? (
-        <a
-          href="/auth/oidc/login"
-          className="inline-flex h-12 w-fit items-center gap-2 rounded-2xl border border-stone-200 bg-white px-5 text-sm font-semibold text-stone-700 shadow-sm transition hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-rose-400 dark:hover:text-stone-50"
-        >
-          <LogIn color="currentColor" size={18} />
-          <span>Continue with OIDC</span>
-        </a>
-      ) : null}
     </section>
   );
 }

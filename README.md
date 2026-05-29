@@ -199,7 +199,7 @@ export OIDC_CLIENT_SECRET=your-authentik-client-secret
 ```
 
 After restart, `GET /api/auth/config` should report `"oidcEnabled":true`, and
-the login screen should show **Continue with OIDC**.
+unauthenticated users should be redirected to the OIDC provider automatically.
 
 Manual auth QA checklist:
 
