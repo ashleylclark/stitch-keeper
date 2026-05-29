@@ -114,6 +114,7 @@ app.get('/auth/callback', async (request, response, next) => {
   try {
     await handleCallback(request, response, authConfig);
   } catch (error) {
+    logOidcCallbackError(error);
     clearAuthCookie(response, authConfig);
     next(error);
   }
@@ -123,6 +124,7 @@ app.get('/auth/oidc/callback', async (request, response, next) => {
   try {
     await handleCallback(request, response, authConfig);
   } catch (error) {
+    logOidcCallbackError(error);
     clearAuthCookie(response, authConfig);
     next(error);
   }
@@ -237,6 +239,17 @@ function requireAuthenticatedUser(request, response, next) {
 
   request.sessionUser = sessionUser;
   next();
+}
+
+function logOidcCallbackError(error) {
+  if (!error?.error && !error?.error_description) {
+    return;
+  }
+
+  console.error('OIDC authorization failed', {
+    error: error.error,
+    errorDescription: error.error_description,
+  });
 }
 
 function normalizeStashItem(input) {
