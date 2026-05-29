@@ -129,8 +129,8 @@ Server auth behavior:
 - `APP_BASE_URL` controls callback URLs and secure-cookie behavior; it defaults
   to `http://localhost:$PORT` when omitted.
 - The first local account can be created from the login screen.
-- The first local account claims the default local user and household, so
-  existing seeded or migrated data remains visible after account setup.
+- The first local or OIDC account claims the default local user and household,
+  so existing seeded or migrated data remains visible after account setup.
 - After the first local account exists, new local registrations are disabled
   unless `ALLOW_SIGNUPS=true`.
 - Signed HTTP-only session cookies store only `userId`, `activeHouseholdId`, and

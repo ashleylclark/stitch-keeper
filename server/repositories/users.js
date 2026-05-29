@@ -77,9 +77,15 @@ export function findOrCreateUserFromIdentity(identityInput) {
       .from(users)
       .where(eq(users.email, identityInput.email))
       .get();
-    const userId = existingUser?.id ?? `user-${randomUUID()}`;
+    const shouldClaimDefaultUser =
+      !existingUser && canClaimDefaultUserForFirstAuth(tx);
+    const userId =
+      existingUser?.id ??
+      (shouldClaimDefaultUser ? defaultUserId : `user-${randomUUID()}`);
 
     if (existingUser) {
+      updateExistingUser(tx, userId, identityInput, now);
+    } else if (shouldClaimDefaultUser) {
       updateExistingUser(tx, userId, identityInput, now);
     } else {
       tx.insert(users)
@@ -281,6 +287,18 @@ function countLocalCredentials(tx = orm) {
 function userExists(tx, userId) {
   return Boolean(
     tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).get(),
+  );
+}
+
+function canClaimDefaultUserForFirstAuth(tx) {
+  return (
+    countLocalCredentials(tx) === 0 &&
+    userExists(tx, defaultUserId) &&
+    !tx
+      .select({ id: identities.id })
+      .from(identities)
+      .where(eq(identities.userId, defaultUserId))
+      .get()
   );
 }
 
