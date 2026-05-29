@@ -132,6 +132,8 @@ function Sidebar({
 
 function AuthPanel() {
   const { authSettings, login, register } = useAppData();
+  const shouldSkipOidcRedirect =
+    new URLSearchParams(window.location.search).get('loggedOut') === 'true';
   const [mode, setMode] = useState<'login' | 'register'>(
     authSettings.registrationEnabled ? 'register' : 'login',
   );
@@ -144,12 +146,12 @@ function AuthPanel() {
   const isRegistering = mode === 'register';
 
   useEffect(() => {
-    if (authSettings.oidcEnabled) {
+    if (authSettings.oidcEnabled && !shouldSkipOidcRedirect) {
       window.location.assign('/auth/oidc/login');
     }
-  }, [authSettings.oidcEnabled]);
+  }, [authSettings.oidcEnabled, shouldSkipOidcRedirect]);
 
-  if (authSettings.oidcEnabled) {
+  if (authSettings.oidcEnabled && !shouldSkipOidcRedirect) {
     return (
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-4">
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-rose-500 dark:text-rose-300">
@@ -329,7 +331,10 @@ export function AppShell() {
                 <button
                   type="button"
                   aria-label="Log out"
-                  onClick={() => void logout()}
+                  onClick={async () => {
+                    await logout();
+                    window.history.replaceState(null, '', '/?loggedOut=true');
+                  }}
                   className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-700 shadow-sm transition hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-rose-400 dark:hover:text-stone-50"
                 >
                   <LogOut color="currentColor" size={20} />
