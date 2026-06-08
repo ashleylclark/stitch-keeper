@@ -283,6 +283,8 @@ function normalizePattern(input) {
     isPlanned: Boolean(input.isPlanned),
     source: emptyToUndefined(input.source),
     sourceUrl: emptyToUndefined(input.sourceUrl),
+    coverImageUrl: emptyToUndefined(input.coverImageUrl),
+    illustrationImageUrl: emptyToUndefined(input.illustrationImageUrl),
     category: emptyToUndefined(input.category),
     difficulty: emptyToUndefined(input.difficulty),
     notes: emptyToUndefined(input.notes),
@@ -367,6 +369,7 @@ function normalizeInstructionSections(value, legacyInstructions = '') {
           .map((step) => ({
             id: String(step?.id ?? `step-${randomUUID()}`),
             text: String(step?.text ?? '').trim(),
+            imageUrl: emptyToUndefined(step?.imageUrl),
           }))
           .filter((step) => step.text)
       : [];

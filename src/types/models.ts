@@ -39,6 +39,7 @@ type PatternRequirement = {
 type PatternInstructionStep = {
   id: string;
   text: string;
+  imageUrl?: string;
 };
 
 type PatternInstructionSection = {
@@ -55,6 +56,8 @@ type Pattern = {
   isPlanned?: boolean;
   source?: string;
   sourceUrl?: string;
+  coverImageUrl?: string;
+  illustrationImageUrl?: string;
   category?: string;
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
   requirements: PatternRequirement[];

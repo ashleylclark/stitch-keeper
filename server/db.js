@@ -66,6 +66,8 @@ function seedDatabaseIfEmpty() {
           isPlanned: pattern.isPlanned ? 1 : 0,
           source: pattern.source ?? null,
           sourceUrl: pattern.sourceUrl ?? null,
+          coverImageUrl: pattern.coverImageUrl ?? null,
+          illustrationImageUrl: pattern.illustrationImageUrl ?? null,
           category: pattern.category ?? null,
           difficulty: pattern.difficulty ?? null,
           notes: pattern.notes ?? null,
