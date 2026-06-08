@@ -64,7 +64,7 @@ helm uninstall stitch-keeper
 | service.type | string | `"ClusterIP"` | Service type (ClusterIP/LoadBalancer/NodePort) |
 | service.port | int | `3001` | Service port |
 | resources | object | `{}` | Resource requests and limits |
-| env | list | `[{"name":"PORT","value":"3001"},{"name":"SQLITE_PATH","value":"/data/stitch-keeper.db"}]` | Environment variables for the container |
+| env | list | `[]` | Environment variables for the container |
 | envFrom | list | `[]` | Environment sources (ConfigMap/Secret refs) |
 | persistence.enabled | bool | `true` | Enable persistence |
 | persistence.storageClass | string | `""` | Storage class for PVC Set to "-" to disable dynamic provisioning and use default storage class Set to "" to use cluster default storage class |

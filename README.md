@@ -277,7 +277,7 @@ docker compose down -v
 
 Notes:
 
-- The container stores SQLite data in a named Docker volume mounted at `/app/data`
+- The container stores SQLite data in a named Docker volume mounted at `/data`
 - `docker compose down -v` removes that volume and resets the app data
 
 ## API Overview

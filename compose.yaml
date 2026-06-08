@@ -7,7 +7,7 @@ services:
     image: ghcr.io/ashleylclark/stitch-keeper:latest
     environment:
       PORT: 3001
-      SQLITE_PATH: /app/data/stitch-keeper.db
+      SQLITE_PATH: /data/stitch-keeper.db
       OIDC_ISSUER_URL: ${OIDC_ISSUER_URL}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
@@ -17,7 +17,7 @@ services:
     ports:
       - '8080:3001'
     volumes:
-      - stitch-keeper-data:/app/data
+      - stitch-keeper-data:/data
 
 volumes:
   stitch-keeper-data:

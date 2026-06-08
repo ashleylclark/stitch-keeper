@@ -60,33 +60,36 @@ resources: {}
   #   memory: 128Mi
 
 # -- Environment variables for the container
-env:
-  - name: PORT
-    value: "3001"
-  - name: SQLITE_PATH
-    value: /data/stitch-keeper.db
-  # SESSION_SECRET is required at runtime. Provide it directly here or through
-  # envFrom with a Secret/ConfigMap.
-  # - name: SESSION_SECRET
-  #   valueFrom:
-  #     secretKeyRef:
-  #       name: stitch-keeper-auth
-  #       key: session-secret
-  # Optional:
-  # - name: APP_BASE_URL
-  #   value: https://stitch-keeper.example.com
-  # - name: ALLOW_SIGNUPS
-  #   value: "false"
-  # OIDC login is optional. Provide all three OIDC values to enable it.
-  # - name: OIDC_ISSUER_URL
-  #   value: https://your-provider.example
-  # - name: OIDC_CLIENT_ID
-  #   value: your-client-id
-  # - name: OIDC_CLIENT_SECRET
-  #   valueFrom:
-  #     secretKeyRef:
-  #       name: stitch-keeper-auth
-  #       key: client-secret
+env: []
+
+# The image defaults to PORT=3001 and SQLITE_PATH=/data/stitch-keeper.db.
+# SESSION_SECRET is required at runtime. Provide it directly here or through
+# envFrom with a Secret/ConfigMap.
+# env:
+#   - name: PORT
+#     value: "3001"
+#   - name: SQLITE_PATH
+#     value: /data/stitch-keeper.db
+#   - name: SESSION_SECRET
+#     valueFrom:
+#       secretKeyRef:
+#         name: stitch-keeper-auth
+#         key: session-secret
+# Optional:
+#   - name: APP_BASE_URL
+#     value: https://stitch-keeper.example.com
+#   - name: ALLOW_SIGNUPS
+#     value: "false"
+# OIDC login is optional. Provide all three OIDC values to enable it.
+#   - name: OIDC_ISSUER_URL
+#     value: https://your-provider.example
+#   - name: OIDC_CLIENT_ID
+#     value: your-client-id
+#   - name: OIDC_CLIENT_SECRET
+#     valueFrom:
+#       secretKeyRef:
+#         name: stitch-keeper-auth
+#         key: client-secret
 
 # -- Environment sources (ConfigMap/Secret refs)
 envFrom: []
