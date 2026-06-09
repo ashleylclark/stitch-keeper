@@ -287,10 +287,7 @@ export default function ProjectDetail() {
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
-              <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500 dark:text-rose-300">
-                Stitch Keeper
-              </p>
-              <h1 className="font-serif text-4xl tracking-tight text-stone-900 dark:text-stone-50 sm:text-5xl">
+              <h1 className="font-serif text-3xl tracking-tight text-stone-900 dark:text-stone-50 sm:text-4xl">
                 {currentProject.name}
               </h1>
               <p className="max-w-3xl text-base leading-7 text-stone-600 dark:text-stone-300">
@@ -337,14 +334,9 @@ export default function ProjectDetail() {
         </section>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
-          <div className="space-y-2">
-            <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
-              Linked Stash Items
-            </h2>
-            <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
-              Supplies currently connected to this project.
-            </p>
-          </div>
+          <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
+            Linked Stash Items
+          </h2>
 
           {linkedStashItems.length > 0 ? (
             <div className="mt-6 grid gap-3">
@@ -378,15 +370,9 @@ export default function ProjectDetail() {
         </section>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
-          <div className="space-y-2">
-            <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
-              Pattern Instructions
-            </h2>
-            <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
-              Track only the actual steps while section headers and notes stay
-              as reference text.
-            </p>
-          </div>
+          <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
+            Pattern Instructions
+          </h2>
 
           {!linkedPattern ? (
             <div className="mt-6 rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 px-5 py-5 text-sm leading-6 text-stone-600 dark:border-stone-700 dark:bg-stone-800/50 dark:text-stone-300">

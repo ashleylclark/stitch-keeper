@@ -248,12 +248,9 @@ export default function PatternDetail() {
             ].join(' ')}
           >
             <div className="space-y-4">
-              <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500 dark:text-rose-300">
-                Stitch Keeper
-              </p>
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className="space-y-3">
-                  <h1 className="font-serif text-4xl tracking-tight text-stone-900 dark:text-stone-50 sm:text-5xl">
+                  <h1 className="font-serif text-3xl tracking-tight text-stone-900 dark:text-stone-50 sm:text-4xl">
                     {currentPattern.name}
                   </h1>
                   {sourceLabel || sourceUrl ? (
@@ -317,14 +314,9 @@ export default function PatternDetail() {
         </section>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
-          <div className="space-y-2">
-            <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
-              Requirements
-            </h2>
-            <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
-              Everything listed for this pattern at a glance.
-            </p>
-          </div>
+          <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
+            Requirements
+          </h2>
 
           <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-stone-200/70 dark:border-stone-700">
             <table className="w-full table-auto">
@@ -379,15 +371,9 @@ export default function PatternDetail() {
         </section>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
-          <div className="space-y-2">
-            <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
-              Instructions
-            </h2>
-            <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
-              Organized by section so pattern headers stay separate from
-              trackable steps.
-            </p>
-          </div>
+          <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-50">
+            Instructions
+          </h2>
 
           {patternChartUrl ? (
             <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-stone-200/70 bg-stone-50 dark:border-stone-700 dark:bg-stone-800/50">
