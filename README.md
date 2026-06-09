@@ -19,7 +19,8 @@ It is designed for fiber artists and households who want to answer questions lik
 
 ### Patterns
 
-- Save pattern details including source, source URL, category, difficulty, notes, and instructions
+- Save pattern details including source, source URL, image URLs, category, difficulty, notes, and instructions
+- Add optional image URLs for the finished object, the pattern chart, and individual instruction steps
 - Add requirement lists for each pattern
 - Match requirements against the stash to show whether a pattern is:
   - `ready-to-start`

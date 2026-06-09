@@ -473,6 +473,13 @@ export default function ProjectDetail() {
                                 >
                                   {step.text}
                                 </p>
+                                {step.imageUrl ? (
+                                  <img
+                                    src={step.imageUrl}
+                                    alt={`${section.title} step ${stepIndex + 1}`}
+                                    className="mt-3 max-h-72 w-full rounded-xl border border-stone-200 bg-white object-contain dark:border-stone-700 dark:bg-stone-900"
+                                  />
+                                ) : null}
                               </div>
                             </label>
                           );

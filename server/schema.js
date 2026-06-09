@@ -97,6 +97,8 @@ export const patterns = sqliteTable('patterns', {
   isPlanned: integer('is_planned').notNull().default(0),
   source: text('source'),
   sourceUrl: text('source_url'),
+  coverImageUrl: text('cover_image_url'),
+  patternChartUrl: text('pattern_chart_url'),
   category: text('category'),
   difficulty: text('difficulty'),
   notes: text('notes'),

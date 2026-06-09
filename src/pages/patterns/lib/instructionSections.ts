@@ -38,6 +38,7 @@ export function createStepsFromText(
     .map((line, index) => ({
       id: existingSteps[index]?.id ?? createInstructionId('step'),
       text: line,
+      imageUrl: existingSteps[index]?.imageUrl,
     }));
 
   return steps.length > 0 ? steps : [createInstructionStep()];
@@ -81,6 +82,7 @@ export function getPatternInstructionSections(input: {
                 step.id ||
                 `${section.id || `section-${sectionIndex}`}-step-${stepIndex}`,
               text: step.text,
+              imageUrl: step.imageUrl,
             }))
           : [createInstructionStep()],
     }));
@@ -100,6 +102,7 @@ export function normalizeInstructionSections(
       .map((step) => ({
         id: step.id || createInstructionId('step'),
         text: step.text.trim(),
+        imageUrl: step.imageUrl?.trim() || undefined,
       }))
       .filter((step) => step.text),
   }));
