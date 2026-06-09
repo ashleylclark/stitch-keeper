@@ -285,17 +285,10 @@ export default function Stash() {
     <>
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <div className="flex gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-3">
-            <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500 dark:text-rose-300">
-              Stitch Keeper
-            </p>
-            <h1 className="font-serif text-4xl tracking-tight text-stone-900 dark:text-stone-100 sm:text-5xl">
+          <div>
+            <h1 className="font-serif text-3xl tracking-tight text-stone-900 dark:text-stone-100 sm:text-4xl">
               Stash
             </h1>
-            <p className="max-w-2xl text-base leading-7 text-stone-600 dark:text-stone-300">
-              Browse yarn, tools, and notions in one place, with quick filters
-              for the stash you need right now.
-            </p>
           </div>
 
           <button

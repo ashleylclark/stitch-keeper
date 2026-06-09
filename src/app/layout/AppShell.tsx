@@ -53,41 +53,9 @@ function Sidebar({
   mobile?: boolean;
   onNavigate?: () => void;
 }) {
-  const { theme, toggleTheme } = useTheme();
-
   return (
     <div className="flex h-full flex-col">
-      <div className="px-6 py-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-rose-500 dark:text-rose-300">
-              Stitch Keeper
-            </p>
-            <h1 className="mt-3 font-serif text-2xl text-stone-900 dark:text-stone-100">
-              Fiber Arts HQ
-            </h1>
-            <p className="mt-2 text-sm leading-6 text-stone-600 dark:text-stone-400">
-              Keep yarn, patterns, and works in progress in one place.
-            </p>
-          </div>
-          {mobile ? (
-            <button
-              type="button"
-              aria-label="Toggle dark mode"
-              onClick={toggleTheme}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-700 transition hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-rose-400 dark:hover:text-stone-50"
-            >
-              {theme === 'dark' ? (
-                <SunMedium color="currentColor" size={18} />
-              ) : (
-                <MoonStar color="currentColor" size={18} />
-              )}
-            </button>
-          ) : null}
-        </div>
-      </div>
-
-      <nav className="flex-1 px-4 py-6">
+      <nav className="flex-1 px-4 py-7">
         <ul className="space-y-2">
           {navItems.map((item) => (
             <li key={item.to}>
@@ -293,15 +261,10 @@ export function AppShell() {
         </aside>
 
         <div className="flex min-h-[calc(100vh-2rem)] flex-1 flex-col rounded-[2rem] border border-white/70 bg-white/55 shadow-[0_30px_80px_-40px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-950/70 dark:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.7)]">
-          <header className="flex items-center justify-between border-b border-stone-200/70 px-5 py-4 dark:border-stone-800 sm:px-8 lg:px-10">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-rose-500 dark:text-rose-300">
-                Workspace
-              </p>
-              <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-                Organize your fiber arts world.
-              </p>
-            </div>
+          <header className="flex items-center justify-between gap-4 border-b border-stone-200/70 px-5 py-4 dark:border-stone-800 sm:px-8 lg:px-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-rose-500 dark:text-rose-300 sm:text-sm sm:tracking-[0.35em]">
+              Stitch Keeper
+            </p>
             <div className="flex items-center gap-3">
               {authStatus === 'authenticated' && session ? (
                 <div className="hidden items-center gap-3 rounded-2xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 shadow-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 sm:flex">

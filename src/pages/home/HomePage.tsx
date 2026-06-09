@@ -282,17 +282,10 @@ export default function Home() {
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-      <div className="space-y-3">
-        <p className="text-sm font-medium uppercase tracking-[0.3em] text-rose-500 dark:text-rose-300">
-          Stitch Keeper
-        </p>
-        <h1 className="font-serif text-4xl tracking-tight text-stone-900 dark:text-stone-100 sm:text-5xl">
+      <div>
+        <h1 className="font-serif text-3xl tracking-tight text-stone-900 dark:text-stone-100 sm:text-4xl">
           Home
         </h1>
-        <p className="max-w-2xl text-base leading-7 text-stone-600 dark:text-stone-400">
-          A quick snapshot of the parts of your crochet stash you will check
-          most often.
-        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
