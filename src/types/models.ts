@@ -57,7 +57,7 @@ type Pattern = {
   source?: string;
   sourceUrl?: string;
   coverImageUrl?: string;
-  illustrationImageUrl?: string;
+  patternChartUrl?: string;
   category?: string;
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
   requirements: PatternRequirement[];

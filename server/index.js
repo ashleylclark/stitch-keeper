@@ -284,7 +284,7 @@ function normalizePattern(input) {
     source: emptyToUndefined(input.source),
     sourceUrl: emptyToUndefined(input.sourceUrl),
     coverImageUrl: emptyToUndefined(input.coverImageUrl),
-    illustrationImageUrl: emptyToUndefined(input.illustrationImageUrl),
+    patternChartUrl: emptyToUndefined(input.patternChartUrl),
     category: emptyToUndefined(input.category),
     difficulty: emptyToUndefined(input.difficulty),
     notes: emptyToUndefined(input.notes),

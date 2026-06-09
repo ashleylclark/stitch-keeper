@@ -98,7 +98,7 @@ export const patterns = sqliteTable('patterns', {
   source: text('source'),
   sourceUrl: text('source_url'),
   coverImageUrl: text('cover_image_url'),
-  illustrationImageUrl: text('illustration_image_url'),
+  patternChartUrl: text('pattern_chart_url'),
   category: text('category'),
   difficulty: text('difficulty'),
   notes: text('notes'),

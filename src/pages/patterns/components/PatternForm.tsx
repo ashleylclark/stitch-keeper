@@ -26,7 +26,7 @@ export type PatternFormValues = {
   source: string;
   sourceUrl: string;
   coverImageUrl: string;
-  illustrationImageUrl: string;
+  patternChartUrl: string;
   category: NonNullable<Pattern['category']> | '';
   difficulty: NonNullable<Pattern['difficulty']> | '';
   notes: string;
@@ -90,7 +90,7 @@ export function PatternForm({
     source: initialValues?.source ?? '',
     sourceUrl: initialValues?.sourceUrl ?? '',
     coverImageUrl: initialValues?.coverImageUrl ?? '',
-    illustrationImageUrl: initialValues?.illustrationImageUrl ?? '',
+    patternChartUrl: initialValues?.patternChartUrl ?? '',
     category: initialValues?.category ?? '',
     difficulty: initialValues?.difficulty ?? '',
     notes: initialValues?.notes ?? '',
@@ -389,17 +389,6 @@ export function PatternForm({
               placeholder="https://"
             />
           </FormField>
-
-          <FormField label="Illustration Image URL">
-            <TextInput
-              type="url"
-              value={values.illustrationImageUrl}
-              onChange={(event) =>
-                update('illustrationImageUrl', event.target.value)
-              }
-              placeholder="https://"
-            />
-          </FormField>
         </div>
 
         <FormField label="Notes">
@@ -578,6 +567,17 @@ export function PatternForm({
             in a section becomes a trackable step inside linked projects.
           </p>
 
+          <FormField label="Pattern Chart URL">
+            <TextInput
+              type="url"
+              value={values.patternChartUrl}
+              onChange={(event) =>
+                update('patternChartUrl', event.target.value)
+              }
+              placeholder="https://"
+            />
+          </FormField>
+
           {errors.instructionSections ? (
             <p className="text-sm text-rose-600 dark:text-rose-300">
               {errors.instructionSections}
@@ -691,7 +691,7 @@ export function PatternForm({
                           {step.text || 'Empty step'}
                         </p>
                       </div>
-                      <FormField label="Image URL">
+                      <FormField label="Step Image URL">
                         <TextInput
                           type="url"
                           value={step.imageUrl ?? ''}

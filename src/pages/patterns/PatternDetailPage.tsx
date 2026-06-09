@@ -176,7 +176,7 @@ export default function PatternDetail() {
   const sourceLabel = currentPattern.source?.trim();
   const sourceUrl = currentPattern.sourceUrl?.trim();
   const coverImageUrl = currentPattern.coverImageUrl?.trim();
-  const illustrationImageUrl = currentPattern.illustrationImageUrl?.trim();
+  const patternChartUrl = currentPattern.patternChartUrl?.trim();
   const requirementMatchesById = new Map(
     patternSummary?.requirementMatches.map((match) => [
       match.requirementId,
@@ -195,7 +195,7 @@ export default function PatternDetail() {
         source: values.source.trim() || undefined,
         sourceUrl: values.sourceUrl.trim() || undefined,
         coverImageUrl: values.coverImageUrl.trim() || undefined,
-        illustrationImageUrl: values.illustrationImageUrl.trim() || undefined,
+        patternChartUrl: values.patternChartUrl.trim() || undefined,
         category: values.category || undefined,
         difficulty: values.difficulty || undefined,
         notes: values.notes.trim() || undefined,
@@ -389,11 +389,11 @@ export default function PatternDetail() {
             </p>
           </div>
 
-          {illustrationImageUrl ? (
+          {patternChartUrl ? (
             <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-stone-200/70 bg-stone-50 dark:border-stone-700 dark:bg-stone-800/50">
               <img
-                src={illustrationImageUrl}
-                alt={`${currentPattern.name} illustration`}
+                src={patternChartUrl}
+                alt={`${currentPattern.name} pattern chart`}
                 className="max-h-[32rem] w-full object-contain"
               />
             </div>
@@ -462,7 +462,7 @@ export default function PatternDetail() {
             source: currentPattern.source ?? '',
             sourceUrl: currentPattern.sourceUrl ?? '',
             coverImageUrl: currentPattern.coverImageUrl ?? '',
-            illustrationImageUrl: currentPattern.illustrationImageUrl ?? '',
+            patternChartUrl: currentPattern.patternChartUrl ?? '',
             category: currentPattern.category ?? '',
             difficulty: currentPattern.difficulty ?? '',
             notes: currentPattern.notes ?? '',
