@@ -9,6 +9,7 @@ import type {
   RegistrationCredentials,
   StashCategory,
   StashItem,
+  Theme,
 } from '../../types/models';
 import type { StashCategoryInput } from '../../pages/stash/api';
 
@@ -21,6 +22,7 @@ export type AppDataContextValue = {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegistrationCredentials) => Promise<void>;
   logout: () => Promise<void>;
+  updateUserTheme: (theme: Theme) => Promise<void>;
   isLoading: boolean;
   error: string | null;
   stashCategories: StashCategory[];

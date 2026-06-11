@@ -6,17 +6,14 @@ import {
   LogIn,
   LogOut,
   Menu,
-  MoonStar,
   PackageOpen,
   Settings,
   Spool,
-  SunMedium,
   UserRound,
   UserPlus,
   X,
 } from 'lucide-react';
 import { useAppData } from '../state/app-data';
-import { useTheme } from '../theme/theme-context';
 
 type NavItem = {
   label: string;
@@ -257,7 +254,6 @@ function AuthPanel() {
 export function AppShell() {
   const { authStatus, session, isLoading, error, logout } = useAppData();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#fffaf7_0%,#f7f1eb_100%)] text-stone-900 dark:bg-[linear-gradient(180deg,#1c1917_0%,#292524_100%)] dark:text-stone-100">
@@ -309,18 +305,6 @@ export function AppShell() {
                   <LogOut color="currentColor" size={20} />
                 </button>
               ) : null}
-              <button
-                type="button"
-                aria-label="Toggle dark mode"
-                onClick={toggleTheme}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-700 shadow-sm transition hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-rose-400 dark:hover:text-stone-50"
-              >
-                {theme === 'dark' ? (
-                  <SunMedium color="currentColor" size={20} />
-                ) : (
-                  <MoonStar color="currentColor" size={20} />
-                )}
-              </button>
               <button
                 type="button"
                 aria-label="Open navigation menu"

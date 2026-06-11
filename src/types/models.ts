@@ -139,6 +139,7 @@ type AuthUser = {
   email: string;
   displayName: string;
   avatarUrl?: string;
+  theme: Theme;
 };
 
 type Household = {
@@ -157,6 +158,8 @@ type AuthSettings = {
   oidcEnabled: boolean;
   registrationEnabled: boolean;
 };
+
+type Theme = 'light' | 'dark';
 
 type LoginCredentials = {
   email: string;
@@ -189,5 +192,6 @@ export type {
   StashCategory,
   StashItem,
   StashStatus,
+  Theme,
   YarnWeight,
 };

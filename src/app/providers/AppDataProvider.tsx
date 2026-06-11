@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type PropsWithChildren,
-} from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AppDataContext, type AppDataContextValue } from '../state/app-data';
 import type {
   AuthSettings,
@@ -15,6 +9,7 @@ import type {
   RegistrationCredentials,
   StashCategory,
   StashItem,
+  Theme,
 } from '../../types/models';
 import { buildPatternMatchSummaries } from '../../pages/patterns/lib/patternMatching';
 import {
@@ -23,6 +18,7 @@ import {
   login as loginWithServer,
   logout as logoutFromServer,
   register as registerWithServer,
+  saveUserSettings,
 } from '../auth/api';
 import {
   archiveStashCategory as archiveStashCategoryWithServer,
@@ -47,7 +43,13 @@ import {
   saveProject,
 } from '../../pages/projects/api';
 
-export function AppDataProvider({ children }: PropsWithChildren) {
+type AppDataProviderProps = {
+  children:
+    | ReactNode
+    | ((value: AppDataContextValue) => ReactNode);
+};
+
+export function AppDataProvider({ children }: AppDataProviderProps) {
   const [stashItems, setStashItems] = useState<StashItem[]>([]);
   const [stashCategories, setStashCategories] = useState<StashCategory[]>([]);
   const [patterns, setPatterns] = useState<Pattern[]>([]);
@@ -143,6 +145,56 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     setProjects([]);
   }, []);
 
+  const updateUserTheme = useCallback(async (theme: Theme) => {
+    let previousTheme: Theme | undefined;
+
+    setSession((current) => {
+      if (!current) {
+        return current;
+      }
+
+      previousTheme = current.user.theme;
+      return {
+        ...current,
+        user: {
+          ...current.user,
+          theme,
+        },
+      };
+    });
+
+    try {
+      const updatedUser = await saveUserSettings({ theme });
+
+      setSession((current) =>
+        current
+          ? {
+              ...current,
+              user: updatedUser,
+            }
+          : current,
+      );
+    } catch (error) {
+      if (previousTheme) {
+        const themeToRestore = previousTheme;
+
+        setSession((current) =>
+          current
+            ? {
+                ...current,
+                user: {
+                  ...current.user,
+                  theme: themeToRestore,
+                },
+              }
+            : current,
+        );
+      }
+
+      throw error;
+    }
+  }, []);
+
   const patternMatchSummaries = useMemo(
     () => buildPatternMatchSummaries(patterns, stashItems, stashCategories),
     [patterns, stashItems, stashCategories],
@@ -164,6 +216,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       login,
       register,
       logout,
+      updateUserTheme,
       isLoading,
       error,
       stashCategories,
@@ -277,10 +330,13 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       patternMatchSummaries,
       patternMatchById,
       logout,
+      updateUserTheme,
     ],
   );
 
   return (
-    <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>
+    <AppDataContext.Provider value={value}>
+      {typeof children === 'function' ? children(value) : children}
+    </AppDataContext.Provider>
   );
 }

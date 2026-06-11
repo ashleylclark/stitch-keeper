@@ -2,8 +2,10 @@ import { fetchJson } from '../../shared/api/fetchJson';
 import type {
   AuthSession,
   AuthSettings,
+  AuthUser,
   LoginCredentials,
   RegistrationCredentials,
+  Theme,
 } from '../../types/models';
 
 export function fetchAuthSettings() {
@@ -12,6 +14,14 @@ export function fetchAuthSettings() {
 
 export function fetchCurrentSession() {
   return fetchJson<AuthSession>('/api/me');
+}
+
+export function saveUserSettings(settings: { theme: Theme }) {
+  return fetchJson<AuthUser>('/api/me/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  });
 }
 
 export function login(credentials: LoginCredentials) {
