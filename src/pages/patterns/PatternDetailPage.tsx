@@ -17,6 +17,7 @@ import {
   requirementMatchLabels,
 } from './lib/patternMatching';
 import { countInstructionSteps } from './lib/instructionSections';
+import { getCategoryLabel } from '../stash/lib/categories';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error
@@ -156,8 +157,13 @@ function NotFoundState() {
 
 export default function PatternDetail() {
   const navigate = useNavigate();
-  const { patternMatchById, patterns, updatePattern, deletePattern } =
-    useAppData();
+  const {
+    patternMatchById,
+    patterns,
+    stashCategories,
+    updatePattern,
+    deletePattern,
+  } = useAppData();
   const { patternId } = useParams();
   const pattern = patterns.find((item) => item.id === patternId);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -340,7 +346,10 @@ export default function PatternDetail() {
                         </div>
                       </td>
                       <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">
-                        {titleCase(requirement.category)}
+                        {getCategoryLabel(
+                          requirement.category,
+                          stashCategories,
+                        )}
                       </td>
                       <td className="px-4 py-4 text-sm leading-6 text-stone-600 dark:text-stone-300">
                         {[
@@ -443,6 +452,7 @@ export default function PatternDetail() {
         maxWidthClassName="max-w-5xl"
       >
         <PatternForm
+          stashCategories={stashCategories}
           initialValues={{
             name: currentPattern.name,
             source: currentPattern.source ?? '',

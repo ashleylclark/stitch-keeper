@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Modal } from '../../components/Modal';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ProjectForm, type ProjectFormValues } from './components/ProjectForm';
+import { getCategoryLabel } from '../stash/lib/categories';
 import { useAppData } from '../../app/state/app-data';
 import type { Pattern, Project, ProjectStatus } from '../../types/models';
 import {
@@ -170,8 +171,14 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 export default function ProjectDetail() {
   const navigate = useNavigate();
-  const { stashItems, patterns, projects, updateProject, deleteProject } =
-    useAppData();
+  const {
+    stashCategories,
+    stashItems,
+    patterns,
+    projects,
+    updateProject,
+    deleteProject,
+  } = useAppData();
   const { projectId } = useParams();
   const project = projects.find((item) => item.id === projectId);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -355,8 +362,7 @@ export default function ProjectDetail() {
                       </p>
                     </div>
                     <div className="text-sm text-stone-500 dark:text-stone-400">
-                      {item.category.charAt(0).toUpperCase() +
-                        item.category.slice(1)}
+                      {getCategoryLabel(item.category, stashCategories)}
                     </div>
                   </div>
                 </div>
@@ -542,6 +548,7 @@ export default function ProjectDetail() {
         maxWidthClassName="max-w-3xl"
       >
         <ProjectForm
+          stashCategories={stashCategories}
           patternOptions={patterns.map((pattern) => ({
             id: pattern.id,
             name: pattern.name,

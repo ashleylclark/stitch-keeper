@@ -4,6 +4,7 @@ import type {
   Pattern,
   PatternInstructionSection,
   PatternRequirement,
+  StashCategory,
   YarnWeight,
 } from '../../../types/models';
 import { FormActions } from '../../../components/forms/FormActions';
@@ -20,6 +21,12 @@ import {
   getPatternInstructionSections,
   normalizeInstructionSections,
 } from '../lib/instructionSections';
+import {
+  getActiveCategories,
+  getCategory,
+  getCategoryLabel,
+  getDefaultUnit,
+} from '../../stash/lib/categories';
 
 export type PatternFormValues = {
   name: string;
@@ -46,6 +53,7 @@ type RequirementFormValues = {
 };
 
 type PatternFormProps = {
+  stashCategories: StashCategory[];
   initialValues?: Partial<PatternFormValues>;
   submitLabel?: string;
   onSubmit: (values: PatternFormValues) => void;
@@ -56,26 +64,18 @@ type PatternFormProps = {
 
 type FormErrors = Partial<Record<'name' | 'instructionSections', string>>;
 
-const defaultRequirementUnits: Record<ItemCategory, string> = {
-  yarn: 'yrds',
-  hook: 'hook',
-  needle: '',
-  eyes: 'pairs',
-  stuffing: 'bags',
-  other: 'items',
-};
-
 const initialRequirementValues: RequirementFormValues = {
   category: 'yarn',
   name: '',
   weight: '',
   quantityNeeded: '',
-  unit: defaultRequirementUnits.yarn,
+  unit: 'yrds',
   size: '',
   notes: '',
 };
 
 export function PatternForm({
+  stashCategories,
   initialValues,
   submitLabel = 'Save Pattern',
   onSubmit,
@@ -105,12 +105,28 @@ export function PatternForm({
     Record<string, string>
   >(() => createInstructionStepDrafts(values.instructionSections));
   const [newRequirement, setNewRequirement] = useState<RequirementFormValues>(
-    initialRequirementValues,
+    () => {
+      const initialCategory =
+        stashCategories.find((category) => !category.archivedAt)?.id ?? 'yarn';
+      return {
+        ...initialRequirementValues,
+        category: initialCategory,
+        unit: getDefaultUnit(getCategory(initialCategory, stashCategories)),
+      };
+    },
   );
 
-  const showRequirementWeight = showsRequirementWeight(newRequirement.category);
-  const showRequirementSize = showsRequirementSize(newRequirement.category);
-  const showRequirementUnit = showsRequirementUnit(newRequirement.category);
+  const requirementCategory = getCategory(
+    newRequirement.category,
+    stashCategories,
+  );
+  const requirementCategoryOptions = getActiveCategories(
+    stashCategories,
+    newRequirement.category,
+  );
+  const showRequirementWeight = showsRequirementWeight(requirementCategory);
+  const showRequirementSize = showsRequirementSize(requirementCategory);
+  const showRequirementUnit = showsRequirementUnit(requirementCategory);
 
   function update<K extends keyof PatternFormValues>(
     key: K,
@@ -243,7 +259,11 @@ export function PatternForm({
       ...prev,
       requirements: [...prev.requirements, nextRequirement],
     }));
-    setNewRequirement(initialRequirementValues);
+    setNewRequirement({
+      ...initialRequirementValues,
+      category: newRequirement.category,
+      unit: getDefaultUnit(requirementCategory),
+    });
     setRequirementError(undefined);
   }
 
@@ -410,16 +430,17 @@ export function PatternForm({
                   ...getNextRequirementValues(
                     prev,
                     event.target.value as ItemCategory,
+                    stashCategories,
                   ),
                 }))
               }
             >
-              <option value="yarn">Yarn</option>
-              <option value="hook">Hook</option>
-              <option value="needle">Needle</option>
-              <option value="eyes">Safety Eyes</option>
-              <option value="stuffing">Stuffing</option>
-              <option value="other">Other</option>
+              {requirementCategoryOptions.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.nameSingular}
+                  {category.archivedAt ? ' (archived)' : ''}
+                </option>
+              ))}
             </SelectInput>
           </FormField>
 
@@ -492,6 +513,7 @@ export function PatternForm({
                 }
                 placeholder={getRequirementUnitPlaceholder(
                   newRequirement.category,
+                  stashCategories,
                 )}
               />
             </FormField>
@@ -542,7 +564,7 @@ export function PatternForm({
             >
               <span>
                 <span className="font-medium capitalize">
-                  {requirement.category}:
+                  {getCategoryLabel(requirement.category, stashCategories)}:
                 </span>{' '}
                 {requirement.name}
               </span>
@@ -757,33 +779,34 @@ function getDetectedInstructionSteps(
 function getNextRequirementValues(
   previous: RequirementFormValues,
   category: ItemCategory,
+  categories: StashCategory[],
 ): RequirementFormValues {
+  const categoryConfig = getCategory(category, categories);
+
   return {
     ...previous,
     category,
-    unit: defaultRequirementUnits[category],
-    weight: showsRequirementWeight(category) ? previous.weight : '',
-    size: showsRequirementSize(category) ? previous.size : '',
+    unit: getDefaultUnit(categoryConfig),
+    weight: showsRequirementWeight(categoryConfig) ? previous.weight : '',
+    size: showsRequirementSize(categoryConfig) ? previous.size : '',
   };
 }
 
-function showsRequirementWeight(category: ItemCategory) {
-  return category === 'yarn';
+function showsRequirementWeight(category?: StashCategory) {
+  return Boolean(category?.showWeight);
 }
 
-function showsRequirementSize(category: ItemCategory) {
-  return category === 'hook' || category === 'needle' || category === 'eyes';
+function showsRequirementSize(category?: StashCategory) {
+  return Boolean(category?.showSize);
 }
 
-function showsRequirementUnit(category: ItemCategory) {
-  return (
-    category === 'yarn' ||
-    category === 'stuffing' ||
-    category === 'eyes' ||
-    category === 'other'
-  );
+function showsRequirementUnit(category?: StashCategory) {
+  return Boolean(category?.showUnit);
 }
 
-function getRequirementUnitPlaceholder(category: ItemCategory) {
-  return defaultRequirementUnits[category] || 'items';
+function getRequirementUnitPlaceholder(
+  category: ItemCategory,
+  categories: StashCategory[],
+) {
+  return getDefaultUnit(getCategory(category, categories));
 }

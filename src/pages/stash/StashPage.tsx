@@ -6,10 +6,17 @@ import { StashForm, type StashFormValues } from './components/StashForm';
 import { useAppData } from '../../app/state/app-data';
 import type {
   ItemCategory,
+  StashCategory,
   StashItem,
   StashStatus,
   YarnWeight,
 } from '../../types/models';
+import {
+  getActiveCategories,
+  getCategory,
+  getCategoryLabel,
+  otherLikeCategoryDefaults,
+} from './lib/categories';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error
@@ -24,19 +31,10 @@ type FilterOption<T extends string> = {
 
 type StashCardProps = {
   item: StashItem;
+  categories: StashCategory[];
   onEdit: (item: StashItem) => void;
   onDelete: (item: StashItem) => void;
 };
-
-const categoryOptions: FilterOption<ItemCategory | 'all'>[] = [
-  { label: 'All categories', value: 'all' },
-  { label: 'Yarn', value: 'yarn' },
-  { label: 'Hooks', value: 'hook' },
-  { label: 'Needles', value: 'needle' },
-  { label: 'Safety eyes', value: 'eyes' },
-  { label: 'Stuffing', value: 'stuffing' },
-  { label: 'Other notions', value: 'other' },
-];
 
 const yarnWeightOptions: FilterOption<YarnWeight | 'all'>[] = [
   { label: 'All weights', value: 'all' },
@@ -66,15 +64,6 @@ const statusLabels: Record<StashStatus, string> = {
   'low-stock': 'Low Stock',
   'out-of-stock': 'Out of Stock',
   'not-replacing': 'Not Replacing',
-};
-
-const categoryLabels: Record<ItemCategory, string> = {
-  yarn: 'Yarn',
-  hook: 'Hook',
-  needle: 'Needle',
-  eyes: 'Safety Eyes',
-  stuffing: 'Stuffing',
-  other: 'Other',
 };
 
 function DetailPill({ label }: { label: string }) {
@@ -127,9 +116,9 @@ function ActionButton({
   );
 }
 
-function StashCard({ item, onEdit, onDelete }: StashCardProps) {
+function StashCard({ item, categories, onEdit, onDelete }: StashCardProps) {
   const detailPills = [
-    categoryLabels[item.category],
+    getCategoryLabel(item.category, categories),
     item.weight ? item.weight.toUpperCase() : null,
     item.material ?? null,
     item.color ?? null,
@@ -192,8 +181,14 @@ function FieldLabel({ label }: { label: string }) {
 }
 
 export default function Stash() {
-  const { stashItems, addStashItem, updateStashItem, deleteStashItem } =
-    useAppData();
+  const {
+    stashCategories,
+    stashItems,
+    addStashCategory,
+    addStashItem,
+    updateStashItem,
+    deleteStashItem,
+  } = useAppData();
   const [selectedCategory, setSelectedCategory] = useState<
     ItemCategory | 'all'
   >('all');
@@ -210,7 +205,31 @@ export default function Stash() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const showWeightFilter = selectedCategory === 'yarn';
+  const selectedCategoryConfig =
+    selectedCategory === 'all'
+      ? undefined
+      : getCategory(selectedCategory, stashCategories);
+  const showWeightFilter = Boolean(selectedCategoryConfig?.showWeight);
+  const categoryOptions: FilterOption<ItemCategory | 'all'>[] = [
+    { label: 'All categories', value: 'all' },
+    ...getActiveCategories(stashCategories)
+      .concat(
+        stashCategories.filter(
+          (category) =>
+            Boolean(category.archivedAt) &&
+            stashItems.some((item) => item.category === category.id),
+        ),
+      )
+      .filter(
+        (category, index, categories) =>
+          categories.findIndex((candidate) => candidate.id === category.id) ===
+          index,
+      )
+      .map((category) => ({
+        label: `${category.namePlural}${category.archivedAt ? ' (archived)' : ''}`,
+        value: category.id,
+      })),
+  ];
 
   const filteredItems = stashItems.filter((item) => {
     const categoryMatches =
@@ -263,6 +282,17 @@ export default function Stash() {
     }
   }
 
+  async function handleCreateCategory(
+    nameSingular: string,
+    namePlural: string,
+  ) {
+    return addStashCategory({
+      nameSingular: nameSingular.trim(),
+      namePlural: namePlural.trim(),
+      ...otherLikeCategoryDefaults,
+    });
+  }
+
   async function handleDeleteConfirm() {
     if (!itemPendingDelete) {
       return;
@@ -313,7 +343,11 @@ export default function Stash() {
                     | ItemCategory
                     | 'all';
                   setSelectedCategory(nextCategory);
-                  if (nextCategory !== 'yarn') {
+                  const nextCategoryConfig =
+                    nextCategory === 'all'
+                      ? undefined
+                      : getCategory(nextCategory, stashCategories);
+                  if (!nextCategoryConfig?.showWeight) {
                     setSelectedWeight('all');
                   }
                 }}
@@ -360,6 +394,7 @@ export default function Stash() {
             <StashCard
               key={item.id}
               item={item}
+              categories={stashCategories}
               onEdit={(nextItem) => {
                 setEditingItem(nextItem);
                 setIsAddItemOpen(false);
@@ -376,6 +411,7 @@ export default function Stash() {
         onClose={closeModal}
       >
         <StashForm
+          categories={stashCategories}
           initialValues={
             editingItem
               ? {
@@ -397,6 +433,7 @@ export default function Stash() {
           onSubmit={(values) => {
             void handleSubmit(values);
           }}
+          onCreateCategory={handleCreateCategory}
           onCancel={closeModal}
           submitError={submitError}
           isSubmitting={isSubmitting}

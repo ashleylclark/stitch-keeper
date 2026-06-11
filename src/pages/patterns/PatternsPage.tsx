@@ -198,6 +198,7 @@ function RowActions({
 
 export default function Patterns() {
   const {
+    stashCategories,
     patterns,
     addPattern,
     updatePattern,
@@ -474,6 +475,7 @@ export default function Patterns() {
         maxWidthClassName="max-w-5xl"
       >
         <PatternForm
+          stashCategories={stashCategories}
           initialValues={
             editingPattern
               ? {

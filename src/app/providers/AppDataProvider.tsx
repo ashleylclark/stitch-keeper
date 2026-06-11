@@ -13,6 +13,7 @@ import type {
   Pattern,
   Project,
   RegistrationCredentials,
+  StashCategory,
   StashItem,
 } from '../../types/models';
 import { buildPatternMatchSummaries } from '../../pages/patterns/lib/patternMatching';
@@ -24,9 +25,13 @@ import {
   register as registerWithServer,
 } from '../auth/api';
 import {
+  archiveStashCategory as archiveStashCategoryWithServer,
+  createStashCategory as createStashCategoryWithServer,
   createStashItem,
+  fetchStashCategories,
   fetchStashItems,
   removeStashItem,
+  saveStashCategory as saveStashCategoryWithServer,
   saveStashItem,
 } from '../../pages/stash/api';
 import {
@@ -44,6 +49,7 @@ import {
 
 export function AppDataProvider({ children }: PropsWithChildren) {
   const [stashItems, setStashItems] = useState<StashItem[]>([]);
+  const [stashCategories, setStashCategories] = useState<StashCategory[]>([]);
   const [patterns, setPatterns] = useState<Pattern[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -68,12 +74,19 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       setSession(nextSession);
       setAuthStatus('authenticated');
 
-      const [nextStashItems, nextPatterns, nextProjects] = await Promise.all([
+      const [
+        nextStashCategories,
+        nextStashItems,
+        nextPatterns,
+        nextProjects,
+      ] = await Promise.all([
+        fetchStashCategories(),
         fetchStashItems(),
         fetchPatterns(),
         fetchProjects(),
       ]);
 
+      setStashCategories(nextStashCategories);
       setStashItems(nextStashItems);
       setPatterns(nextPatterns);
       setProjects(nextProjects);
@@ -81,6 +94,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       if (loadError instanceof Error && loadError.message.includes('401')) {
         setSession(null);
         setAuthStatus('unauthenticated');
+        setStashCategories([]);
         setStashItems([]);
         setPatterns([]);
         setProjects([]);
@@ -123,14 +137,15 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     setAuthSettings(nextAuthSettings);
     setSession(null);
     setAuthStatus('unauthenticated');
+    setStashCategories([]);
     setStashItems([]);
     setPatterns([]);
     setProjects([]);
   }, []);
 
   const patternMatchSummaries = useMemo(
-    () => buildPatternMatchSummaries(patterns, stashItems),
-    [patterns, stashItems],
+    () => buildPatternMatchSummaries(patterns, stashItems, stashCategories),
+    [patterns, stashItems, stashCategories],
   );
 
   const patternMatchById = useMemo(
@@ -151,6 +166,38 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       logout,
       isLoading,
       error,
+      stashCategories,
+      addStashCategory: async (category) => {
+        const createdCategory = await createStashCategoryWithServer(category);
+        setStashCategories((current) => [...current, createdCategory]);
+        return createdCategory;
+      },
+      updateStashCategory: async (categoryId, category) => {
+        const updatedCategory = await saveStashCategoryWithServer(
+          categoryId,
+          category,
+        );
+        setStashCategories((current) =>
+          current.map((existingCategory) =>
+            existingCategory.id === updatedCategory.id
+              ? updatedCategory
+              : existingCategory,
+          ),
+        );
+        return updatedCategory;
+      },
+      archiveStashCategory: async (categoryId) => {
+        const archivedCategory =
+          await archiveStashCategoryWithServer(categoryId);
+        setStashCategories((current) =>
+          current.map((existingCategory) =>
+            existingCategory.id === archivedCategory.id
+              ? archivedCategory
+              : existingCategory,
+          ),
+        );
+        return archivedCategory;
+      },
       stashItems,
       addStashItem: async (item) => {
         const createdItem = await createStashItem(item);
@@ -223,6 +270,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       register,
       isLoading,
       error,
+      stashCategories,
       stashItems,
       patterns,
       projects,

@@ -1,4 +1,4 @@
-type ItemCategory = 'yarn' | 'hook' | 'needle' | 'eyes' | 'stuffing' | 'other';
+type ItemCategory = string;
 type YarnWeight =
   | 'lace'
   | 'super-fine'
@@ -23,6 +23,25 @@ type StashItem = {
   unit?: string;
   size?: string;
   notes?: string;
+};
+
+type StashCategory = {
+  id: ItemCategory;
+  nameSingular: string;
+  namePlural: string;
+  defaultUnit?: string;
+  showWeight: boolean;
+  showBrand: boolean;
+  showColor: boolean;
+  showSize: boolean;
+  showMaterial: boolean;
+  showUnit: boolean;
+  showNotes: boolean;
+  isConsumable: boolean;
+  isBuiltin: boolean;
+  archivedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 type PatternRequirement = {
@@ -167,6 +186,7 @@ export type {
   LoginCredentials,
   RequirementMatch,
   RegistrationCredentials,
+  StashCategory,
   StashItem,
   StashStatus,
   YarnWeight,

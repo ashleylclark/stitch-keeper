@@ -250,6 +250,7 @@ function ProjectSection({
 
 export default function Projects() {
   const {
+    stashCategories,
     stashItems,
     projects,
     patterns,
@@ -410,6 +411,7 @@ export default function Projects() {
         maxWidthClassName="max-w-3xl"
       >
         <ProjectForm
+          stashCategories={stashCategories}
           patternOptions={patterns.map((pattern) => ({
             id: pattern.id,
             name: pattern.name,
