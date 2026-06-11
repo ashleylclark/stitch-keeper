@@ -9,7 +9,7 @@ import type {
   RegistrationCredentials,
   StashCategory,
   StashItem,
-  Theme,
+  UserSettings,
 } from '../../types/models';
 import { buildPatternMatchSummaries } from '../../pages/patterns/lib/patternMatching';
 import {
@@ -145,26 +145,26 @@ export function AppDataProvider({ children }: AppDataProviderProps) {
     setProjects([]);
   }, []);
 
-  const updateUserTheme = useCallback(async (theme: Theme) => {
-    let previousTheme: Theme | undefined;
+  const updateUserSettings = useCallback(async (settings: UserSettings) => {
+    let previousUser: AuthSession['user'] | undefined;
 
     setSession((current) => {
       if (!current) {
         return current;
       }
 
-      previousTheme = current.user.theme;
+      previousUser = current.user;
       return {
         ...current,
         user: {
           ...current.user,
-          theme,
+          ...settings,
         },
       };
     });
 
     try {
-      const updatedUser = await saveUserSettings({ theme });
+      const updatedUser = await saveUserSettings(settings);
 
       setSession((current) =>
         current
@@ -175,17 +175,14 @@ export function AppDataProvider({ children }: AppDataProviderProps) {
           : current,
       );
     } catch (error) {
-      if (previousTheme) {
-        const themeToRestore = previousTheme;
+      if (previousUser) {
+        const userToRestore = previousUser;
 
         setSession((current) =>
           current
             ? {
                 ...current,
-                user: {
-                  ...current.user,
-                  theme: themeToRestore,
-                },
+                user: userToRestore,
               }
             : current,
         );
@@ -216,7 +213,7 @@ export function AppDataProvider({ children }: AppDataProviderProps) {
       login,
       register,
       logout,
-      updateUserTheme,
+      updateUserSettings,
       isLoading,
       error,
       stashCategories,
@@ -330,7 +327,7 @@ export function AppDataProvider({ children }: AppDataProviderProps) {
       patternMatchSummaries,
       patternMatchById,
       logout,
-      updateUserTheme,
+      updateUserSettings,
     ],
   );
 

@@ -19,6 +19,7 @@ export function findSessionUser(session) {
       displayName: users.displayName,
       avatarUrl: users.avatarUrl,
       theme: users.theme,
+      colorTheme: users.colorTheme,
     })
     .from(users)
     .where(eq(users.id, session.userId))
@@ -95,7 +96,8 @@ export function findOrCreateUserFromIdentity(identityInput) {
           email: identityInput.email,
           displayName: identityInput.displayName,
           avatarUrl: identityInput.avatarUrl ?? null,
-          theme: 'light',
+          theme: 'dark',
+          colorTheme: 'rose',
           createdAt: now,
           updatedAt: now,
         })
@@ -248,7 +250,8 @@ export function createLocalUser({ email, displayName, passwordHash }) {
           email,
           displayName,
           avatarUrl: null,
-          theme: 'light',
+          theme: 'dark',
+          colorTheme: 'rose',
           createdAt: now,
           updatedAt: now,
         })
@@ -279,12 +282,12 @@ export function listHouseholdsForUser(userId, tx = orm) {
 }
 
 export function updateUserSettings(userId, settings) {
-  const theme = normalizeTheme(settings.theme);
+  const updates = normalizeUserSettings(settings);
   const now = new Date().toISOString();
 
   orm.update(users)
     .set({
-      theme,
+      ...updates,
       updatedAt: now,
     })
     .where(eq(users.id, userId))
@@ -297,6 +300,7 @@ export function updateUserSettings(userId, settings) {
       displayName: users.displayName,
       avatarUrl: users.avatarUrl,
       theme: users.theme,
+      colorTheme: users.colorTheme,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -410,6 +414,24 @@ function updateExistingUser(tx, userId, identityInput, now) {
 
 function normalizeTheme(value) {
   return value === 'dark' ? 'dark' : 'light';
+}
+
+function normalizeColorTheme(value) {
+  return value === 'green' ? 'green' : 'rose';
+}
+
+function normalizeUserSettings(settings) {
+  const updates = {};
+
+  if (settings.theme !== undefined) {
+    updates.theme = normalizeTheme(settings.theme);
+  }
+
+  if (settings.colorTheme !== undefined) {
+    updates.colorTheme = normalizeColorTheme(settings.colorTheme);
+  }
+
+  return updates;
 }
 
 function toUser(user) {

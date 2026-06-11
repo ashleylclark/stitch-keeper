@@ -157,6 +157,7 @@ app.get('/api/me', (request, response) => {
 app.put('/api/me/settings', (request, response) => {
   const user = updateUserSettings(request.sessionUser.user.id, {
     theme: request.body?.theme,
+    colorTheme: request.body?.colorTheme,
   });
 
   response.json(user);

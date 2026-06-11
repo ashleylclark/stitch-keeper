@@ -140,6 +140,7 @@ type AuthUser = {
   displayName: string;
   avatarUrl?: string;
   theme: Theme;
+  colorTheme: ColorTheme;
 };
 
 type Household = {
@@ -160,6 +161,11 @@ type AuthSettings = {
 };
 
 type Theme = 'light' | 'dark';
+type ColorTheme = 'rose' | 'green';
+type UserSettings = {
+  theme?: Theme;
+  colorTheme?: ColorTheme;
+};
 
 type LoginCredentials = {
   email: string;
@@ -174,6 +180,7 @@ export type {
   AuthSettings,
   AuthSession,
   AuthUser,
+  ColorTheme,
   Household,
   ItemCategory,
   MatchStatus,
@@ -193,5 +200,6 @@ export type {
   StashItem,
   StashStatus,
   Theme,
+  UserSettings,
   YarnWeight,
 };

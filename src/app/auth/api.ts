@@ -5,7 +5,7 @@ import type {
   AuthUser,
   LoginCredentials,
   RegistrationCredentials,
-  Theme,
+  UserSettings,
 } from '../../types/models';
 
 export function fetchAuthSettings() {
@@ -16,7 +16,7 @@ export function fetchCurrentSession() {
   return fetchJson<AuthSession>('/api/me');
 }
 
-export function saveUserSettings(settings: { theme: Theme }) {
+export function saveUserSettings(settings: UserSettings) {
   return fetchJson<AuthUser>('/api/me/settings', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
