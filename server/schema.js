@@ -87,6 +87,34 @@ export const stashItems = sqliteTable('stash_items', {
   notes: text('notes'),
 });
 
+export const stashCategories = sqliteTable(
+  'stash_categories',
+  {
+    id: text('id').notNull(),
+    householdId: text('household_id')
+      .notNull()
+      .references(() => households.id, { onDelete: 'cascade' }),
+    nameSingular: text('name_singular').notNull(),
+    namePlural: text('name_plural').notNull(),
+    defaultUnit: text('default_unit'),
+    showWeight: integer('show_weight').notNull().default(0),
+    showBrand: integer('show_brand').notNull().default(0),
+    showColor: integer('show_color').notNull().default(0),
+    showSize: integer('show_size').notNull().default(0),
+    showMaterial: integer('show_material').notNull().default(0),
+    showUnit: integer('show_unit').notNull().default(0),
+    showNotes: integer('show_notes').notNull().default(0),
+    isConsumable: integer('is_consumable').notNull().default(0),
+    isBuiltin: integer('is_builtin').notNull().default(0),
+    archivedAt: text('archived_at'),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.householdId, table.id] }),
+  ],
+);
+
 export const patterns = sqliteTable('patterns', {
   id: text('id').primaryKey(),
   householdId: text('household_id')
