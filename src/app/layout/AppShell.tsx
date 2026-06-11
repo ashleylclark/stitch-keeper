@@ -8,6 +8,7 @@ import {
   Menu,
   MoonStar,
   PackageOpen,
+  Settings,
   Spool,
   SunMedium,
   UserRound,
@@ -43,6 +44,11 @@ const navItems: NavItem[] = [
     label: 'Projects',
     to: '/projects',
     icon: <PackageOpen color="currentColor" size={20} />,
+  },
+  {
+    label: 'Settings',
+    to: '/settings',
+    icon: <Settings color="currentColor" size={20} />,
   },
 ];
 

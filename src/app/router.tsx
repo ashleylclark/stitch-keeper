@@ -6,6 +6,7 @@ import PatternsPage from '../pages/patterns/PatternsPage';
 import PatternDetailPage from '../pages/patterns/PatternDetailPage';
 import ProjectsPage from '../pages/projects/ProjectsPage';
 import ProjectDetailPage from '../pages/projects/ProjectDetailPage';
+import SettingsPage from '../pages/settings/SettingsPage';
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +36,10 @@ export const router = createBrowserRouter([
       {
         path: 'projects/:projectId',
         element: <ProjectDetailPage />,
+      },
+      {
+        path: 'settings',
+        element: <SettingsPage />,
       },
     ],
   },
