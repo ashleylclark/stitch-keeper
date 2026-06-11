@@ -67,6 +67,8 @@ function toInput(values: CategoryFormValues): StashCategoryInput {
 
 export default function Settings() {
   const {
+    session,
+    updateUserTheme,
     stashCategories,
     addStashCategory,
     updateStashCategory,
@@ -83,6 +85,8 @@ export default function Settings() {
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [themeError, setThemeError] = useState<string | null>(null);
+  const [isUpdatingTheme, setIsUpdatingTheme] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
 
@@ -158,27 +162,93 @@ export default function Settings() {
     }
   }
 
+  async function handleThemeChange(theme: 'light' | 'dark') {
+    if (session?.user.theme === theme) {
+      return;
+    }
+
+    setThemeError(null);
+    setIsUpdatingTheme(true);
+
+    try {
+      await updateUserTheme(theme);
+    } catch (error) {
+      setThemeError(getErrorMessage(error));
+    } finally {
+      setIsUpdatingTheme(false);
+    }
+  }
+
   return (
     <>
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
           <h1 className="font-serif text-3xl tracking-tight text-stone-900 dark:text-stone-100 sm:text-4xl">
             Settings
           </h1>
-          <button
-            type="button"
-            onClick={openAddModal}
-            className="inline-flex w-fit items-center justify-center gap-2 rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-rose-400 dark:text-stone-950 dark:hover:bg-rose-300"
-          >
-            <Plus size={18} />
-            Add Category
-          </button>
         </div>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
           <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-100">
-            Stash Categories
+            User Settings
           </h2>
+          <div className="mt-6 space-y-3">
+            <p className="text-sm font-medium text-stone-700 dark:text-stone-300">
+              Theme
+            </p>
+            <div className="inline-flex rounded-2xl border border-stone-200 bg-white p-1 shadow-sm dark:border-stone-700 dark:bg-stone-950">
+              {(['light', 'dark'] as const).map((theme) => {
+                const isSelected = session?.user.theme === theme;
+
+                return (
+                  <button
+                    key={theme}
+                    type="button"
+                    disabled={isUpdatingTheme}
+                    onClick={() => {
+                      void handleThemeChange(theme);
+                    }}
+                    className={[
+                      'min-w-24 rounded-xl px-4 py-2 text-sm font-semibold capitalize transition disabled:cursor-not-allowed disabled:opacity-60',
+                      isSelected
+                        ? 'bg-rose-500 text-white shadow-sm dark:bg-rose-400 dark:text-stone-950'
+                        : 'text-stone-600 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-100',
+                    ].join(' ')}
+                  >
+                    {theme}
+                  </button>
+                );
+              })}
+            </div>
+            {themeError ? (
+              <p className="text-sm text-rose-600 dark:text-rose-300">
+                {themeError}
+              </p>
+            ) : null}
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-100">
+                Stash Categories
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-stone-600 dark:text-stone-400">
+                Shared with everyone in {session?.activeHousehold.name}. These
+                categories appear in stash items, pattern requirements, and
+                stash filters.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={openAddModal}
+              className="inline-flex w-fit items-center justify-center gap-2 rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-rose-400 dark:text-stone-950 dark:hover:bg-rose-300"
+            >
+              <Plus size={18} />
+              Category
+            </button>
+          </div>
           <div className="mt-6 grid gap-3">
             {activeCategories.map((category) => (
               <CategoryRow
