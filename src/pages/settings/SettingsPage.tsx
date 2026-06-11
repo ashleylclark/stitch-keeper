@@ -215,7 +215,7 @@ export default function Settings() {
               }}
             />
             <SegmentedSetting
-              label="Color"
+              label="Accent Color"
               value={session?.user.colorTheme ?? 'rose'}
               options={[
                 { value: 'rose', label: 'Rose' },
