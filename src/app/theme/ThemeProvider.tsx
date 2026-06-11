@@ -3,15 +3,19 @@ import {
   ThemeContext,
   type ThemeContextValue,
 } from './theme-context';
-import type { Theme } from '../../types/models';
+import type { ColorTheme, Theme } from '../../types/models';
 
 export function ThemeProvider({
   children,
   theme,
+  colorTheme,
   onThemeChange,
+  onColorThemeChange,
 }: PropsWithChildren<{
   theme: Theme;
+  colorTheme: ColorTheme;
   onThemeChange: (theme: Theme) => void;
+  onColorThemeChange: (colorTheme: ColorTheme) => void;
 }>) {
   useEffect(() => {
     const root = document.documentElement;
@@ -19,12 +23,20 @@ export function ThemeProvider({
     root.style.colorScheme = theme;
   }, [theme]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('theme-green', colorTheme === 'green');
+    root.classList.toggle('theme-rose', colorTheme === 'rose');
+  }, [colorTheme]);
+
   const value = useMemo<ThemeContextValue>(
     () => ({
       theme,
+      colorTheme,
       setTheme: onThemeChange,
+      setColorTheme: onColorThemeChange,
     }),
-    [theme, onThemeChange],
+    [theme, colorTheme, onThemeChange, onColorThemeChange],
   );
 
   return (

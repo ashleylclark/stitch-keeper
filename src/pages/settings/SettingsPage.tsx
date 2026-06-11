@@ -7,7 +7,12 @@ import { FormField } from '../../components/forms/FormField';
 import { FormSection } from '../../components/forms/FormSection';
 import { TextInput } from '../../components/forms/TextInput';
 import { useAppData } from '../../app/state/app-data';
-import type { StashCategory } from '../../types/models';
+import type {
+  ColorTheme,
+  StashCategory,
+  Theme,
+  UserSettings,
+} from '../../types/models';
 import type { StashCategoryInput } from '../stash/api';
 import { otherLikeCategoryDefaults } from '../stash/lib/categories';
 
@@ -68,7 +73,7 @@ function toInput(values: CategoryFormValues): StashCategoryInput {
 export default function Settings() {
   const {
     session,
-    updateUserTheme,
+    updateUserSettings,
     stashCategories,
     addStashCategory,
     updateStashCategory,
@@ -85,8 +90,8 @@ export default function Settings() {
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [archiveError, setArchiveError] = useState<string | null>(null);
-  const [themeError, setThemeError] = useState<string | null>(null);
-  const [isUpdatingTheme, setIsUpdatingTheme] = useState(false);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
 
@@ -162,20 +167,24 @@ export default function Settings() {
     }
   }
 
-  async function handleThemeChange(theme: 'light' | 'dark') {
-    if (session?.user.theme === theme) {
+  async function handleUserSettingChange(settings: UserSettings) {
+    if (
+      (settings.theme === undefined || session?.user.theme === settings.theme) &&
+      (settings.colorTheme === undefined ||
+        session?.user.colorTheme === settings.colorTheme)
+    ) {
       return;
     }
 
-    setThemeError(null);
-    setIsUpdatingTheme(true);
+    setSettingsError(null);
+    setIsUpdatingSettings(true);
 
     try {
-      await updateUserTheme(theme);
+      await updateUserSettings(settings);
     } catch (error) {
-      setThemeError(getErrorMessage(error));
+      setSettingsError(getErrorMessage(error));
     } finally {
-      setIsUpdatingTheme(false);
+      setIsUpdatingSettings(false);
     }
   }
 
@@ -192,40 +201,37 @@ export default function Settings() {
           <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-100">
             User Settings
           </h2>
-          <div className="mt-6 space-y-3">
-            <p className="text-sm font-medium text-stone-700 dark:text-stone-300">
-              Theme
-            </p>
-            <div className="inline-flex rounded-2xl border border-stone-200 bg-white p-1 shadow-sm dark:border-stone-700 dark:bg-stone-950">
-              {(['light', 'dark'] as const).map((theme) => {
-                const isSelected = session?.user.theme === theme;
-
-                return (
-                  <button
-                    key={theme}
-                    type="button"
-                    disabled={isUpdatingTheme}
-                    onClick={() => {
-                      void handleThemeChange(theme);
-                    }}
-                    className={[
-                      'min-w-24 rounded-xl px-4 py-2 text-sm font-semibold capitalize transition disabled:cursor-not-allowed disabled:opacity-60',
-                      isSelected
-                        ? 'bg-rose-500 text-white shadow-sm dark:bg-rose-400 dark:text-stone-950'
-                        : 'text-stone-600 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-100',
-                    ].join(' ')}
-                  >
-                    {theme}
-                  </button>
-                );
-              })}
-            </div>
-            {themeError ? (
-              <p className="text-sm text-rose-600 dark:text-rose-300">
-                {themeError}
-              </p>
-            ) : null}
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
+            <SegmentedSetting
+              label="Mode"
+              value={session?.user.theme ?? 'dark'}
+              options={[
+                { value: 'light', label: 'Light' },
+                { value: 'dark', label: 'Dark' },
+              ]}
+              disabled={isUpdatingSettings}
+              onChange={(theme) => {
+                void handleUserSettingChange({ theme });
+              }}
+            />
+            <SegmentedSetting
+              label="Color"
+              value={session?.user.colorTheme ?? 'rose'}
+              options={[
+                { value: 'rose', label: 'Rose' },
+                { value: 'green', label: 'Green' },
+              ]}
+              disabled={isUpdatingSettings}
+              onChange={(colorTheme) => {
+                void handleUserSettingChange({ colorTheme });
+              }}
+            />
           </div>
+          {settingsError ? (
+            <p className="mt-4 text-sm text-rose-600 dark:text-rose-300">
+              {settingsError}
+            </p>
+          ) : null}
         </section>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
@@ -243,7 +249,7 @@ export default function Settings() {
             <button
               type="button"
               onClick={openAddModal}
-              className="inline-flex w-fit items-center justify-center gap-2 rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-rose-400 dark:text-stone-950 dark:hover:bg-rose-300"
+              className="inline-flex w-fit items-center justify-center gap-2 rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300"
             >
               <Plus size={18} />
               Category
@@ -351,7 +357,7 @@ function CategoryRow({
               {category.namePlural}
             </span>
             {category.isBuiltin ? (
-              <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-600 ring-1 ring-inset ring-rose-100 dark:bg-rose-950/30 dark:text-rose-200 dark:ring-rose-900/60">
+              <span className="rounded-full bg-accent-50 px-3 py-1 text-xs font-semibold text-accent-600 ring-1 ring-inset ring-accent-100 dark:bg-accent-950/30 dark:text-accent-200 dark:ring-accent-900/60">
                 Built-in
               </span>
             ) : null}
@@ -380,7 +386,7 @@ function CategoryRow({
             type="button"
             aria-label={`Edit ${category.nameSingular}`}
             onClick={onEdit}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-300 dark:hover:border-rose-400 dark:hover:text-stone-100"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-accent-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-300 dark:hover:border-accent-400 dark:hover:text-stone-100"
           >
             <Pencil size={16} />
           </button>
@@ -397,6 +403,50 @@ function CategoryRow({
         </div>
       </div>
     </article>
+  );
+}
+
+function SegmentedSetting<T extends Theme | ColorTheme>({
+  label,
+  value,
+  options,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: Array<{ value: T; label: string }>;
+  disabled: boolean;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-sm font-medium text-stone-700 dark:text-stone-300">
+        {label}
+      </p>
+      <div className="inline-flex rounded-2xl border border-stone-200 bg-white p-1 shadow-sm dark:border-stone-700 dark:bg-stone-950">
+        {options.map((option) => {
+          const isSelected = option.value === value;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              disabled={disabled}
+              onClick={() => onChange(option.value)}
+              className={[
+                'min-w-24 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
+                isSelected
+                  ? 'bg-accent-500 text-white shadow-sm dark:bg-accent-400 dark:text-stone-950'
+                  : 'text-stone-600 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-100',
+              ].join(' ')}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -527,7 +577,7 @@ function CheckboxField({
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-4 w-4 rounded border-stone-300 text-rose-600 focus:ring-rose-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-rose-400"
+        className="h-4 w-4 rounded border-stone-300 text-accent-600 focus:ring-accent-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-accent-400"
       />
       {label}
     </label>
