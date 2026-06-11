@@ -11,6 +11,7 @@ export const users = sqliteTable('users', {
   email: text('email').notNull().unique(),
   displayName: text('display_name').notNull(),
   avatarUrl: text('avatar_url'),
+  theme: text('theme').notNull().default('light'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });

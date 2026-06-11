@@ -17,6 +17,7 @@ import { getOwnerContext } from './owner-context.js';
 import {
   findSessionUser,
   isLocalRegistrationEnabled,
+  updateUserSettings,
 } from './repositories/users.js';
 import {
   deletePattern,
@@ -151,6 +152,14 @@ app.use('/api', requireAuthenticatedUser);
 
 app.get('/api/me', (request, response) => {
   response.json(request.sessionUser);
+});
+
+app.put('/api/me/settings', (request, response) => {
+  const user = updateUserSettings(request.sessionUser.user.id, {
+    theme: request.body?.theme,
+  });
+
+  response.json(user);
 });
 
 app.get('/api/stash', (request, response) => {

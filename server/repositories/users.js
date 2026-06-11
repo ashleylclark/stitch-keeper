@@ -18,6 +18,7 @@ export function findSessionUser(session) {
       email: users.email,
       displayName: users.displayName,
       avatarUrl: users.avatarUrl,
+      theme: users.theme,
     })
     .from(users)
     .where(eq(users.id, session.userId))
@@ -94,6 +95,7 @@ export function findOrCreateUserFromIdentity(identityInput) {
           email: identityInput.email,
           displayName: identityInput.displayName,
           avatarUrl: identityInput.avatarUrl ?? null,
+          theme: 'light',
           createdAt: now,
           updatedAt: now,
         })
@@ -246,6 +248,7 @@ export function createLocalUser({ email, displayName, passwordHash }) {
           email,
           displayName,
           avatarUrl: null,
+          theme: 'light',
           createdAt: now,
           updatedAt: now,
         })
@@ -273,6 +276,33 @@ export function listHouseholdsForUser(userId, tx = orm) {
     .innerJoin(households, eq(householdMembers.householdId, households.id))
     .where(eq(householdMembers.userId, userId))
     .all();
+}
+
+export function updateUserSettings(userId, settings) {
+  const theme = normalizeTheme(settings.theme);
+  const now = new Date().toISOString();
+
+  orm.update(users)
+    .set({
+      theme,
+      updatedAt: now,
+    })
+    .where(eq(users.id, userId))
+    .run();
+
+  const user = orm
+    .select({
+      id: users.id,
+      email: users.email,
+      displayName: users.displayName,
+      avatarUrl: users.avatarUrl,
+      theme: users.theme,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .get();
+
+  return toUser(user);
 }
 
 function countLocalCredentials(tx = orm) {
@@ -376,6 +406,10 @@ function updateExistingUser(tx, userId, identityInput, now) {
     })
     .where(eq(users.id, userId))
     .run();
+}
+
+function normalizeTheme(value) {
+  return value === 'dark' ? 'dark' : 'light';
 }
 
 function toUser(user) {
