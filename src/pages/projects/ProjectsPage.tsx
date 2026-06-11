@@ -146,7 +146,7 @@ function ActionButton({
         'inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white transition dark:bg-stone-950',
         tone === 'danger'
           ? 'border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/80 dark:text-rose-200 dark:hover:bg-rose-950/40'
-          : 'border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:text-stone-300 dark:hover:border-rose-400 dark:hover:text-stone-100',
+          : 'border-stone-200 text-stone-600 hover:border-accent-200 hover:text-stone-900 dark:border-stone-700 dark:text-stone-300 dark:hover:border-accent-400 dark:hover:text-stone-100',
       ].join(' ')}
     >
       {children}
@@ -170,7 +170,7 @@ function ProjectRow({
       <div className="flex min-w-0 flex-col gap-4 rounded-[1.25rem] lg:flex-row lg:items-center lg:justify-between">
         <Link
           to={`/projects/${project.id}`}
-          className="flex min-w-0 flex-1 flex-col gap-3 transition hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 dark:hover:text-stone-100 dark:focus-visible:ring-rose-400"
+          className="flex min-w-0 flex-1 flex-col gap-3 transition hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-300 dark:hover:text-stone-100 dark:focus-visible:ring-accent-400"
         >
           <div className="space-y-1">
             <h3 className="text-base font-semibold text-stone-900 dark:text-stone-100">
@@ -250,6 +250,7 @@ function ProjectSection({
 
 export default function Projects() {
   const {
+    stashCategories,
     stashItems,
     projects,
     patterns,
@@ -352,7 +353,7 @@ export default function Projects() {
             type="button"
             aria-label="Add project"
             onClick={() => setIsAddProjectOpen(true)}
-            className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-rose-400 dark:text-stone-950 dark:hover:bg-rose-300 sm:gap-2 sm:px-5"
+            className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300 sm:gap-2 sm:px-5"
           >
             <Plus size={18} />
             <span className="hidden whitespace-nowrap sm:inline">
@@ -370,7 +371,7 @@ export default function Projects() {
                 onChange={(event) =>
                   setSelectedStatus(event.target.value as StatusFilter)
                 }
-                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:focus:border-rose-400"
+                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-accent-300 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:focus:border-accent-400"
               >
                 {statusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -380,7 +381,7 @@ export default function Projects() {
               </select>
             </label>
 
-            <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-stone-600 dark:bg-rose-950/30 dark:text-stone-300">
+            <div className="rounded-2xl bg-accent-50 px-4 py-3 text-sm text-stone-600 dark:bg-accent-950/30 dark:text-stone-300">
               Showing{' '}
               <span className="font-semibold text-stone-900 dark:text-stone-100">
                 {filteredProjects.length}
@@ -410,6 +411,7 @@ export default function Projects() {
         maxWidthClassName="max-w-3xl"
       >
         <ProjectForm
+          stashCategories={stashCategories}
           patternOptions={patterns.map((pattern) => ({
             id: pattern.id,
             name: pattern.name,

@@ -18,6 +18,8 @@ export function findSessionUser(session) {
       email: users.email,
       displayName: users.displayName,
       avatarUrl: users.avatarUrl,
+      theme: users.theme,
+      colorTheme: users.colorTheme,
     })
     .from(users)
     .where(eq(users.id, session.userId))
@@ -94,6 +96,8 @@ export function findOrCreateUserFromIdentity(identityInput) {
           email: identityInput.email,
           displayName: identityInput.displayName,
           avatarUrl: identityInput.avatarUrl ?? null,
+          theme: 'dark',
+          colorTheme: 'rose',
           createdAt: now,
           updatedAt: now,
         })
@@ -246,6 +250,8 @@ export function createLocalUser({ email, displayName, passwordHash }) {
           email,
           displayName,
           avatarUrl: null,
+          theme: 'dark',
+          colorTheme: 'rose',
           createdAt: now,
           updatedAt: now,
         })
@@ -273,6 +279,34 @@ export function listHouseholdsForUser(userId, tx = orm) {
     .innerJoin(households, eq(householdMembers.householdId, households.id))
     .where(eq(householdMembers.userId, userId))
     .all();
+}
+
+export function updateUserSettings(userId, settings) {
+  const updates = normalizeUserSettings(settings);
+  const now = new Date().toISOString();
+
+  orm.update(users)
+    .set({
+      ...updates,
+      updatedAt: now,
+    })
+    .where(eq(users.id, userId))
+    .run();
+
+  const user = orm
+    .select({
+      id: users.id,
+      email: users.email,
+      displayName: users.displayName,
+      avatarUrl: users.avatarUrl,
+      theme: users.theme,
+      colorTheme: users.colorTheme,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .get();
+
+  return toUser(user);
 }
 
 function countLocalCredentials(tx = orm) {
@@ -376,6 +410,28 @@ function updateExistingUser(tx, userId, identityInput, now) {
     })
     .where(eq(users.id, userId))
     .run();
+}
+
+function normalizeTheme(value) {
+  return value === 'dark' ? 'dark' : 'light';
+}
+
+function normalizeColorTheme(value) {
+  return value === 'green' ? 'green' : 'rose';
+}
+
+function normalizeUserSettings(settings) {
+  const updates = {};
+
+  if (settings.theme !== undefined) {
+    updates.theme = normalizeTheme(settings.theme);
+  }
+
+  if (settings.colorTheme !== undefined) {
+    updates.colorTheme = normalizeColorTheme(settings.colorTheme);
+  }
+
+  return updates;
 }
 
 function toUser(user) {

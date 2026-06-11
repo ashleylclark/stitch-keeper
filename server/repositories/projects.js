@@ -1,6 +1,11 @@
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { orm } from '../db.js';
-import { projects, projectStashItems, stashItems } from '../schema.js';
+import {
+  projects,
+  projectStashItems,
+  stashCategories,
+  stashItems,
+} from '../schema.js';
 import { emptyToUndefined } from './utils.js';
 
 export function listProjects(ownerContext) {
@@ -198,8 +203,15 @@ function applyProjectStashUsage(tx, ownerContext, stashUsages) {
     }
 
     const stashItem = tx
-      .select({ category: stashItems.category })
+      .select({ isConsumable: stashCategories.isConsumable })
       .from(stashItems)
+      .leftJoin(
+        stashCategories,
+        and(
+          eq(stashCategories.id, stashItems.category),
+          eq(stashCategories.householdId, ownerContext.householdId),
+        ),
+      )
       .where(
         and(
           eq(stashItems.id, usage.stashItemId),
@@ -208,7 +220,7 @@ function applyProjectStashUsage(tx, ownerContext, stashUsages) {
       )
       .get();
 
-    if (!stashItem || !isConsumableCategory(stashItem.category)) {
+    if (!stashItem?.isConsumable) {
       continue;
     }
 
@@ -224,15 +236,6 @@ function applyProjectStashUsage(tx, ownerContext, stashUsages) {
       )
       .run();
   }
-}
-
-function isConsumableCategory(category) {
-  return (
-    category === 'yarn' ||
-    category === 'eyes' ||
-    category === 'stuffing' ||
-    category === 'other'
-  );
 }
 
 function parseCompletedInstructionSteps(value) {

@@ -17,6 +17,7 @@ import { getOwnerContext } from './owner-context.js';
 import {
   findSessionUser,
   isLocalRegistrationEnabled,
+  updateUserSettings,
 } from './repositories/users.js';
 import {
   deletePattern,
@@ -33,6 +34,13 @@ import {
   listStashItems,
   saveStashItem,
 } from './repositories/stash.js';
+import {
+  archiveStashCategory,
+  createStashCategory,
+  findStashCategory,
+  listStashCategories,
+  updateStashCategory,
+} from './repositories/stash-categories.js';
 
 const authConfig = readAuthConfig();
 
@@ -146,19 +154,73 @@ app.get('/api/me', (request, response) => {
   response.json(request.sessionUser);
 });
 
+app.put('/api/me/settings', (request, response) => {
+  const user = updateUserSettings(request.sessionUser.user.id, {
+    theme: request.body?.theme,
+    colorTheme: request.body?.colorTheme,
+  });
+
+  response.json(user);
+});
+
 app.get('/api/stash', (request, response) => {
   response.json(listStashItems(getOwnerContext(request)));
 });
 
+app.get('/api/stash-categories', (request, response) => {
+  response.json(listStashCategories(getOwnerContext(request)));
+});
+
+app.post('/api/stash-categories', (request, response) => {
+  const category = createStashCategory(
+    getOwnerContext(request),
+    normalizeStashCategory(request.body),
+  );
+  response.status(201).json(category);
+});
+
+app.put('/api/stash-categories/:id', (request, response) => {
+  const category = updateStashCategory(
+    getOwnerContext(request),
+    request.params.id,
+    normalizeStashCategory(request.body),
+  );
+
+  if (!category) {
+    response.status(404).send('Category not found.');
+    return;
+  }
+
+  response.json(category);
+});
+
+app.delete('/api/stash-categories/:id', (request, response) => {
+  const category = archiveStashCategory(
+    getOwnerContext(request),
+    request.params.id,
+  );
+
+  if (!category) {
+    response.status(404).send('Category not found.');
+    return;
+  }
+
+  response.json(category);
+});
+
 app.post('/api/stash', (request, response) => {
+  const ownerContext = getOwnerContext(request);
   const item = normalizeStashItem(request.body);
-  saveStashItem(getOwnerContext(request), item);
+  validateStashCategory(ownerContext, item.category);
+  saveStashItem(ownerContext, item);
   response.status(201).json(item);
 });
 
 app.put('/api/stash/:id', (request, response) => {
+  const ownerContext = getOwnerContext(request);
   const item = normalizeStashItem({ ...request.body, id: request.params.id });
-  saveStashItem(getOwnerContext(request), item, true);
+  validateStashCategory(ownerContext, item.category);
+  saveStashItem(ownerContext, item, true);
   response.json(item);
 });
 
@@ -172,14 +234,18 @@ app.get('/api/patterns', (request, response) => {
 });
 
 app.post('/api/patterns', (request, response) => {
+  const ownerContext = getOwnerContext(request);
   const pattern = normalizePattern(request.body);
-  savePattern(getOwnerContext(request), pattern);
+  validatePatternRequirementCategories(ownerContext, pattern);
+  savePattern(ownerContext, pattern);
   response.status(201).json(pattern);
 });
 
 app.put('/api/patterns/:id', (request, response) => {
+  const ownerContext = getOwnerContext(request);
   const pattern = normalizePattern({ ...request.body, id: request.params.id });
-  savePattern(getOwnerContext(request), pattern, true);
+  validatePatternRequirementCategories(ownerContext, pattern);
+  savePattern(ownerContext, pattern, true);
   response.json(pattern);
 });
 
@@ -267,6 +333,39 @@ function normalizeStashItem(input) {
     size: emptyToUndefined(input.size),
     notes: emptyToUndefined(input.notes),
   };
+}
+
+function normalizeStashCategory(input) {
+  return {
+    nameSingular: String(input.nameSingular ?? '').trim(),
+    namePlural: String(input.namePlural ?? '').trim(),
+    defaultUnit: emptyToUndefined(input.defaultUnit),
+    showWeight: Boolean(input.showWeight),
+    showBrand: Boolean(input.showBrand),
+    showColor: Boolean(input.showColor),
+    showSize: Boolean(input.showSize),
+    showMaterial: Boolean(input.showMaterial),
+    showUnit: Boolean(input.showUnit),
+    showNotes: Boolean(input.showNotes),
+    isConsumable: Boolean(input.isConsumable),
+    archivedAt: input.archivedAt,
+  };
+}
+
+function validateStashCategory(ownerContext, categoryId) {
+  const category = findStashCategory(ownerContext, categoryId);
+
+  if (!category) {
+    const error = new Error(`Unknown stash category: ${categoryId}`);
+    error.status = 400;
+    throw error;
+  }
+}
+
+function validatePatternRequirementCategories(ownerContext, pattern) {
+  for (const requirement of pattern.requirements) {
+    validateStashCategory(ownerContext, requirement.category);
+  }
 }
 
 function normalizePattern(input) {

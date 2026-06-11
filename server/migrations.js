@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const migrationTableName = 'schema_migrations';
 const appTableNames = [
+  'stash_categories',
   'stash_items',
   'patterns',
   'pattern_requirements',

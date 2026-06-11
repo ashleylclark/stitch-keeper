@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type PropsWithChildren,
-} from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AppDataContext, type AppDataContextValue } from '../state/app-data';
 import type {
   AuthSettings,
@@ -13,7 +7,9 @@ import type {
   Pattern,
   Project,
   RegistrationCredentials,
+  StashCategory,
   StashItem,
+  UserSettings,
 } from '../../types/models';
 import { buildPatternMatchSummaries } from '../../pages/patterns/lib/patternMatching';
 import {
@@ -22,11 +18,16 @@ import {
   login as loginWithServer,
   logout as logoutFromServer,
   register as registerWithServer,
+  saveUserSettings,
 } from '../auth/api';
 import {
+  archiveStashCategory as archiveStashCategoryWithServer,
+  createStashCategory as createStashCategoryWithServer,
   createStashItem,
+  fetchStashCategories,
   fetchStashItems,
   removeStashItem,
+  saveStashCategory as saveStashCategoryWithServer,
   saveStashItem,
 } from '../../pages/stash/api';
 import {
@@ -42,8 +43,15 @@ import {
   saveProject,
 } from '../../pages/projects/api';
 
-export function AppDataProvider({ children }: PropsWithChildren) {
+type AppDataProviderProps = {
+  children:
+    | ReactNode
+    | ((value: AppDataContextValue) => ReactNode);
+};
+
+export function AppDataProvider({ children }: AppDataProviderProps) {
   const [stashItems, setStashItems] = useState<StashItem[]>([]);
+  const [stashCategories, setStashCategories] = useState<StashCategory[]>([]);
   const [patterns, setPatterns] = useState<Pattern[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -68,12 +76,19 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       setSession(nextSession);
       setAuthStatus('authenticated');
 
-      const [nextStashItems, nextPatterns, nextProjects] = await Promise.all([
+      const [
+        nextStashCategories,
+        nextStashItems,
+        nextPatterns,
+        nextProjects,
+      ] = await Promise.all([
+        fetchStashCategories(),
         fetchStashItems(),
         fetchPatterns(),
         fetchProjects(),
       ]);
 
+      setStashCategories(nextStashCategories);
       setStashItems(nextStashItems);
       setPatterns(nextPatterns);
       setProjects(nextProjects);
@@ -81,6 +96,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       if (loadError instanceof Error && loadError.message.includes('401')) {
         setSession(null);
         setAuthStatus('unauthenticated');
+        setStashCategories([]);
         setStashItems([]);
         setPatterns([]);
         setProjects([]);
@@ -123,14 +139,62 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     setAuthSettings(nextAuthSettings);
     setSession(null);
     setAuthStatus('unauthenticated');
+    setStashCategories([]);
     setStashItems([]);
     setPatterns([]);
     setProjects([]);
   }, []);
 
+  const updateUserSettings = useCallback(async (settings: UserSettings) => {
+    let previousUser: AuthSession['user'] | undefined;
+
+    setSession((current) => {
+      if (!current) {
+        return current;
+      }
+
+      previousUser = current.user;
+      return {
+        ...current,
+        user: {
+          ...current.user,
+          ...settings,
+        },
+      };
+    });
+
+    try {
+      const updatedUser = await saveUserSettings(settings);
+
+      setSession((current) =>
+        current
+          ? {
+              ...current,
+              user: updatedUser,
+            }
+          : current,
+      );
+    } catch (error) {
+      if (previousUser) {
+        const userToRestore = previousUser;
+
+        setSession((current) =>
+          current
+            ? {
+                ...current,
+                user: userToRestore,
+              }
+            : current,
+        );
+      }
+
+      throw error;
+    }
+  }, []);
+
   const patternMatchSummaries = useMemo(
-    () => buildPatternMatchSummaries(patterns, stashItems),
-    [patterns, stashItems],
+    () => buildPatternMatchSummaries(patterns, stashItems, stashCategories),
+    [patterns, stashItems, stashCategories],
   );
 
   const patternMatchById = useMemo(
@@ -149,8 +213,41 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       login,
       register,
       logout,
+      updateUserSettings,
       isLoading,
       error,
+      stashCategories,
+      addStashCategory: async (category) => {
+        const createdCategory = await createStashCategoryWithServer(category);
+        setStashCategories((current) => [...current, createdCategory]);
+        return createdCategory;
+      },
+      updateStashCategory: async (categoryId, category) => {
+        const updatedCategory = await saveStashCategoryWithServer(
+          categoryId,
+          category,
+        );
+        setStashCategories((current) =>
+          current.map((existingCategory) =>
+            existingCategory.id === updatedCategory.id
+              ? updatedCategory
+              : existingCategory,
+          ),
+        );
+        return updatedCategory;
+      },
+      archiveStashCategory: async (categoryId) => {
+        const archivedCategory =
+          await archiveStashCategoryWithServer(categoryId);
+        setStashCategories((current) =>
+          current.map((existingCategory) =>
+            existingCategory.id === archivedCategory.id
+              ? archivedCategory
+              : existingCategory,
+          ),
+        );
+        return archivedCategory;
+      },
       stashItems,
       addStashItem: async (item) => {
         const createdItem = await createStashItem(item);
@@ -223,16 +320,20 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       register,
       isLoading,
       error,
+      stashCategories,
       stashItems,
       patterns,
       projects,
       patternMatchSummaries,
       patternMatchById,
       logout,
+      updateUserSettings,
     ],
   );
 
   return (
-    <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>
+    <AppDataContext.Provider value={value}>
+      {typeof children === 'function' ? children(value) : children}
+    </AppDataContext.Provider>
   );
 }

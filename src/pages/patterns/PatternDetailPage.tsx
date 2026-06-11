@@ -17,6 +17,7 @@ import {
   requirementMatchLabels,
 } from './lib/patternMatching';
 import { countInstructionSteps } from './lib/instructionSections';
+import { getCategoryLabel } from '../stash/lib/categories';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error
@@ -124,7 +125,7 @@ function ActionButton({
         'inline-flex h-11 w-11 items-center justify-center rounded-2xl border bg-white transition dark:bg-stone-900',
         tone === 'danger'
           ? 'border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-300 dark:hover:bg-rose-950/40'
-          : 'border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:text-stone-300 dark:hover:border-rose-500/50 dark:hover:text-stone-50',
+          : 'border-stone-200 text-stone-600 hover:border-accent-200 hover:text-stone-900 dark:border-stone-700 dark:text-stone-300 dark:hover:border-accent-500/50 dark:hover:text-stone-50',
       ].join(' ')}
     >
       {children}
@@ -156,8 +157,13 @@ function NotFoundState() {
 
 export default function PatternDetail() {
   const navigate = useNavigate();
-  const { patternMatchById, patterns, updatePattern, deletePattern } =
-    useAppData();
+  const {
+    patternMatchById,
+    patterns,
+    stashCategories,
+    updatePattern,
+    deletePattern,
+  } = useAppData();
   const { patternId } = useParams();
   const pattern = patterns.find((item) => item.id === patternId);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -265,7 +271,7 @@ export default function PatternDetail() {
                           rel="noreferrer"
                           aria-label={`Open source for ${currentPattern.name}`}
                           title="View source"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 transition hover:border-rose-200 hover:text-rose-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-rose-500/50 dark:hover:text-rose-300"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 transition hover:border-accent-200 hover:text-accent-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-accent-500/50 dark:hover:text-accent-300"
                         >
                           <ExternalLink size={14} />
                         </a>
@@ -340,7 +346,10 @@ export default function PatternDetail() {
                         </div>
                       </td>
                       <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">
-                        {titleCase(requirement.category)}
+                        {getCategoryLabel(
+                          requirement.category,
+                          stashCategories,
+                        )}
                       </td>
                       <td className="px-4 py-4 text-sm leading-6 text-stone-600 dark:text-stone-300">
                         {[
@@ -389,7 +398,7 @@ export default function PatternDetail() {
             {currentPattern.instructionSections.map((section) => (
               <article
                 key={section.id}
-                className="rounded-[1.5rem] border border-rose-100 bg-rose-50/60 p-5 dark:border-rose-900/50 dark:bg-rose-950/20"
+                className="rounded-[1.5rem] border border-accent-100 bg-accent-50/60 p-5 dark:border-accent-900/50 dark:bg-accent-950/20"
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
@@ -402,7 +411,7 @@ export default function PatternDetail() {
                       </p>
                     ) : null}
                   </div>
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-stone-600 ring-1 ring-inset ring-rose-100 dark:bg-stone-900 dark:text-stone-300 dark:ring-rose-900/70">
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-stone-600 ring-1 ring-inset ring-accent-100 dark:bg-stone-900 dark:text-stone-300 dark:ring-accent-900/70">
                     {countInstructionSteps(section)} steps
                   </span>
                 </div>
@@ -443,6 +452,7 @@ export default function PatternDetail() {
         maxWidthClassName="max-w-5xl"
       >
         <PatternForm
+          stashCategories={stashCategories}
           initialValues={{
             name: currentPattern.name,
             source: currentPattern.source ?? '',

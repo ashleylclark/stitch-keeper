@@ -122,7 +122,7 @@ function DashboardList({
         </div>
         <Link
           to={viewAllHref}
-          className="inline-flex shrink-0 items-center rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:hover:border-rose-400 dark:hover:text-stone-50"
+          className="inline-flex shrink-0 items-center rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-accent-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:hover:border-accent-400 dark:hover:text-stone-50"
         >
           View All
         </Link>
@@ -133,12 +133,12 @@ function DashboardList({
           items.map((item) => (
             <article
               key={item.id}
-              className="rounded-[1.5rem] border border-stone-100 bg-stone-50/80 px-4 py-4 transition hover:border-rose-100 hover:bg-rose-50/50 dark:border-stone-800 dark:bg-stone-950/70 dark:hover:border-rose-900/70 dark:hover:bg-stone-900"
+              className="rounded-[1.5rem] border border-stone-100 bg-stone-50/80 px-4 py-4 transition hover:border-accent-100 hover:bg-accent-50/50 dark:border-stone-800 dark:bg-stone-950/70 dark:hover:border-accent-900/70 dark:hover:bg-stone-900"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <Link
                   to={item.href}
-                  className="block flex-1 space-y-1 transition hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 dark:hover:text-stone-100 dark:focus-visible:ring-rose-400"
+                  className="block flex-1 space-y-1 transition hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-300 dark:hover:text-stone-100 dark:focus-visible:ring-accent-400"
                 >
                   <h3 className="text-base font-semibold text-stone-900 dark:text-stone-100">
                     {item.name}

@@ -5,6 +5,7 @@ import type {
   PatternMatchSummary,
   PatternRequirement,
   RequirementMatch,
+  StashCategory,
   StashItem,
 } from '../../../types/models';
 
@@ -49,16 +50,22 @@ export const requirementMatchBadgeClasses: Record<
 export function buildPatternMatchSummaries(
   patterns: Pattern[],
   stashItems: StashItem[],
+  stashCategories: StashCategory[],
 ): PatternMatchSummary[] {
   return patterns.map((pattern) =>
-    buildPatternMatchSummary(pattern, stashItems),
+    buildPatternMatchSummary(pattern, stashItems, stashCategories),
   );
 }
 
 export function buildPatternMatchSummary(
   pattern: Pattern,
   stashItems: StashItem[],
+  stashCategories: StashCategory[],
 ): PatternMatchSummary {
+  const categoryById = new Map(
+    stashCategories.map((category) => [category.id, category]),
+  );
+
   if (pattern.requirements.length === 0) {
     return {
       patternId: pattern.id,
@@ -71,7 +78,7 @@ export function buildPatternMatchSummary(
   }
 
   const requirementMatches = pattern.requirements.map((requirement) =>
-    buildRequirementMatch(requirement, stashItems),
+    buildRequirementMatch(requirement, stashItems, categoryById),
   );
 
   const matchedCount = requirementMatches.filter(
@@ -111,9 +118,10 @@ export function buildPatternMatchSummary(
 export function buildRequirementMatch(
   requirement: PatternRequirement,
   stashItems: StashItem[],
+  categoryById = new Map<ItemCategory, StashCategory>(),
 ): RequirementMatch {
   const matchingItems = stashItems.filter((item) =>
-    isMatchingItem(requirement, item),
+    isMatchingItem(requirement, item, categoryById.get(requirement.category)),
   );
   const matchedItemIds = matchingItems.map((item) => item.id);
   const quantityMatched = matchingItems.reduce(
@@ -128,7 +136,7 @@ export function buildRequirementMatch(
       matchedItemIds: [],
       status: 'missing',
       quantityMatched: 0,
-      reason: buildMissingReason(requirement),
+      reason: buildMissingReason(requirement, categoryById.get(requirement.category)),
     };
   }
 
@@ -167,7 +175,11 @@ export function buildRequirementMatch(
   };
 }
 
-function isMatchingItem(requirement: PatternRequirement, item: StashItem) {
+function isMatchingItem(
+  requirement: PatternRequirement,
+  item: StashItem,
+  category?: StashCategory,
+) {
   if (item.category !== requirement.category) {
     return false;
   }
@@ -179,7 +191,7 @@ function isMatchingItem(requirement: PatternRequirement, item: StashItem) {
     return false;
   }
 
-  if (requirement.category === 'yarn') {
+  if (category?.showWeight) {
     if (requirement.weight && item.weight !== requirement.weight) {
       return false;
     }
@@ -187,15 +199,11 @@ function isMatchingItem(requirement: PatternRequirement, item: StashItem) {
     return true;
   }
 
-  if (needsSizeMatch(requirement.category) && requirement.size) {
+  if (category?.showSize && requirement.size) {
     return item.size === requirement.size;
   }
 
   return true;
-}
-
-function needsSizeMatch(category: ItemCategory) {
-  return category === 'hook' || category === 'needle' || category === 'eyes';
 }
 
 function getComparableQuantity(
@@ -228,14 +236,19 @@ function normalizeUnit(unit?: string) {
   return unit?.trim().toLowerCase().replace(/\.$/, '').replace(/s$/, '');
 }
 
-function buildMissingReason(requirement: PatternRequirement) {
-  if (requirement.category === 'yarn' && requirement.weight) {
-    return `No ${requirement.weight} yarn currently available.`;
+function buildMissingReason(
+  requirement: PatternRequirement,
+  category?: StashCategory,
+) {
+  const categoryName = category?.nameSingular.toLowerCase() ?? requirement.category;
+
+  if (category?.showWeight && requirement.weight) {
+    return `No ${requirement.weight} ${categoryName} currently available.`;
   }
 
-  if (needsSizeMatch(requirement.category) && requirement.size) {
-    return `No ${requirement.size} ${requirement.category} currently available.`;
+  if (category?.showSize && requirement.size) {
+    return `No ${requirement.size} ${categoryName} currently available.`;
   }
 
-  return `No matching ${requirement.category} currently available.`;
+  return `No matching ${categoryName} currently available.`;
 }

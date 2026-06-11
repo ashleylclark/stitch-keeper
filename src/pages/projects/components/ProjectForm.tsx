@@ -3,6 +3,7 @@ import type {
   ItemCategory,
   ProjectStashUsage,
   ProjectStatus,
+  StashCategory,
 } from '../../../types/models';
 import { FormActions } from '../../../components/forms/FormActions';
 import { FormField } from '../../../components/forms/FormField';
@@ -10,6 +11,7 @@ import { FormSection } from '../../../components/forms/FormSection';
 import { SelectInput } from '../../../components/forms/SelectInput';
 import { TextArea } from '../../../components/forms/TextArea';
 import { TextInput } from '../../../components/forms/TextInput';
+import { getCategory, getCategoryLabel } from '../../stash/lib/categories';
 
 export type ProjectFormValues = {
   name: string;
@@ -38,6 +40,7 @@ type StashItemOption = {
 type ProjectFormProps = {
   patternOptions: PatternOption[];
   stashItemOptions: StashItemOption[];
+  stashCategories: StashCategory[];
   initialValues?: Partial<ProjectFormValues>;
   submitLabel?: string;
   onSubmit: (values: ProjectFormValues) => void;
@@ -51,6 +54,7 @@ type FormErrors = Partial<Record<'name' | 'patternId' | 'status', string>>;
 export function ProjectForm({
   patternOptions,
   stashItemOptions,
+  stashCategories,
   initialValues,
   submitLabel = 'Save Project',
   onSubmit,
@@ -231,27 +235,28 @@ export function ProjectForm({
                 return (
                   <div
                     key={item.id}
-                    className="flex cursor-pointer items-start gap-3 rounded-xl border border-transparent bg-white px-3 py-3 transition hover:border-rose-200 dark:bg-stone-950 dark:hover:border-rose-500/60"
+                    className="flex cursor-pointer items-start gap-3 rounded-xl border border-transparent bg-white px-3 py-3 transition hover:border-accent-200 dark:bg-stone-950 dark:hover:border-accent-500/60"
                   >
                     <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
                       <input
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => toggleStashItem(item.id)}
-                        className="mt-1 h-4 w-4 rounded border-stone-300 text-rose-600 focus:ring-rose-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-rose-400"
+                        className="mt-1 h-4 w-4 rounded border-stone-300 text-accent-600 focus:ring-accent-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-accent-400"
                       />
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-stone-900 dark:text-stone-100">
                           {item.name}
                         </p>
                         <p className="text-sm text-stone-600 dark:text-stone-400">
-                          {formatCategory(item.category)} • {item.quantity}{' '}
-                          {item.unit ?? 'items'}
+                          {getCategoryLabel(item.category, stashCategories)} •{' '}
+                          {item.quantity} {item.unit ?? 'items'}
                         </p>
                       </div>
                     </label>
 
-                    {isConsumableCategory(item.category) ? (
+                    {getCategory(item.category, stashCategories)
+                      ?.isConsumable ? (
                       <div className="w-28 shrink-0">
                         <TextInput
                           type="number"
@@ -271,8 +276,8 @@ export function ProjectForm({
             </div>
             <p className="text-xs leading-5 text-stone-500 dark:text-stone-400">
               Usage quantities are only applied when the project is first marked
-              completed. Hooks and needles are linked for reference only and are
-              not decremented.
+              completed. Non-consumable categories are linked for reference only
+              and are not decremented.
             </p>
           </div>
         ) : (
@@ -298,18 +303,5 @@ export function ProjectForm({
         isSubmitting={isSubmitting}
       />
     </form>
-  );
-}
-
-function formatCategory(category: ItemCategory) {
-  return category.charAt(0).toUpperCase() + category.slice(1);
-}
-
-function isConsumableCategory(category: ItemCategory) {
-  return (
-    category === 'yarn' ||
-    category === 'eyes' ||
-    category === 'stuffing' ||
-    category === 'other'
   );
 }

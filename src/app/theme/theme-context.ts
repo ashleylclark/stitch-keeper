@@ -1,14 +1,12 @@
 import { createContext, useContext } from 'react';
-
-export type Theme = 'light' | 'dark';
+import type { ColorTheme, Theme } from '../../types/models';
 
 export type ThemeContextValue = {
   theme: Theme;
+  colorTheme: ColorTheme;
   setTheme: (theme: Theme) => void;
-  toggleTheme: () => void;
+  setColorTheme: (colorTheme: ColorTheme) => void;
 };
-
-export const THEME_STORAGE_KEY = 'stitch-keeper-theme';
 
 export const ThemeContext = createContext<ThemeContextValue | null>(null);
 

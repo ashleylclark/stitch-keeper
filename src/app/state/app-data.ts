@@ -7,8 +7,11 @@ import type {
   PatternMatchSummary,
   Project,
   RegistrationCredentials,
+  StashCategory,
   StashItem,
+  UserSettings,
 } from '../../types/models';
+import type { StashCategoryInput } from '../../pages/stash/api';
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -19,8 +22,16 @@ export type AppDataContextValue = {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegistrationCredentials) => Promise<void>;
   logout: () => Promise<void>;
+  updateUserSettings: (settings: UserSettings) => Promise<void>;
   isLoading: boolean;
   error: string | null;
+  stashCategories: StashCategory[];
+  addStashCategory: (category: StashCategoryInput) => Promise<StashCategory>;
+  updateStashCategory: (
+    categoryId: string,
+    category: StashCategoryInput,
+  ) => Promise<StashCategory>;
+  archiveStashCategory: (categoryId: string) => Promise<StashCategory>;
   stashItems: StashItem[];
   addStashItem: (item: StashItem) => Promise<void>;
   updateStashItem: (item: StashItem) => Promise<void>;

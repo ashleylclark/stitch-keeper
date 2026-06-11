@@ -1,47 +1,45 @@
-import { useEffect, useMemo, useState, type PropsWithChildren } from 'react';
+import { useEffect, useMemo, type PropsWithChildren } from 'react';
 import {
   ThemeContext,
-  THEME_STORAGE_KEY,
-  type Theme,
   type ThemeContextValue,
 } from './theme-context';
+import type { ColorTheme, Theme } from '../../types/models';
 
-export function ThemeProvider({ children }: PropsWithChildren) {
-  const [theme, setThemeState] = useState<Theme>(() => getInitialTheme());
-
+export function ThemeProvider({
+  children,
+  theme,
+  colorTheme,
+  onThemeChange,
+  onColorThemeChange,
+}: PropsWithChildren<{
+  theme: Theme;
+  colorTheme: ColorTheme;
+  onThemeChange: (theme: Theme) => void;
+  onColorThemeChange: (colorTheme: ColorTheme) => void;
+}>) {
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle('dark', theme === 'dark');
     root.style.colorScheme = theme;
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('theme-green', colorTheme === 'green');
+    root.classList.toggle('theme-rose', colorTheme === 'rose');
+  }, [colorTheme]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({
       theme,
-      setTheme: setThemeState,
-      toggleTheme: () =>
-        setThemeState((current) => (current === 'dark' ? 'light' : 'dark')),
+      colorTheme,
+      setTheme: onThemeChange,
+      setColorTheme: onColorThemeChange,
     }),
-    [theme],
+    [theme, colorTheme, onThemeChange, onColorThemeChange],
   );
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );
-}
-
-function getInitialTheme(): Theme {
-  if (typeof window === 'undefined') {
-    return 'light';
-  }
-
-  const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (savedTheme === 'light' || savedTheme === 'dark') {
-    return savedTheme;
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light';
 }

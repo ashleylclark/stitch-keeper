@@ -117,6 +117,9 @@ The app uses households as shared workspaces:
   belong to the same household.
 - Projects are personal to the signed-in user, but live inside a household so
   they can reference household patterns and consume household stash.
+- User settings, such as theme mode and accent color, are saved per user.
+  Household settings, such as stash categories, are shared with household
+  members.
 
 For a single-user install, the first account owns one household and the model
 mostly feels like a named workspace. For multi-person use, members can share

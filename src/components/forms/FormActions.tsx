@@ -15,8 +15,8 @@ export function FormActions({
     ? 'min-h-10 flex-1 cursor-pointer rounded-lg border border-stone-300 px-4 py-2 text-sm text-stone-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-stone-700 dark:text-stone-200 sm:flex-none'
     : 'cursor-pointer rounded-lg border border-stone-300 px-4 py-2 text-sm text-stone-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-stone-700 dark:text-stone-200';
   const submitClassName = sticky
-    ? 'min-h-10 flex-1 cursor-pointer rounded-lg bg-stone-800 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-rose-400 dark:text-stone-950 sm:flex-none'
-    : 'cursor-pointer rounded-lg bg-stone-800 px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-rose-400 dark:text-stone-950';
+    ? 'min-h-10 flex-1 cursor-pointer rounded-lg bg-stone-800 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-accent-400 dark:text-stone-950 sm:flex-none'
+    : 'cursor-pointer rounded-lg bg-stone-800 px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-accent-400 dark:text-stone-950';
 
   return (
     <div

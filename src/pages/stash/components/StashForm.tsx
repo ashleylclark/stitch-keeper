@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type {
   ItemCategory,
+  StashCategory,
   StashStatus,
   YarnWeight,
 } from '../../../types/models';
@@ -10,6 +11,11 @@ import { FormSection } from '../../../components/forms/FormSection';
 import { SelectInput } from '../../../components/forms/SelectInput';
 import { TextArea } from '../../../components/forms/TextArea';
 import { TextInput } from '../../../components/forms/TextInput';
+import {
+  getActiveCategories,
+  getCategory,
+  getDefaultUnit,
+} from '../lib/categories';
 
 export type StashFormValues = {
   category: ItemCategory;
@@ -26,9 +32,14 @@ export type StashFormValues = {
 };
 
 type StashFormProps = {
+  categories: StashCategory[];
   initialValues?: Partial<StashFormValues>;
   submitLabel?: string;
   onSubmit: (values: StashFormValues) => void;
+  onCreateCategory?: (
+    nameSingular: string,
+    namePlural: string,
+  ) => Promise<StashCategory>;
   onCancel?: () => void;
   submitError?: string | null;
   isSubmitting?: boolean;
@@ -36,31 +47,34 @@ type StashFormProps = {
 
 type FormErrors = Partial<Record<'name' | 'quantity', string>>;
 
-const defaultUnits: Record<ItemCategory, string> = {
-  yarn: 'yrds',
-  hook: 'hook',
-  needle: 'needles',
-  eyes: 'pairs',
-  stuffing: 'bags',
-  other: 'items',
-};
-
 export function StashForm({
+  categories,
   initialValues,
   submitLabel = 'Save Stash Item',
   onSubmit,
+  onCreateCategory,
   onCancel,
   submitError = null,
   isSubmitting = false,
 }: StashFormProps) {
   const [errors, setErrors] = useState<FormErrors>({});
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [categoryDraft, setCategoryDraft] = useState({
+    nameSingular: '',
+    namePlural: '',
+  });
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const initialCategory =
+    initialValues?.category ?? categories.find((category) => !category.archivedAt)?.id ?? 'yarn';
   const [values, setValues] = useState<StashFormValues>({
-    category: initialValues?.category ?? 'yarn',
+    category: initialCategory,
     name: initialValues?.name ?? '',
     quantity: initialValues?.quantity ?? '',
     status: initialValues?.status ?? 'in-stock',
     unit:
-      initialValues?.unit ?? defaultUnits[initialValues?.category ?? 'yarn'],
+      initialValues?.unit ??
+      getDefaultUnit(getCategory(initialCategory, categories)),
     brand: initialValues?.brand ?? '',
     color: initialValues?.color ?? '',
     weight: initialValues?.weight ?? '',
@@ -78,14 +92,15 @@ export function StashForm({
 
       if (key === 'category') {
         const category = value as ItemCategory;
-        next.unit = defaultUnits[category];
+        const categoryConfig = getCategory(category, categories);
+        next.unit = getDefaultUnit(categoryConfig);
 
-        if (!showsWeight(category)) next.weight = '';
-        if (!showsBrand(category)) next.brand = '';
-        if (!showsColor(category)) next.color = '';
-        if (!showsSize(category)) next.size = '';
-        if (!showsMaterial(category)) next.material = '';
-        if (!showsNotes(category)) next.notes = '';
+        if (!showsWeight(categoryConfig)) next.weight = '';
+        if (!showsBrand(categoryConfig)) next.brand = '';
+        if (!showsColor(categoryConfig)) next.color = '';
+        if (!showsSize(categoryConfig)) next.size = '';
+        if (!showsMaterial(categoryConfig)) next.material = '';
+        if (!showsNotes(categoryConfig)) next.notes = '';
       }
 
       if (key === 'quantity') {
@@ -127,13 +142,47 @@ export function StashForm({
     onSubmit(values);
   }
 
-  const showBrand = showsBrand(values.category);
-  const showColor = showsColor(values.category);
-  const showWeight = showsWeight(values.category);
-  const showSize = showsSize(values.category);
-  const showMaterial = showsMaterial(values.category);
-  const showUnit = showsUnit(values.category);
-  const showNotes = showsNotes(values.category);
+  async function handleCreateCategory() {
+    if (!onCreateCategory) {
+      return;
+    }
+
+    if (!categoryDraft.nameSingular.trim() || !categoryDraft.namePlural.trim()) {
+      setCategoryError('Singular and plural names are required.');
+      return;
+    }
+
+    setCategoryError(null);
+    setIsCreatingCategory(true);
+
+    try {
+      const category = await onCreateCategory(
+        categoryDraft.nameSingular,
+        categoryDraft.namePlural,
+      );
+      update('category', category.id);
+      setCategoryDraft({ nameSingular: '', namePlural: '' });
+      setIsAddingCategory(false);
+    } catch (error) {
+      setCategoryError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to create category.',
+      );
+    } finally {
+      setIsCreatingCategory(false);
+    }
+  }
+
+  const categoryConfig = getCategory(values.category, categories);
+  const categoryOptions = getActiveCategories(categories, values.category);
+  const showBrand = showsBrand(categoryConfig);
+  const showColor = showsColor(categoryConfig);
+  const showWeight = showsWeight(categoryConfig);
+  const showSize = showsSize(categoryConfig);
+  const showMaterial = showsMaterial(categoryConfig);
+  const showUnit = showsUnit(categoryConfig);
+  const showNotes = showsNotes(categoryConfig);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -146,19 +195,31 @@ export function StashForm({
       <FormSection title="Basic Info">
         <div className="grid gap-3 sm:grid-cols-2">
           <FormField label="Category">
-            <SelectInput
-              value={values.category}
-              onChange={(event) =>
-                update('category', event.target.value as ItemCategory)
-              }
-            >
-              <option value="yarn">Yarn</option>
-              <option value="hook">Hook</option>
-              <option value="needle">Needle</option>
-              <option value="eyes">Safety Eyes</option>
-              <option value="stuffing">Stuffing</option>
-              <option value="other">Other</option>
-            </SelectInput>
+            <div className="space-y-3">
+              <SelectInput
+                value={values.category}
+                onChange={(event) =>
+                  update('category', event.target.value as ItemCategory)
+                }
+              >
+                {categoryOptions.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.nameSingular}
+                    {category.archivedAt ? ' (archived)' : ''}
+                  </option>
+                ))}
+              </SelectInput>
+
+              {onCreateCategory ? (
+                <button
+                  type="button"
+                  onClick={() => setIsAddingCategory((current) => !current)}
+                  className="text-sm font-semibold text-accent-600 transition hover:text-accent-700 dark:text-accent-300 dark:hover:text-accent-200"
+                >
+                  {isAddingCategory ? 'Cancel new category' : 'Add category'}
+                </button>
+              ) : null}
+            </div>
           </FormField>
 
           <FormField label="Name">
@@ -219,6 +280,51 @@ export function StashForm({
           ) : null}
         </div>
       </FormSection>
+
+      {isAddingCategory ? (
+        <FormSection title="New Category">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <FormField label="Singular name">
+              <TextInput
+                value={categoryDraft.nameSingular}
+                onChange={(event) =>
+                  setCategoryDraft((current) => ({
+                    ...current,
+                    nameSingular: event.target.value,
+                  }))
+                }
+                placeholder="Button"
+              />
+            </FormField>
+
+            <FormField label="Plural name">
+              <TextInput
+                value={categoryDraft.namePlural}
+                onChange={(event) =>
+                  setCategoryDraft((current) => ({
+                    ...current,
+                    namePlural: event.target.value,
+                  }))
+                }
+                placeholder="Buttons"
+              />
+            </FormField>
+          </div>
+          {categoryError ? (
+            <p className="text-sm text-rose-600 dark:text-rose-300">
+              {categoryError}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            disabled={isCreatingCategory}
+            onClick={handleCreateCategory}
+            className="inline-flex w-fit items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300"
+          >
+            {isCreatingCategory ? 'Adding...' : 'Add Category'}
+          </button>
+        </FormSection>
+      ) : null}
 
       {showBrand || showColor || showWeight || showSize || showMaterial ? (
         <FormSection title="Item Details">
@@ -308,30 +414,30 @@ export function StashForm({
   );
 }
 
-function showsWeight(category: ItemCategory) {
-  return category === 'yarn' || category === 'other';
+function showsWeight(category?: StashCategory) {
+  return Boolean(category?.showWeight);
 }
 
-function showsBrand(category: ItemCategory) {
-  return ['yarn', 'hook', 'needle', 'eyes', 'other'].includes(category);
+function showsBrand(category?: StashCategory) {
+  return Boolean(category?.showBrand);
 }
 
-function showsColor(category: ItemCategory) {
-  return category === 'yarn' || category === 'other';
+function showsColor(category?: StashCategory) {
+  return Boolean(category?.showColor);
 }
 
-function showsSize(category: ItemCategory) {
-  return ['hook', 'needle', 'eyes', 'other'].includes(category);
+function showsSize(category?: StashCategory) {
+  return Boolean(category?.showSize);
 }
 
-function showsMaterial(category: ItemCategory) {
-  return ['hook', 'needle', 'eyes', 'stuffing', 'other'].includes(category);
+function showsMaterial(category?: StashCategory) {
+  return Boolean(category?.showMaterial);
 }
 
-function showsUnit(category: ItemCategory) {
-  return ['yarn', 'stuffing', 'eyes', 'other'].includes(category);
+function showsUnit(category?: StashCategory) {
+  return Boolean(category?.showUnit);
 }
 
-function showsNotes(category: ItemCategory) {
-  return ['yarn', 'stuffing', 'other'].includes(category);
+function showsNotes(category?: StashCategory) {
+  return Boolean(category?.showNotes);
 }

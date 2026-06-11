@@ -1,4 +1,4 @@
-type ItemCategory = 'yarn' | 'hook' | 'needle' | 'eyes' | 'stuffing' | 'other';
+type ItemCategory = string;
 type YarnWeight =
   | 'lace'
   | 'super-fine'
@@ -23,6 +23,25 @@ type StashItem = {
   unit?: string;
   size?: string;
   notes?: string;
+};
+
+type StashCategory = {
+  id: ItemCategory;
+  nameSingular: string;
+  namePlural: string;
+  defaultUnit?: string;
+  showWeight: boolean;
+  showBrand: boolean;
+  showColor: boolean;
+  showSize: boolean;
+  showMaterial: boolean;
+  showUnit: boolean;
+  showNotes: boolean;
+  isConsumable: boolean;
+  isBuiltin: boolean;
+  archivedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 type PatternRequirement = {
@@ -120,6 +139,8 @@ type AuthUser = {
   email: string;
   displayName: string;
   avatarUrl?: string;
+  theme: Theme;
+  colorTheme: ColorTheme;
 };
 
 type Household = {
@@ -139,6 +160,13 @@ type AuthSettings = {
   registrationEnabled: boolean;
 };
 
+type Theme = 'light' | 'dark';
+type ColorTheme = 'rose' | 'green';
+type UserSettings = {
+  theme?: Theme;
+  colorTheme?: ColorTheme;
+};
+
 type LoginCredentials = {
   email: string;
   password: string;
@@ -152,6 +180,7 @@ export type {
   AuthSettings,
   AuthSession,
   AuthUser,
+  ColorTheme,
   Household,
   ItemCategory,
   MatchStatus,
@@ -167,7 +196,10 @@ export type {
   LoginCredentials,
   RequirementMatch,
   RegistrationCredentials,
+  StashCategory,
   StashItem,
   StashStatus,
+  Theme,
+  UserSettings,
   YarnWeight,
 };
