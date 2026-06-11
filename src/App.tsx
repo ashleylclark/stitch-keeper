@@ -3,12 +3,14 @@ import { RouterProvider } from 'react-router-dom';
 import { AppDataProvider } from './app/providers/AppDataProvider';
 import { ThemeProvider } from './app/theme/ThemeProvider';
 import { router } from './app/router';
-import type { Theme } from './types/models';
+import type { ColorTheme, Theme } from './types/models';
 
 function App() {
   const [fallbackTheme, setFallbackTheme] = useState<Theme>(() =>
     getSystemTheme(),
   );
+  const [fallbackColorTheme, setFallbackColorTheme] =
+    useState<ColorTheme>('rose');
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
@@ -27,14 +29,22 @@ function App() {
 
   return (
     <AppDataProvider>
-      {({ session, updateUserTheme }) => (
+      {({ session, updateUserSettings }) => (
         <ThemeProvider
           theme={session?.user.theme ?? fallbackTheme}
+          colorTheme={session?.user.colorTheme ?? fallbackColorTheme}
           onThemeChange={(theme) => {
             if (session) {
-              void updateUserTheme(theme);
+              void updateUserSettings({ theme });
             } else {
               handleFallbackThemeChange(theme);
+            }
+          }}
+          onColorThemeChange={(colorTheme) => {
+            if (session) {
+              void updateUserSettings({ colorTheme });
+            } else {
+              setFallbackColorTheme(colorTheme);
             }
           }}
         >

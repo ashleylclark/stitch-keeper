@@ -214,7 +214,7 @@ export function StashForm({
                 <button
                   type="button"
                   onClick={() => setIsAddingCategory((current) => !current)}
-                  className="text-sm font-semibold text-rose-600 transition hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
+                  className="text-sm font-semibold text-accent-600 transition hover:text-accent-700 dark:text-accent-300 dark:hover:text-accent-200"
                 >
                   {isAddingCategory ? 'Cancel new category' : 'Add category'}
                 </button>
@@ -319,7 +319,7 @@ export function StashForm({
             type="button"
             disabled={isCreatingCategory}
             onClick={handleCreateCategory}
-            className="inline-flex w-fit items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-rose-400 dark:text-stone-950 dark:hover:bg-rose-300"
+            className="inline-flex w-fit items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300"
           >
             {isCreatingCategory ? 'Adding...' : 'Add Category'}
           </button>

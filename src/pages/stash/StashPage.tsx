@@ -108,7 +108,7 @@ function ActionButton({
         'inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white transition dark:bg-stone-950',
         tone === 'danger'
           ? 'border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/80 dark:text-rose-200 dark:hover:bg-rose-950/40'
-          : 'border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:text-stone-300 dark:hover:border-rose-400 dark:hover:text-stone-100',
+          : 'border-stone-200 text-stone-600 hover:border-accent-200 hover:text-stone-900 dark:border-stone-700 dark:text-stone-300 dark:hover:border-accent-400 dark:hover:text-stone-100',
       ].join(' ')}
     >
       {children}
@@ -325,7 +325,7 @@ export default function Stash() {
             type="button"
             aria-label="Add item"
             onClick={() => setIsAddItemOpen(true)}
-            className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-rose-400 dark:text-stone-950 dark:hover:bg-rose-300 sm:gap-2 sm:px-5"
+            className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300 sm:gap-2 sm:px-5"
           >
             <Plus size={18} />
             <span className="hidden whitespace-nowrap md:inline">Add Item</span>
@@ -351,7 +351,7 @@ export default function Stash() {
                     setSelectedWeight('all');
                   }
                 }}
-                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-rose-300 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:focus:border-rose-400"
+                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-accent-300 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:focus:border-accent-400"
               >
                 {categoryOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -369,7 +369,7 @@ export default function Stash() {
                   setSelectedWeight(event.target.value as YarnWeight | 'all')
                 }
                 disabled={!showWeightFilter}
-                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400 focus:border-rose-300 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:disabled:bg-stone-800 dark:disabled:text-stone-500 dark:focus:border-rose-400"
+                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400 focus:border-accent-300 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:disabled:bg-stone-800 dark:disabled:text-stone-500 dark:focus:border-accent-400"
               >
                 {yarnWeightOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -379,7 +379,7 @@ export default function Stash() {
               </select>
             </label>
 
-            <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-stone-600 dark:bg-rose-950/30 dark:text-stone-300">
+            <div className="rounded-2xl bg-accent-50 px-4 py-3 text-sm text-stone-600 dark:bg-accent-950/30 dark:text-stone-300">
               Showing{' '}
               <span className="font-semibold text-stone-900 dark:text-stone-100">
                 {filteredItems.length}

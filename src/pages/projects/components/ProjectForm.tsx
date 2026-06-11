@@ -235,14 +235,14 @@ export function ProjectForm({
                 return (
                   <div
                     key={item.id}
-                    className="flex cursor-pointer items-start gap-3 rounded-xl border border-transparent bg-white px-3 py-3 transition hover:border-rose-200 dark:bg-stone-950 dark:hover:border-rose-500/60"
+                    className="flex cursor-pointer items-start gap-3 rounded-xl border border-transparent bg-white px-3 py-3 transition hover:border-accent-200 dark:bg-stone-950 dark:hover:border-accent-500/60"
                   >
                     <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
                       <input
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => toggleStashItem(item.id)}
-                        className="mt-1 h-4 w-4 rounded border-stone-300 text-rose-600 focus:ring-rose-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-rose-400"
+                        className="mt-1 h-4 w-4 rounded border-stone-300 text-accent-600 focus:ring-accent-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-accent-400"
                       />
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-stone-900 dark:text-stone-100">

@@ -128,7 +128,7 @@ function ActionButton({
         'inline-flex h-11 w-11 items-center justify-center rounded-2xl border bg-white transition dark:bg-stone-900',
         tone === 'danger'
           ? 'border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-300 dark:hover:bg-rose-950/40'
-          : 'border-stone-200 text-stone-600 hover:border-rose-200 hover:text-stone-900 dark:border-stone-700 dark:text-stone-300 dark:hover:border-rose-500/50 dark:hover:text-stone-50',
+          : 'border-stone-200 text-stone-600 hover:border-accent-200 hover:text-stone-900 dark:border-stone-700 dark:text-stone-300 dark:hover:border-accent-500/50 dark:hover:text-stone-50',
       ].join(' ')}
     >
       {children}
@@ -451,7 +451,7 @@ export default function ProjectDetail() {
                                 onChange={() => {
                                   void toggleInstructionStep(step.id);
                                 }}
-                                className="mt-1 h-4 w-4 rounded border-stone-300 text-rose-500 focus:ring-rose-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-rose-400"
+                                className="mt-1 h-4 w-4 rounded border-stone-300 text-accent-500 focus:ring-accent-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-accent-400"
                               />
                               <div className="min-w-0 flex-1">
                                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-400">
@@ -505,7 +505,7 @@ export default function ProjectDetail() {
           {linkedPattern ? (
             <Link
               to={`/patterns/${linkedPattern.id}`}
-              className="mt-6 block rounded-[1.5rem] border border-stone-200 bg-stone-50/80 p-5 transition hover:border-rose-200 hover:bg-rose-50/60 dark:border-stone-700 dark:bg-stone-800/60 dark:hover:border-rose-500/50 dark:hover:bg-rose-950/20"
+              className="mt-6 block rounded-[1.5rem] border border-stone-200 bg-stone-50/80 p-5 transition hover:border-accent-200 hover:bg-accent-50/60 dark:border-stone-700 dark:bg-stone-800/60 dark:hover:border-accent-500/50 dark:hover:bg-accent-950/20"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-2">
@@ -525,7 +525,7 @@ export default function ProjectDetail() {
                       'No notes have been added for this pattern yet.'}
                   </p>
                 </div>
-                <span className="text-sm font-medium text-rose-600 dark:text-rose-300">
+                <span className="text-sm font-medium text-accent-600 dark:text-accent-300">
                   View pattern
                 </span>
               </div>
