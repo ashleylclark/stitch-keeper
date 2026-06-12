@@ -15,10 +15,23 @@ import type { StashCategoryInput } from '../../pages/stash/api';
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
+export type AppPermissions = {
+  canManageHousehold: boolean;
+  canManageStashCategories: boolean;
+  canCreateStash: boolean;
+  canEditStash: boolean;
+  canDeleteStash: boolean;
+  canCreatePatterns: boolean;
+  canEditPatterns: boolean;
+  canDeletePatterns: boolean;
+  canManageOwnProjects: boolean;
+};
+
 export type AppDataContextValue = {
   authStatus: AuthStatus;
   authSettings: AuthSettings;
   session: AuthSession | null;
+  permissions: AppPermissions;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegistrationCredentials) => Promise<void>;
   logout: () => Promise<void>;

@@ -172,6 +172,10 @@ app.get('/api/stash-categories', (request, response) => {
 });
 
 app.post('/api/stash-categories', (request, response) => {
+  if (!ensurePermission(request, response, ['owner'])) {
+    return;
+  }
+
   const category = createStashCategory(
     getOwnerContext(request),
     normalizeStashCategory(request.body),
@@ -180,6 +184,10 @@ app.post('/api/stash-categories', (request, response) => {
 });
 
 app.put('/api/stash-categories/:id', (request, response) => {
+  if (!ensurePermission(request, response, ['owner'])) {
+    return;
+  }
+
   const category = updateStashCategory(
     getOwnerContext(request),
     request.params.id,
@@ -195,6 +203,10 @@ app.put('/api/stash-categories/:id', (request, response) => {
 });
 
 app.delete('/api/stash-categories/:id', (request, response) => {
+  if (!ensurePermission(request, response, ['owner'])) {
+    return;
+  }
+
   const category = archiveStashCategory(
     getOwnerContext(request),
     request.params.id,
@@ -209,6 +221,10 @@ app.delete('/api/stash-categories/:id', (request, response) => {
 });
 
 app.post('/api/stash', (request, response) => {
+  if (!ensurePermission(request, response, ['owner', 'member'])) {
+    return;
+  }
+
   const ownerContext = getOwnerContext(request);
   const item = normalizeStashItem(request.body);
   validateStashCategory(ownerContext, item.category);
@@ -217,6 +233,10 @@ app.post('/api/stash', (request, response) => {
 });
 
 app.put('/api/stash/:id', (request, response) => {
+  if (!ensurePermission(request, response, ['owner', 'member'])) {
+    return;
+  }
+
   const ownerContext = getOwnerContext(request);
   const item = normalizeStashItem({ ...request.body, id: request.params.id });
   validateStashCategory(ownerContext, item.category);
@@ -225,6 +245,10 @@ app.put('/api/stash/:id', (request, response) => {
 });
 
 app.delete('/api/stash/:id', (request, response) => {
+  if (!ensurePermission(request, response, ['owner'])) {
+    return;
+  }
+
   deleteStashItem(getOwnerContext(request), request.params.id);
   response.status(204).end();
 });
@@ -234,6 +258,10 @@ app.get('/api/patterns', (request, response) => {
 });
 
 app.post('/api/patterns', (request, response) => {
+  if (!ensurePermission(request, response, ['owner', 'member'])) {
+    return;
+  }
+
   const ownerContext = getOwnerContext(request);
   const pattern = normalizePattern(request.body);
   validatePatternRequirementCategories(ownerContext, pattern);
@@ -242,6 +270,10 @@ app.post('/api/patterns', (request, response) => {
 });
 
 app.put('/api/patterns/:id', (request, response) => {
+  if (!ensurePermission(request, response, ['owner', 'member'])) {
+    return;
+  }
+
   const ownerContext = getOwnerContext(request);
   const pattern = normalizePattern({ ...request.body, id: request.params.id });
   validatePatternRequirementCategories(ownerContext, pattern);
@@ -250,6 +282,10 @@ app.put('/api/patterns/:id', (request, response) => {
 });
 
 app.delete('/api/patterns/:id', (request, response) => {
+  if (!ensurePermission(request, response, ['owner'])) {
+    return;
+  }
+
   deletePattern(getOwnerContext(request), request.params.id);
   response.status(204).end();
 });
@@ -259,18 +295,30 @@ app.get('/api/projects', (request, response) => {
 });
 
 app.post('/api/projects', (request, response) => {
+  if (!ensurePermission(request, response, ['owner', 'member'])) {
+    return;
+  }
+
   const project = normalizeProject(request.body);
   saveProject(getOwnerContext(request), project);
   response.status(201).json(project);
 });
 
 app.put('/api/projects/:id', (request, response) => {
+  if (!ensurePermission(request, response, ['owner', 'member'])) {
+    return;
+  }
+
   const project = normalizeProject({ ...request.body, id: request.params.id });
   saveProject(getOwnerContext(request), project, true);
   response.json(project);
 });
 
 app.delete('/api/projects/:id', (request, response) => {
+  if (!ensurePermission(request, response, ['owner', 'member'])) {
+    return;
+  }
+
   deleteProject(getOwnerContext(request), request.params.id);
   response.status(204).end();
 });
@@ -305,6 +353,25 @@ function requireAuthenticatedUser(request, response, next) {
 
   request.sessionUser = sessionUser;
   next();
+}
+
+function ensurePermission(request, response, allowedRoles) {
+  const role = normalizeHouseholdRole(
+    request.sessionUser?.activeHousehold?.role,
+  );
+
+  if (allowedRoles.includes(role)) {
+    return true;
+  }
+
+  response.status(403).send('You do not have permission to do that.');
+  return false;
+}
+
+function normalizeHouseholdRole(role) {
+  return role === 'owner' || role === 'member' || role === 'viewer'
+    ? role
+    : 'viewer';
 }
 
 function logOidcCallbackError(error) {

@@ -163,6 +163,7 @@ export default function PatternDetail() {
     stashCategories,
     updatePattern,
     deletePattern,
+    permissions,
   } = useAppData();
   const { patternId } = useParams();
   const pattern = patterns.find((item) => item.id === patternId);
@@ -291,19 +292,23 @@ export default function PatternDetail() {
                   ) : null}
                   <DifficultyBadge difficulty={currentPattern.difficulty} />
                   <RequirementBadge status={patternSummary?.status} />
-                  <ActionButton
-                    label={`Edit ${currentPattern.name}`}
-                    onClick={() => setIsEditOpen(true)}
-                  >
-                    <Pencil size={16} />
-                  </ActionButton>
-                  <ActionButton
-                    label={`Delete ${currentPattern.name}`}
-                    tone="danger"
-                    onClick={() => setIsDeleteOpen(true)}
-                  >
-                    <Trash2 size={16} />
-                  </ActionButton>
+                  {permissions.canEditPatterns ? (
+                    <ActionButton
+                      label={`Edit ${currentPattern.name}`}
+                      onClick={() => setIsEditOpen(true)}
+                    >
+                      <Pencil size={16} />
+                    </ActionButton>
+                  ) : null}
+                  {permissions.canDeletePatterns ? (
+                    <ActionButton
+                      label={`Delete ${currentPattern.name}`}
+                      tone="danger"
+                      onClick={() => setIsDeleteOpen(true)}
+                    >
+                      <Trash2 size={16} />
+                    </ActionButton>
+                  ) : null}
                 </div>
               </div>
             </div>

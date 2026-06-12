@@ -178,6 +178,7 @@ export default function ProjectDetail() {
     projects,
     updateProject,
     deleteProject,
+    permissions,
   } = useAppData();
   const { projectId } = useParams();
   const project = projects.find((item) => item.id === projectId);
@@ -304,19 +305,23 @@ export default function ProjectDetail() {
             </div>
             <div className="flex items-center gap-2">
               <StatusBadge status={currentProject.status} />
-              <ActionButton
-                label={`Edit ${currentProject.name}`}
-                onClick={() => setIsEditOpen(true)}
-              >
-                <Pencil size={16} />
-              </ActionButton>
-              <ActionButton
-                label={`Delete ${currentProject.name}`}
-                tone="danger"
-                onClick={() => setIsDeleteOpen(true)}
-              >
-                <Trash2 size={16} />
-              </ActionButton>
+              {permissions.canManageOwnProjects ? (
+                <ActionButton
+                  label={`Edit ${currentProject.name}`}
+                  onClick={() => setIsEditOpen(true)}
+                >
+                  <Pencil size={16} />
+                </ActionButton>
+              ) : null}
+              {permissions.canManageOwnProjects ? (
+                <ActionButton
+                  label={`Delete ${currentProject.name}`}
+                  tone="danger"
+                  onClick={() => setIsDeleteOpen(true)}
+                >
+                  <Trash2 size={16} />
+                </ActionButton>
+              ) : null}
             </div>
           </div>
 
@@ -447,11 +452,15 @@ export default function ProjectDetail() {
                               <input
                                 type="checkbox"
                                 checked={isChecked}
-                                disabled={isPending}
+                                disabled={
+                                  isPending || !permissions.canManageOwnProjects
+                                }
                                 onChange={() => {
-                                  void toggleInstructionStep(step.id);
+                                  if (permissions.canManageOwnProjects) {
+                                    void toggleInstructionStep(step.id);
+                                  }
                                 }}
-                                className="mt-1 h-4 w-4 rounded border-stone-300 text-accent-500 focus:ring-accent-300 dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-accent-400"
+                                className="mt-1 h-4 w-4 rounded border-stone-300 text-accent-500 focus:ring-accent-300 disabled:cursor-not-allowed dark:border-stone-600 dark:bg-stone-900 dark:focus:ring-accent-400"
                               />
                               <div className="min-w-0 flex-1">
                                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-400">

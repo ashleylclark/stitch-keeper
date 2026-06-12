@@ -1,8 +1,15 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { AppDataContext, type AppDataContextValue } from '../state/app-data';
 import type {
   AuthSettings,
   AuthSession,
+  HouseholdRole,
   LoginCredentials,
   Pattern,
   Project,
@@ -44,9 +51,7 @@ import {
 } from '../../pages/projects/api';
 
 type AppDataProviderProps = {
-  children:
-    | ReactNode
-    | ((value: AppDataContextValue) => ReactNode);
+  children: ReactNode | ((value: AppDataContextValue) => ReactNode);
 };
 
 export function AppDataProvider({ children }: AppDataProviderProps) {
@@ -76,17 +81,13 @@ export function AppDataProvider({ children }: AppDataProviderProps) {
       setSession(nextSession);
       setAuthStatus('authenticated');
 
-      const [
-        nextStashCategories,
-        nextStashItems,
-        nextPatterns,
-        nextProjects,
-      ] = await Promise.all([
-        fetchStashCategories(),
-        fetchStashItems(),
-        fetchPatterns(),
-        fetchProjects(),
-      ]);
+      const [nextStashCategories, nextStashItems, nextPatterns, nextProjects] =
+        await Promise.all([
+          fetchStashCategories(),
+          fetchStashItems(),
+          fetchPatterns(),
+          fetchProjects(),
+        ]);
 
       setStashCategories(nextStashCategories);
       setStashItems(nextStashItems);
@@ -205,11 +206,17 @@ export function AppDataProvider({ children }: AppDataProviderProps) {
     [patternMatchSummaries],
   );
 
+  const permissions = useMemo(
+    () => buildPermissions(session?.activeHousehold.role),
+    [session?.activeHousehold.role],
+  );
+
   const value = useMemo<AppDataContextValue>(
     () => ({
       authStatus,
       authSettings,
       session,
+      permissions,
       login,
       register,
       logout,
@@ -316,6 +323,7 @@ export function AppDataProvider({ children }: AppDataProviderProps) {
       authStatus,
       authSettings,
       session,
+      permissions,
       login,
       register,
       isLoading,
@@ -336,4 +344,28 @@ export function AppDataProvider({ children }: AppDataProviderProps) {
       {typeof children === 'function' ? children(value) : children}
     </AppDataContext.Provider>
   );
+}
+
+function normalizeHouseholdRole(role?: HouseholdRole | string): HouseholdRole {
+  return role === 'owner' || role === 'member' || role === 'viewer'
+    ? role
+    : 'viewer';
+}
+
+function buildPermissions(role?: HouseholdRole | string) {
+  const normalizedRole = normalizeHouseholdRole(role);
+  const isOwner = normalizedRole === 'owner';
+  const canCollaborate = isOwner || normalizedRole === 'member';
+
+  return {
+    canManageHousehold: isOwner,
+    canManageStashCategories: isOwner,
+    canCreateStash: canCollaborate,
+    canEditStash: canCollaborate,
+    canDeleteStash: isOwner,
+    canCreatePatterns: canCollaborate,
+    canEditPatterns: canCollaborate,
+    canDeletePatterns: isOwner,
+    canManageOwnProjects: canCollaborate,
+  };
 }

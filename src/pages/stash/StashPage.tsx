@@ -32,8 +32,8 @@ type FilterOption<T extends string> = {
 type StashCardProps = {
   item: StashItem;
   categories: StashCategory[];
-  onEdit: (item: StashItem) => void;
-  onDelete: (item: StashItem) => void;
+  onEdit?: (item: StashItem) => void;
+  onDelete?: (item: StashItem) => void;
 };
 
 const yarnWeightOptions: FilterOption<YarnWeight | 'all'>[] = [
@@ -140,21 +140,27 @@ function StashCard({ item, categories, onEdit, onDelete }: StashCardProps) {
           </div>
           <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
             <StatusBadge status={item.status} />
-            <div className="flex items-center gap-2">
-              <ActionButton
-                label={`Edit ${item.name}`}
-                onClick={() => onEdit(item)}
-              >
-                <Pencil size={16} />
-              </ActionButton>
-              <ActionButton
-                label={`Delete ${item.name}`}
-                tone="danger"
-                onClick={() => onDelete(item)}
-              >
-                <Trash2 size={16} />
-              </ActionButton>
-            </div>
+            {onEdit || onDelete ? (
+              <div className="flex items-center gap-2">
+                {onEdit ? (
+                  <ActionButton
+                    label={`Edit ${item.name}`}
+                    onClick={() => onEdit(item)}
+                  >
+                    <Pencil size={16} />
+                  </ActionButton>
+                ) : null}
+                {onDelete ? (
+                  <ActionButton
+                    label={`Delete ${item.name}`}
+                    tone="danger"
+                    onClick={() => onDelete(item)}
+                  >
+                    <Trash2 size={16} />
+                  </ActionButton>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -188,6 +194,7 @@ export default function Stash() {
     addStashItem,
     updateStashItem,
     deleteStashItem,
+    permissions,
   } = useAppData();
   const [selectedCategory, setSelectedCategory] = useState<
     ItemCategory | 'all'
@@ -321,15 +328,19 @@ export default function Stash() {
             </h1>
           </div>
 
-          <button
-            type="button"
-            aria-label="Add item"
-            onClick={() => setIsAddItemOpen(true)}
-            className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300 sm:gap-2 sm:px-5"
-          >
-            <Plus size={18} />
-            <span className="hidden whitespace-nowrap md:inline">Add Item</span>
-          </button>
+          {permissions.canCreateStash ? (
+            <button
+              type="button"
+              aria-label="Add item"
+              onClick={() => setIsAddItemOpen(true)}
+              className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300 sm:gap-2 sm:px-5"
+            >
+              <Plus size={18} />
+              <span className="hidden whitespace-nowrap md:inline">
+                Add Item
+              </span>
+            </button>
+          ) : null}
         </div>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
@@ -395,11 +406,17 @@ export default function Stash() {
               key={item.id}
               item={item}
               categories={stashCategories}
-              onEdit={(nextItem) => {
-                setEditingItem(nextItem);
-                setIsAddItemOpen(false);
-              }}
-              onDelete={setItemPendingDelete}
+              onEdit={
+                permissions.canEditStash
+                  ? (nextItem) => {
+                      setEditingItem(nextItem);
+                      setIsAddItemOpen(false);
+                    }
+                  : undefined
+              }
+              onDelete={
+                permissions.canDeleteStash ? setItemPendingDelete : undefined
+              }
             />
           ))}
         </div>
