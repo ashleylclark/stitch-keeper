@@ -41,6 +41,7 @@ import {
   listStashCategories,
   updateStashCategory,
 } from './repositories/stash-categories.js';
+import { hasHouseholdRole } from './roles.js';
 
 const authConfig = readAuthConfig();
 
@@ -356,22 +357,14 @@ function requireAuthenticatedUser(request, response, next) {
 }
 
 function ensurePermission(request, response, allowedRoles) {
-  const role = normalizeHouseholdRole(
-    request.sessionUser?.activeHousehold?.role,
-  );
-
-  if (allowedRoles.includes(role)) {
+  if (
+    hasHouseholdRole(request.sessionUser?.activeHousehold?.role, allowedRoles)
+  ) {
     return true;
   }
 
   response.status(403).send('You do not have permission to do that.');
   return false;
-}
-
-function normalizeHouseholdRole(role) {
-  return role === 'owner' || role === 'member' || role === 'viewer'
-    ? role
-    : 'viewer';
 }
 
 function logOidcCallbackError(error) {

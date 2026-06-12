@@ -9,7 +9,6 @@ import { AppDataContext, type AppDataContextValue } from '../state/app-data';
 import type {
   AuthSettings,
   AuthSession,
-  HouseholdRole,
   LoginCredentials,
   Pattern,
   Project,
@@ -27,6 +26,7 @@ import {
   register as registerWithServer,
   saveUserSettings,
 } from '../auth/api';
+import { buildPermissions } from '../auth/permissions';
 import {
   archiveStashCategory as archiveStashCategoryWithServer,
   createStashCategory as createStashCategoryWithServer,
@@ -344,28 +344,4 @@ export function AppDataProvider({ children }: AppDataProviderProps) {
       {typeof children === 'function' ? children(value) : children}
     </AppDataContext.Provider>
   );
-}
-
-function normalizeHouseholdRole(role?: HouseholdRole | string): HouseholdRole {
-  return role === 'owner' || role === 'member' || role === 'viewer'
-    ? role
-    : 'viewer';
-}
-
-function buildPermissions(role?: HouseholdRole | string) {
-  const normalizedRole = normalizeHouseholdRole(role);
-  const isOwner = normalizedRole === 'owner';
-  const canCollaborate = isOwner || normalizedRole === 'member';
-
-  return {
-    canManageHousehold: isOwner,
-    canManageStashCategories: isOwner,
-    canCreateStash: canCollaborate,
-    canEditStash: canCollaborate,
-    canDeleteStash: isOwner,
-    canCreatePatterns: canCollaborate,
-    canEditPatterns: canCollaborate,
-    canDeletePatterns: isOwner,
-    canManageOwnProjects: canCollaborate,
-  };
 }

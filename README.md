@@ -134,6 +134,23 @@ will let owners invite and remove members, members leave households, users
 delete their own accounts with warnings, and app admins manage all users if an
 app-admin role is added later.
 
+Manual role QA can be done by editing `household_members.role` directly in the
+SQLite database while invite and member-management screens are future work:
+
+```sql
+SELECT household_id, user_id, role FROM household_members;
+
+UPDATE household_members
+SET role = 'member'
+WHERE household_id = 'household-local-default'
+  AND user_id = 'user-local-default';
+```
+
+Valid roles are `owner`, `member`, and `viewer`; invalid values are normalized
+to `viewer` during migration and rejected by the database after migration. Use
+the role matrix above to confirm the visible controls change, and make direct
+write API requests to confirm forbidden actions return `403`.
+
 For a single-user install, the first account owns one household and the model
 mostly feels like a named workspace. For multi-person use, members can share
 stash and patterns without mixing up each person's active projects. Household
