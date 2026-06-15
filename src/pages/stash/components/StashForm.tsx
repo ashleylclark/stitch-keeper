@@ -66,7 +66,9 @@ export function StashForm({
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const initialCategory =
-    initialValues?.category ?? categories.find((category) => !category.archivedAt)?.id ?? 'yarn';
+    initialValues?.category ??
+    categories.find((category) => !category.archivedAt)?.id ??
+    'yarn';
   const [values, setValues] = useState<StashFormValues>({
     category: initialCategory,
     name: initialValues?.name ?? '',
@@ -147,7 +149,10 @@ export function StashForm({
       return;
     }
 
-    if (!categoryDraft.nameSingular.trim() || !categoryDraft.namePlural.trim()) {
+    if (
+      !categoryDraft.nameSingular.trim() ||
+      !categoryDraft.namePlural.trim()
+    ) {
       setCategoryError('Singular and plural names are required.');
       return;
     }
@@ -165,9 +170,7 @@ export function StashForm({
       setIsAddingCategory(false);
     } catch (error) {
       setCategoryError(
-        error instanceof Error
-          ? error.message
-          : 'Unable to create category.',
+        error instanceof Error ? error.message : 'Unable to create category.',
       );
     } finally {
       setIsCreatingCategory(false);

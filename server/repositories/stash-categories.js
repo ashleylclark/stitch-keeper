@@ -97,7 +97,10 @@ export function listStashCategories(ownerContext) {
     .select()
     .from(stashCategories)
     .where(eq(stashCategories.householdId, ownerContext.householdId))
-    .orderBy(stashCategories.isBuiltin, sql`lower(${stashCategories.namePlural})`)
+    .orderBy(
+      stashCategories.isBuiltin,
+      sql`lower(${stashCategories.namePlural})`,
+    )
     .all()
     .map(toStashCategory);
 }
@@ -147,7 +150,8 @@ export function createStashCategory(ownerContext, input) {
     updatedAt: now,
   });
 
-  orm.insert(stashCategories)
+  orm
+    .insert(stashCategories)
     .values(toStashCategoryRow(ownerContext, category))
     .run();
 
@@ -176,7 +180,8 @@ export function updateStashCategory(ownerContext, id, input) {
     existing,
   );
 
-  orm.update(stashCategories)
+  orm
+    .update(stashCategories)
     .set(toStashCategoryRow(ownerContext, category))
     .where(
       and(

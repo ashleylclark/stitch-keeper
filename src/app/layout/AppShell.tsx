@@ -67,11 +67,11 @@ function Sidebar({
                 onClick={onNavigate}
                 end={item.to === '/'}
                 className={({ isActive }) =>
-                    [
-                      'group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition',
-                      isActive
-                        ? 'bg-accent-200 text-stone-900 shadow-lg shadow-stone-900/10 dark:bg-accent-800 dark:text-stone-50 dark:shadow-black/20'
-                        : 'text-stone-600 hover:bg-accent-50 hover:text-stone-900 dark:text-stone-300 dark:hover:bg-stone-800 dark:hover:text-stone-100',
+                  [
+                    'group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition',
+                    isActive
+                      ? 'bg-accent-200 text-stone-900 shadow-lg shadow-stone-900/10 dark:bg-accent-800 dark:text-stone-50 dark:shadow-black/20'
+                      : 'text-stone-600 hover:bg-accent-50 hover:text-stone-900 dark:text-stone-300 dark:hover:bg-stone-800 dark:hover:text-stone-100',
                   ].join(' ')
                 }
               >

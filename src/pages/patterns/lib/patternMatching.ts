@@ -136,7 +136,10 @@ export function buildRequirementMatch(
       matchedItemIds: [],
       status: 'missing',
       quantityMatched: 0,
-      reason: buildMissingReason(requirement, categoryById.get(requirement.category)),
+      reason: buildMissingReason(
+        requirement,
+        categoryById.get(requirement.category),
+      ),
     };
   }
 
@@ -240,7 +243,8 @@ function buildMissingReason(
   requirement: PatternRequirement,
   category?: StashCategory,
 ) {
-  const categoryName = category?.nameSingular.toLowerCase() ?? requirement.category;
+  const categoryName =
+    category?.nameSingular.toLowerCase() ?? requirement.category;
 
   if (category?.showWeight && requirement.weight) {
     return `No ${requirement.weight} ${categoryName} currently available.`;

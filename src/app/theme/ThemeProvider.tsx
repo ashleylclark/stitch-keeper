@@ -1,8 +1,5 @@
 import { useEffect, useMemo, type PropsWithChildren } from 'react';
-import {
-  ThemeContext,
-  type ThemeContextValue,
-} from './theme-context';
+import { ThemeContext, type ThemeContextValue } from './theme-context';
 import type { ColorTheme, Theme } from '../../types/models';
 
 export function ThemeProvider({

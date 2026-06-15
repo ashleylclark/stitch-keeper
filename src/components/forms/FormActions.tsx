@@ -40,11 +40,7 @@ export function FormActions({
         </button>
       )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className={submitClassName}
-      >
+      <button type="submit" disabled={isSubmitting} className={submitClassName}>
         {isSubmitting ? 'Saving...' : submitLabel}
       </button>
     </div>

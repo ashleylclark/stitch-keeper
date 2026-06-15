@@ -285,7 +285,8 @@ export function updateUserSettings(userId, settings) {
   const updates = normalizeUserSettings(settings);
   const now = new Date().toISOString();
 
-  orm.update(users)
+  orm
+    .update(users)
     .set({
       ...updates,
       updatedAt: now,
