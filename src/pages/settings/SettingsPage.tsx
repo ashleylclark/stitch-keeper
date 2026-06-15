@@ -78,6 +78,7 @@ export default function Settings() {
     addStashCategory,
     updateStashCategory,
     archiveStashCategory,
+    permissions,
   } = useAppData();
   const [editingCategory, setEditingCategory] = useState<StashCategory | null>(
     null,
@@ -85,9 +86,8 @@ export default function Settings() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [categoryPendingArchive, setCategoryPendingArchive] =
     useState<StashCategory | null>(null);
-  const [formValues, setFormValues] = useState<CategoryFormValues>(
-    toFormValues(),
-  );
+  const [formValues, setFormValues] =
+    useState<CategoryFormValues>(toFormValues());
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [archiveError, setArchiveError] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
@@ -169,7 +169,8 @@ export default function Settings() {
 
   async function handleUserSettingChange(settings: UserSettings) {
     if (
-      (settings.theme === undefined || session?.user.theme === settings.theme) &&
+      (settings.theme === undefined ||
+        session?.user.theme === settings.theme) &&
       (settings.colorTheme === undefined ||
         session?.user.colorTheme === settings.colorTheme)
     ) {
@@ -246,22 +247,32 @@ export default function Settings() {
                 stash filters.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={openAddModal}
-              className="inline-flex w-fit items-center justify-center gap-2 rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300"
-            >
-              <Plus size={18} />
-              Category
-            </button>
+            {permissions.canManageStashCategories ? (
+              <button
+                type="button"
+                onClick={openAddModal}
+                className="inline-flex w-fit items-center justify-center gap-2 rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300"
+              >
+                <Plus size={18} />
+                Category
+              </button>
+            ) : null}
           </div>
           <div className="mt-6 grid gap-3">
             {activeCategories.map((category) => (
               <CategoryRow
                 key={category.id}
                 category={category}
-                onEdit={() => openEditModal(category)}
-                onArchive={() => setCategoryPendingArchive(category)}
+                onEdit={
+                  permissions.canManageStashCategories
+                    ? () => openEditModal(category)
+                    : undefined
+                }
+                onArchive={
+                  permissions.canManageStashCategories
+                    ? () => setCategoryPendingArchive(category)
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -277,7 +288,11 @@ export default function Settings() {
                 <CategoryRow
                   key={category.id}
                   category={category}
-                  onEdit={() => openEditModal(category)}
+                  onEdit={
+                    permissions.canManageStashCategories
+                      ? () => openEditModal(category)
+                      : undefined
+                  }
                 />
               ))}
             </div>
@@ -331,7 +346,7 @@ function CategoryRow({
   onArchive,
 }: {
   category: StashCategory;
-  onEdit: () => void;
+  onEdit?: () => void;
   onArchive?: () => void;
 }) {
   const flags = [
@@ -381,26 +396,30 @@ function CategoryRow({
             ))}
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            aria-label={`Edit ${category.nameSingular}`}
-            onClick={onEdit}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-accent-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-300 dark:hover:border-accent-400 dark:hover:text-stone-100"
-          >
-            <Pencil size={16} />
-          </button>
-          {!category.isBuiltin && !category.archivedAt && onArchive ? (
-            <button
-              type="button"
-              aria-label={`Archive ${category.nameSingular}`}
-              onClick={onArchive}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-rose-200 bg-white text-rose-600 transition hover:bg-rose-50 dark:border-rose-900/80 dark:bg-stone-950 dark:text-rose-200 dark:hover:bg-rose-950/40"
-            >
-              <Trash2 size={16} />
-            </button>
-          ) : null}
-        </div>
+        {onEdit || onArchive ? (
+          <div className="flex shrink-0 items-center gap-2">
+            {onEdit ? (
+              <button
+                type="button"
+                aria-label={`Edit ${category.nameSingular}`}
+                onClick={onEdit}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-accent-200 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-300 dark:hover:border-accent-400 dark:hover:text-stone-100"
+              >
+                <Pencil size={16} />
+              </button>
+            ) : null}
+            {!category.isBuiltin && !category.archivedAt && onArchive ? (
+              <button
+                type="button"
+                aria-label={`Archive ${category.nameSingular}`}
+                onClick={onArchive}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-rose-200 bg-white text-rose-600 transition hover:bg-rose-50 dark:border-rose-900/80 dark:bg-stone-950 dark:text-rose-200 dark:hover:bg-rose-950/40"
+              >
+                <Trash2 size={16} />
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </article>
   );

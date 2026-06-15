@@ -1,10 +1,12 @@
 import {
+  check,
   integer,
   primaryKey,
   sqliteTable,
   text,
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -68,7 +70,13 @@ export const householdMembers = sqliteTable(
     role: text('role').notNull(),
     createdAt: text('created_at').notNull(),
   },
-  (table) => [primaryKey({ columns: [table.householdId, table.userId] })],
+  (table) => [
+    primaryKey({ columns: [table.householdId, table.userId] }),
+    check(
+      'household_members_role_check',
+      sql`${table.role} IN ('owner', 'member', 'viewer')`,
+    ),
+  ],
 );
 
 export const stashItems = sqliteTable('stash_items', {
@@ -112,9 +120,7 @@ export const stashCategories = sqliteTable(
     createdAt: text('created_at').notNull(),
     updatedAt: text('updated_at').notNull(),
   },
-  (table) => [
-    primaryKey({ columns: [table.householdId, table.id] }),
-  ],
+  (table) => [primaryKey({ columns: [table.householdId, table.id] })],
 );
 
 export const patterns = sqliteTable('patterns', {

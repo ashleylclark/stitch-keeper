@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { AppDataContext, type AppDataContextValue } from '../state/app-data';
 import type {
   AuthSettings,
@@ -20,6 +26,7 @@ import {
   register as registerWithServer,
   saveUserSettings,
 } from '../auth/api';
+import { buildPermissions } from '../auth/permissions';
 import {
   archiveStashCategory as archiveStashCategoryWithServer,
   createStashCategory as createStashCategoryWithServer,
@@ -44,9 +51,7 @@ import {
 } from '../../pages/projects/api';
 
 type AppDataProviderProps = {
-  children:
-    | ReactNode
-    | ((value: AppDataContextValue) => ReactNode);
+  children: ReactNode | ((value: AppDataContextValue) => ReactNode);
 };
 
 export function AppDataProvider({ children }: AppDataProviderProps) {
@@ -76,17 +81,13 @@ export function AppDataProvider({ children }: AppDataProviderProps) {
       setSession(nextSession);
       setAuthStatus('authenticated');
 
-      const [
-        nextStashCategories,
-        nextStashItems,
-        nextPatterns,
-        nextProjects,
-      ] = await Promise.all([
-        fetchStashCategories(),
-        fetchStashItems(),
-        fetchPatterns(),
-        fetchProjects(),
-      ]);
+      const [nextStashCategories, nextStashItems, nextPatterns, nextProjects] =
+        await Promise.all([
+          fetchStashCategories(),
+          fetchStashItems(),
+          fetchPatterns(),
+          fetchProjects(),
+        ]);
 
       setStashCategories(nextStashCategories);
       setStashItems(nextStashItems);
@@ -205,11 +206,17 @@ export function AppDataProvider({ children }: AppDataProviderProps) {
     [patternMatchSummaries],
   );
 
+  const permissions = useMemo(
+    () => buildPermissions(session?.activeHousehold.role),
+    [session?.activeHousehold.role],
+  );
+
   const value = useMemo<AppDataContextValue>(
     () => ({
       authStatus,
       authSettings,
       session,
+      permissions,
       login,
       register,
       logout,
@@ -316,6 +323,7 @@ export function AppDataProvider({ children }: AppDataProviderProps) {
       authStatus,
       authSettings,
       session,
+      permissions,
       login,
       register,
       isLoading,

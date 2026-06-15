@@ -121,6 +121,36 @@ The app uses households as shared workspaces:
   Household settings, such as stash categories, are shared with household
   members.
 
+Household roles control who can change shared data:
+
+| Role     | Permissions                                                                                                                                                         |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `owner`  | Manage household settings, manage stash categories, add/edit/delete stash, add/edit/delete patterns, and manage their own projects.                                 |
+| `member` | Add/edit stash, add/edit patterns, and manage their own projects. Members cannot delete shared stash or patterns, archive categories, or manage household settings. |
+| `viewer` | Read stash, categories, patterns, and their own projects. Viewers cannot create, edit, or delete app data.                                                          |
+
+Unknown role values are treated as `viewer` for safety. Future household flows
+will let owners invite and remove members, members leave households, users
+delete their own accounts with warnings, and app admins manage all users if an
+app-admin role is added later.
+
+Manual role QA can be done by editing `household_members.role` directly in the
+SQLite database while invite and member-management screens are future work:
+
+```sql
+SELECT household_id, user_id, role FROM household_members;
+
+UPDATE household_members
+SET role = 'member'
+WHERE household_id = 'household-local-default'
+  AND user_id = 'user-local-default';
+```
+
+Valid roles are `owner`, `member`, and `viewer`; invalid values are normalized
+to `viewer` during migration and rejected by the database after migration. Use
+the role matrix above to confirm the visible controls change, and make direct
+write API requests to confirm forbidden actions return `403`.
+
 For a single-user install, the first account owns one household and the model
 mostly feels like a named workspace. For multi-person use, members can share
 stash and patterns without mixing up each person's active projects. Household

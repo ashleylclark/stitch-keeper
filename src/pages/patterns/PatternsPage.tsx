@@ -145,9 +145,13 @@ function RowActions({
   patternName: string;
   isOpen: boolean;
   onToggle: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }) {
+  if (!onEdit && !onDelete) {
+    return null;
+  }
+
   return (
     <div className="relative flex justify-end">
       <button
@@ -172,24 +176,28 @@ function RowActions({
           role="menu"
           className="absolute right-0 top-12 z-10 min-w-36 rounded-2xl border border-stone-200 bg-white p-2 shadow-[0_18px_40px_-24px_rgba(41,37,36,0.45)] dark:border-stone-700 dark:bg-stone-950 dark:shadow-[0_18px_40px_-24px_rgba(0,0,0,0.7)]"
         >
-          <button
-            type="button"
-            role="menuitem"
-            onClick={onEdit}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-stone-700 transition hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800"
-          >
-            <Pencil size={15} />
-            Edit
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={onDelete}
-            className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40"
-          >
-            <Trash2 size={15} />
-            Delete
-          </button>
+          {onEdit ? (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={onEdit}
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-stone-700 transition hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800"
+            >
+              <Pencil size={15} />
+              Edit
+            </button>
+          ) : null}
+          {onDelete ? (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={onDelete}
+              className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40"
+            >
+              <Trash2 size={15} />
+              Delete
+            </button>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -204,6 +212,7 @@ export default function Patterns() {
     updatePattern,
     deletePattern,
     patternMatchById,
+    permissions,
   } = useAppData();
   const [selectedCategory, setSelectedCategory] =
     useState<CategoryFilter>('all');
@@ -310,17 +319,19 @@ export default function Patterns() {
             </h1>
           </div>
 
-          <button
-            type="button"
-            aria-label="Add pattern"
-            onClick={() => setIsAddPatternOpen(true)}
-            className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300 sm:gap-2 sm:px-5"
-          >
-            <Plus size={18} />
-            <span className="hidden whitespace-nowrap sm:inline">
-              Add Pattern
-            </span>
-          </button>
+          {permissions.canCreatePatterns ? (
+            <button
+              type="button"
+              aria-label="Add pattern"
+              onClick={() => setIsAddPatternOpen(true)}
+              className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300 sm:gap-2 sm:px-5"
+            >
+              <Plus size={18} />
+              <span className="hidden whitespace-nowrap sm:inline">
+                Add Pattern
+              </span>
+            </button>
+          ) : null}
         </div>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
@@ -450,14 +461,22 @@ export default function Patterns() {
                             currentId === pattern.id ? null : pattern.id,
                           )
                         }
-                        onEdit={() => {
-                          setOpenRowActionId(null);
-                          setEditingPattern(pattern);
-                        }}
-                        onDelete={() => {
-                          setOpenRowActionId(null);
-                          setPatternPendingDelete(pattern);
-                        }}
+                        onEdit={
+                          permissions.canEditPatterns
+                            ? () => {
+                                setOpenRowActionId(null);
+                                setEditingPattern(pattern);
+                              }
+                            : undefined
+                        }
+                        onDelete={
+                          permissions.canDeletePatterns
+                            ? () => {
+                                setOpenRowActionId(null);
+                                setPatternPendingDelete(pattern);
+                              }
+                            : undefined
+                        }
                       />
                     </td>
                   </tr>

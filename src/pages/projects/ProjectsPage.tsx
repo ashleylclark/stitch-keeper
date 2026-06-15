@@ -160,8 +160,8 @@ function ProjectRow({
   onDelete,
 }: {
   project: Project;
-  onEdit: (project: Project) => void;
-  onDelete: (project: Project) => void;
+  onEdit?: (project: Project) => void;
+  onDelete?: (project: Project) => void;
 }) {
   const relevantDate = getRelevantDate(project);
 
@@ -189,19 +189,23 @@ function ProjectRow({
 
         <div className="flex items-center gap-2">
           <StatusBadge status={project.status} />
-          <ActionButton
-            label={`Edit ${project.name}`}
-            onClick={() => onEdit(project)}
-          >
-            <Pencil size={16} />
-          </ActionButton>
-          <ActionButton
-            label={`Delete ${project.name}`}
-            tone="danger"
-            onClick={() => onDelete(project)}
-          >
-            <Trash2 size={16} />
-          </ActionButton>
+          {onEdit ? (
+            <ActionButton
+              label={`Edit ${project.name}`}
+              onClick={() => onEdit(project)}
+            >
+              <Pencil size={16} />
+            </ActionButton>
+          ) : null}
+          {onDelete ? (
+            <ActionButton
+              label={`Delete ${project.name}`}
+              tone="danger"
+              onClick={() => onDelete(project)}
+            >
+              <Trash2 size={16} />
+            </ActionButton>
+          ) : null}
         </div>
       </div>
     </article>
@@ -216,8 +220,8 @@ function ProjectSection({
 }: {
   status: ProjectStatus;
   projects: Project[];
-  onEdit: (project: Project) => void;
-  onDelete: (project: Project) => void;
+  onEdit?: (project: Project) => void;
+  onDelete?: (project: Project) => void;
 }) {
   return (
     <section className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
@@ -257,6 +261,7 @@ export default function Projects() {
     addProject,
     updateProject,
     deleteProject,
+    permissions,
   } = useAppData();
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all');
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
@@ -349,17 +354,19 @@ export default function Projects() {
             </h1>
           </div>
 
-          <button
-            type="button"
-            aria-label="Add project"
-            onClick={() => setIsAddProjectOpen(true)}
-            className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300 sm:gap-2 sm:px-5"
-          >
-            <Plus size={18} />
-            <span className="hidden whitespace-nowrap sm:inline">
-              Add Project
-            </span>
-          </button>
+          {permissions.canManageOwnProjects ? (
+            <button
+              type="button"
+              aria-label="Add project"
+              onClick={() => setIsAddProjectOpen(true)}
+              className="inline-flex w-fit self-start items-center justify-center rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300 sm:gap-2 sm:px-5"
+            >
+              <Plus size={18} />
+              <span className="hidden whitespace-nowrap sm:inline">
+                Add Project
+              </span>
+            </button>
+          ) : null}
         </div>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
@@ -397,8 +404,14 @@ export default function Projects() {
               key={group.status}
               status={group.status}
               projects={group.projects}
-              onEdit={setEditingProject}
-              onDelete={setProjectPendingDelete}
+              onEdit={
+                permissions.canManageOwnProjects ? setEditingProject : undefined
+              }
+              onDelete={
+                permissions.canManageOwnProjects
+                  ? setProjectPendingDelete
+                  : undefined
+              }
             />
           ))}
         </div>

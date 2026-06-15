@@ -134,6 +134,8 @@ type ProjectStashUsage = {
   quantityUsed?: number;
 };
 
+type HouseholdRole = 'owner' | 'member' | 'viewer';
+
 type AuthUser = {
   id: string;
   email: string;
@@ -146,7 +148,7 @@ type AuthUser = {
 type Household = {
   id: string;
   name: string;
-  role: string;
+  role: HouseholdRole;
 };
 
 type AuthSession = {
@@ -182,6 +184,7 @@ export type {
   AuthUser,
   ColorTheme,
   Household,
+  HouseholdRole,
   ItemCategory,
   MatchStatus,
   Pattern,
