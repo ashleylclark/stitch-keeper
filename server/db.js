@@ -72,7 +72,9 @@ function seedDatabaseIfEmpty() {
           difficulty: pattern.difficulty ?? null,
           notes: pattern.notes ?? null,
           instructions: pattern.instructions,
-          instructionSections: null,
+          instructionSections: pattern.instructionSections
+            ? JSON.stringify(pattern.instructionSections)
+            : null,
         })
         .run();
 
@@ -111,12 +113,19 @@ function seedDatabaseIfEmpty() {
         })
         .run();
 
-      for (const stashItemId of project.stashItemIds ?? []) {
+      const stashUsages = Array.isArray(project.stashUsages)
+        ? project.stashUsages
+        : (project.stashItemIds ?? []).map((stashItemId) => ({
+            stashItemId,
+            quantityUsed: null,
+          }));
+
+      for (const usage of stashUsages) {
         tx.insert(schema.projectStashItems)
           .values({
             projectId: project.id,
-            stashItemId,
-            quantityUsed: null,
+            stashItemId: usage.stashItemId,
+            quantityUsed: usage.quantityUsed ?? null,
           })
           .run();
       }

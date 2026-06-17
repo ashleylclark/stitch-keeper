@@ -1,36 +1,56 @@
+const exampleInstructionSections = [
+  {
+    id: '101-section-setup',
+    title: 'Instructions',
+    steps: [
+      {
+        id: '101-step-1',
+        text: 'Chain 60. Join with a slip stitch to form a ring, being careful not to twist the chain.',
+      },
+      {
+        id: '101-step-2',
+        text: 'Round 1: Chain 2, double crochet in each chain around, and join with a slip stitch.',
+      },
+      {
+        id: '101-step-3',
+        text: 'Repeat Round 1 until the cowl measures approximately 12 inches, then fasten off and weave in ends.',
+      },
+    ],
+  },
+];
+
+function instructionsFromSections(sections) {
+  return sections
+    .map((section) =>
+      [section.title, section.notes, ...section.steps.map((step) => step.text)]
+        .filter(Boolean)
+        .join('\n'),
+    )
+    .join('\n\n');
+}
+
 export const stashItems = [
   {
     id: 's1',
     category: 'yarn',
     name: 'Example Yarn',
-    brand: 'Lion Brand',
+    brand: 'Example brand',
     color: 'Charcoal',
     material: 'Acrylic',
     weight: 'bulky',
     quantity: 30,
     unit: 'yrds',
     status: 'in-stock',
+    notes: 'Example stash notes.',
   },
   {
     id: 's2',
     category: 'hook',
-    name: '3.5 mm hook',
+    name: 'Example Hook',
     brand: 'Example brand',
-    quantity: 1,
     material: 'Aluminum',
-    size: '3.5 mm',
-    status: 'in-stock',
-  },
-  {
-    id: 's3',
-    category: 'yarn',
-    name: 'Example yarn set - Assorted colors',
-    brand: 'Example brand',
-    color: 'Assorted',
-    material: 'Acrylic',
-    weight: 'light',
-    quantity: 10,
-    unit: 'yrds',
+    size: '8 mm',
+    quantity: 1,
     status: 'in-stock',
   },
 ];
@@ -43,19 +63,24 @@ export const patterns = [
     isPlanned: true,
     category: 'accessory',
     difficulty: 'beginner',
-    notes: 'Example notes.',
-    instructions:
-      'Chain 60. Join with slip stitch to form a ring, being careful not to twist the chain. Round 1: Chain 2 (counts as first dc), dc in each chain around. Join with slst to top of beginning chain-2. Round 2: Chain 2, double crochet in each stitch around. Join with slst to top of beginning chain-2. Repeat Round 2 until cowl measures approximately 12 inches from the join, or desired length. Fasten off and weave in ends.',
+    notes: 'Example pattern notes.',
+    instructions: instructionsFromSections(exampleInstructionSections),
+    instructionSections: exampleInstructionSections,
     requirements: [
       {
         id: '101-yarn',
         category: 'yarn',
-        name: 'Pattern example yarn',
+        name: 'Example yarn',
         weight: 'bulky',
-        quantityNeeded: 2,
-        unit: 'skeins',
+        quantityNeeded: 20,
+        unit: 'yrds',
       },
-      { id: '101-hook', category: 'hook', name: '8 mm hook', size: '8 mm' },
+      {
+        id: '101-hook',
+        category: 'hook',
+        name: '8 mm hook',
+        size: '8 mm',
+      },
     ],
   },
 ];
@@ -65,14 +90,14 @@ export const projects = [
     id: 'example-project',
     name: 'Example Project',
     patternId: '101',
-    startDate: '2024-05-01',
+    startDate: '2026-05-01',
     stashItemIds: ['s1', 's2'],
     stashUsages: [
-      { stashItemId: 's1', quantityUsed: 1 },
+      { stashItemId: 's1', quantityUsed: 10 },
       { stashItemId: 's2' },
     ],
-    completedInstructionSteps: [],
+    completedInstructionSteps: ['101-step-1'],
     status: 'in-progress',
-    notes: 'On round 12',
+    notes: 'Example project notes.',
   },
 ];
