@@ -10,6 +10,29 @@ import type {
 } from '../../../types/models';
 
 const availableStatuses = new Set(['in-stock', 'low-stock', 'not-replacing']);
+const yarnCategoryId = 'yarn';
+const hookCategoryId = 'hook';
+const yardsUnitLabel = 'yards';
+
+const hookSizeEquivalents = new Map<string, number>([
+  ['b', 2.25],
+  ['c', 2.75],
+  ['d', 3.25],
+  ['e', 3.5],
+  ['f', 3.75],
+  ['g', 4],
+  ['7', 4.5],
+  ['h', 5],
+  ['i', 5.5],
+  ['j', 6],
+  ['k', 6.5],
+  ['l', 8],
+  ['m', 9],
+  ['n', 10],
+  ['p', 11.5],
+  ['q', 15],
+  ['s', 19],
+]);
 
 export const patternMatchLabels: Record<PatternMatchStatus, string> = {
   'ready-to-start': 'Ready To Start',
@@ -31,6 +54,7 @@ export const requirementMatchLabels: Record<
   string
 > = {
   owned: 'Owned',
+  review: 'Review',
   partial: 'Partial',
   missing: 'Missing',
 };
@@ -41,6 +65,8 @@ export const requirementMatchBadgeClasses: Record<
 > = {
   owned:
     'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-900',
+  review:
+    'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-900',
   partial:
     'bg-amber-100 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-900',
   missing:
@@ -69,8 +95,9 @@ export function buildPatternMatchSummary(
   if (pattern.requirements.length === 0) {
     return {
       patternId: pattern.id,
-      status: 'review-supplies',
-      detail: 'Add requirements to evaluate stash readiness.',
+      status: 'ready-to-start',
+      detail:
+        'No fixed requirements; choose supplies based on your project goals.',
       matchedCount: 0,
       totalCount: 0,
       requirementMatches: [],
@@ -90,6 +117,9 @@ export function buildPatternMatchSummary(
   const hasPartial = requirementMatches.some(
     (match) => match.status === 'partial',
   );
+  const hasReview = requirementMatches.some(
+    (match) => match.status === 'review',
+  );
 
   let status: PatternMatchStatus;
   let detail: string;
@@ -97,9 +127,9 @@ export function buildPatternMatchSummary(
   if (hasMissing) {
     status = 'need-supplies';
     detail = 'You are missing one or more required supplies.';
-  } else if (hasPartial) {
+  } else if (hasPartial || hasReview) {
     status = 'review-supplies';
-    detail = 'Some requirements are only partially matched in your stash.';
+    detail = 'Some requirements need a closer stash review.';
   } else {
     status = 'ready-to-start';
     detail = 'All requirements are available in your stash.';
@@ -120,6 +150,14 @@ export function buildRequirementMatch(
   stashItems: StashItem[],
   categoryById = new Map<ItemCategory, StashCategory>(),
 ): RequirementMatch {
+  if (requirement.category === yarnCategoryId) {
+    return buildYarnRequirementMatch(requirement, stashItems, categoryById);
+  }
+
+  if (requirement.category === hookCategoryId) {
+    return buildHookRequirementMatch(requirement, stashItems, categoryById);
+  }
+
   const matchingItems = stashItems.filter((item) =>
     isMatchingItem(requirement, item, categoryById.get(requirement.category)),
   );
@@ -178,19 +216,145 @@ export function buildRequirementMatch(
   };
 }
 
+function buildYarnRequirementMatch(
+  requirement: PatternRequirement,
+  stashItems: StashItem[],
+  categoryById: Map<ItemCategory, StashCategory>,
+): RequirementMatch {
+  const matchingItems = stashItems.filter((item) => {
+    if (!isAvailableCategoryItem(requirement, item)) {
+      return false;
+    }
+
+    return !requirement.weight || item.weight === requirement.weight;
+  });
+  const matchedItemIds = matchingItems.map((item) => item.id);
+  const quantityMatched = matchingItems.reduce(
+    (sum, item) =>
+      sum + getComparableQuantity(item.category, item.quantity, item.unit),
+    0,
+  );
+
+  if (matchingItems.length === 0) {
+    return {
+      requirementId: requirement.id,
+      matchedItemIds: [],
+      status: 'missing',
+      quantityMatched: 0,
+      reason: buildMissingReason(
+        requirement,
+        categoryById.get(requirement.category),
+      ),
+    };
+  }
+
+  if (typeof requirement.quantityNeeded !== 'number') {
+    if (!requirement.weight) {
+      return {
+        requirementId: requirement.id,
+        matchedItemIds,
+        status: 'review',
+        quantityMatched,
+        reason: 'Requirement has no yarn weight, so matching yarn needs review.',
+      };
+    }
+
+    return {
+      requirementId: requirement.id,
+      matchedItemIds,
+      status: 'owned',
+      quantityMatched,
+      reason: 'Matching yarn weight found in stash.',
+    };
+  }
+
+  const comparableQuantityNeeded = getComparableQuantity(
+    requirement.category,
+    requirement.quantityNeeded,
+    requirement.unit,
+  );
+
+  if (quantityMatched < comparableQuantityNeeded) {
+    return {
+      requirementId: requirement.id,
+      matchedItemIds,
+      status: 'partial',
+      quantityMatched,
+      reason: `Only ${quantityMatched} of ${comparableQuantityNeeded} ${getComparableUnitLabel(requirement)} available.`,
+    };
+  }
+
+  if (!requirement.weight) {
+    return {
+      requirementId: requirement.id,
+      matchedItemIds,
+      status: 'review',
+      quantityMatched,
+      reason: 'Requirement has no yarn weight, so matching yarn needs review.',
+    };
+  }
+
+  const hasSingleEntryMatch = matchingItems.some(
+    (item) =>
+      getComparableQuantity(item.category, item.quantity, item.unit) >=
+      comparableQuantityNeeded,
+  );
+
+  if (hasSingleEntryMatch) {
+    return {
+      requirementId: requirement.id,
+      matchedItemIds,
+      status: 'owned',
+      quantityMatched,
+      reason: `Matched ${quantityMatched} ${getComparableUnitLabel(requirement)}.`,
+    };
+  }
+
+  return {
+    requirementId: requirement.id,
+    matchedItemIds,
+    status: 'review',
+    quantityMatched,
+    reason: `Matched ${quantityMatched} ${getComparableUnitLabel(requirement)} across ${matchingItems.length} yarn entries; review colors/brands before starting.`,
+  };
+}
+
+function buildHookRequirementMatch(
+  requirement: PatternRequirement,
+  stashItems: StashItem[],
+  categoryById: Map<ItemCategory, StashCategory>,
+): RequirementMatch {
+  const category = categoryById.get(requirement.category);
+  const matchingItems = stashItems.filter((item) =>
+    isMatchingItem(requirement, item, category),
+  );
+  const matchedItemIds = matchingItems.map((item) => item.id);
+
+  if (matchingItems.length === 0) {
+    return {
+      requirementId: requirement.id,
+      matchedItemIds: [],
+      status: 'missing',
+      quantityMatched: 0,
+      reason: buildMissingReason(requirement, category),
+    };
+  }
+
+  return {
+    requirementId: requirement.id,
+    matchedItemIds,
+    status: 'owned',
+    quantityMatched: matchingItems.length,
+    reason: buildHookMatchReason(requirement, matchingItems[0]),
+  };
+}
+
 function isMatchingItem(
   requirement: PatternRequirement,
   item: StashItem,
   category?: StashCategory,
 ) {
-  if (item.category !== requirement.category) {
-    return false;
-  }
-
-  if (
-    item.quantity <= 0 ||
-    (item.status && !availableStatuses.has(item.status))
-  ) {
+  if (!isAvailableCategoryItem(requirement, item)) {
     return false;
   }
 
@@ -203,10 +367,25 @@ function isMatchingItem(
   }
 
   if (category?.showSize && requirement.size) {
-    return item.size === requirement.size;
+    if (requirement.category === hookCategoryId) {
+      return areHookSizesEquivalent(requirement.size, item.size);
+    }
+
+    return normalizeSizeText(item.size) === normalizeSizeText(requirement.size);
   }
 
   return true;
+}
+
+function isAvailableCategoryItem(
+  requirement: PatternRequirement,
+  item: StashItem,
+) {
+  return (
+    item.category === requirement.category &&
+    item.quantity > 0 &&
+    (!item.status || availableStatuses.has(item.status))
+  );
 }
 
 function getComparableQuantity(
@@ -228,6 +407,13 @@ function getComparableQuantity(
 }
 
 function getComparableUnitLabel(requirement: PatternRequirement) {
+  if (
+    requirement.category === yarnCategoryId &&
+    isYardsUnit(requirement.unit)
+  ) {
+    return yardsUnitLabel;
+  }
+
   if (requirement.category === 'eyes') {
     return 'eyes';
   }
@@ -237,6 +423,90 @@ function getComparableUnitLabel(requirement: PatternRequirement) {
 
 function normalizeUnit(unit?: string) {
   return unit?.trim().toLowerCase().replace(/\.$/, '').replace(/s$/, '');
+}
+
+function isYardsUnit(unit?: string) {
+  const normalizedUnit = normalizeUnit(unit);
+
+  return (
+    normalizedUnit === 'yrd' ||
+    normalizedUnit === 'yd' ||
+    normalizedUnit === 'yard'
+  );
+}
+
+function areHookSizesEquivalent(requiredSize: string, itemSize?: string) {
+  if (!itemSize) {
+    return false;
+  }
+
+  const requiredHookSize = parseHookSize(requiredSize);
+  const itemHookSize = parseHookSize(itemSize);
+
+  if (
+    requiredHookSize.millimeters !== undefined &&
+    itemHookSize.millimeters !== undefined
+  ) {
+    return requiredHookSize.millimeters === itemHookSize.millimeters;
+  }
+
+  return requiredHookSize.normalizedText === itemHookSize.normalizedText;
+}
+
+function buildHookMatchReason(
+  requirement: PatternRequirement,
+  matchedItem?: StashItem,
+) {
+  if (!requirement.size) {
+    return 'Matching hook found in stash.';
+  }
+
+  const requiredHookSize = parseHookSize(requirement.size);
+  const matchedHookSize = parseHookSize(matchedItem?.size);
+
+  if (
+    requiredHookSize.millimeters !== undefined &&
+    matchedHookSize.millimeters !== undefined &&
+    requiredHookSize.normalizedText !== matchedHookSize.normalizedText
+  ) {
+    return `Matched equivalent hook size: ${requirement.size} / ${formatMillimeters(requiredHookSize.millimeters)}.`;
+  }
+
+  return `Matched hook size: ${requirement.size}.`;
+}
+
+function parseHookSize(size?: string) {
+  const normalizedText = normalizeSizeText(size);
+  const millimeterMatch = normalizedText.match(/(\d+(?:\.\d+)?)mm/);
+
+  if (millimeterMatch) {
+    return {
+      normalizedText,
+      millimeters: Number(millimeterMatch[1]),
+    };
+  }
+
+  const letterMatch = normalizedText.match(/[a-z]/);
+  const letterMillimeters = letterMatch
+    ? hookSizeEquivalents.get(letterMatch[0])
+    : undefined;
+
+  return {
+    normalizedText,
+    millimeters: letterMillimeters ?? hookSizeEquivalents.get(normalizedText),
+  };
+}
+
+function normalizeSizeText(size?: string) {
+  return size?.trim().toLowerCase().replace(/\s+/g, '') ?? '';
+}
+
+function formatMillimeters(millimeters: number) {
+  if (Number.isInteger(millimeters)) {
+    return `${millimeters} mm`;
+  }
+
+  return `${millimeters.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')} mm`;
 }
 
 function buildMissingReason(
