@@ -184,6 +184,7 @@ export default function PatternDetail() {
   const sourceUrl = currentPattern.sourceUrl?.trim();
   const coverImageUrl = currentPattern.coverImageUrl?.trim();
   const patternChartUrl = currentPattern.patternChartUrl?.trim();
+  const hasRequirements = currentPattern.requirements.length > 0;
   const requirementMatchesById = new Map(
     patternSummary?.requirementMatches.map((match) => [
       match.requirementId,
@@ -329,59 +330,80 @@ export default function PatternDetail() {
             Requirements
           </h2>
 
-          <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-stone-200/70 dark:border-stone-700">
-            <table className="w-full table-auto">
-              <thead className="bg-stone-50 dark:bg-stone-800/80">
-                <tr className="text-left text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-400">
-                  <th className="px-4 py-4">Item</th>
-                  <th className="px-4 py-4">Category</th>
-                  <th className="px-4 py-4">Details</th>
-                  <th className="px-4 py-4">Match</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100 bg-white dark:divide-stone-800 dark:bg-stone-900">
-                {currentPattern.requirements.map((requirement) => {
-                  const match = requirementMatchesById.get(requirement.id);
+          {hasRequirements ? (
+            <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-stone-200/70 dark:border-stone-700">
+              <table className="w-full table-auto">
+                <thead className="bg-stone-50 dark:bg-stone-800/80">
+                  <tr className="text-left text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-400">
+                    <th className="px-4 py-4">Item</th>
+                    <th className="px-4 py-4">Category</th>
+                    <th className="px-4 py-4">Details</th>
+                    <th className="px-4 py-4">Match</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100 bg-white dark:divide-stone-800 dark:bg-stone-900">
+                  {currentPattern.requirements.map((requirement) => {
+                    const match = requirementMatchesById.get(requirement.id);
 
-                  return (
-                    <tr key={requirement.id}>
-                      <td className="px-4 py-4">
-                        <div className="font-medium text-stone-900 dark:text-stone-100">
-                          {requirement.name}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">
-                        {getCategoryLabel(
-                          requirement.category,
-                          stashCategories,
-                        )}
-                      </td>
-                      <td className="px-4 py-4 text-sm leading-6 text-stone-600 dark:text-stone-300">
-                        {[
-                          requirement.weight
-                            ? titleCase(requirement.weight)
-                            : null,
-                          requirement.quantityNeeded
-                            ? `${requirement.quantityNeeded} ${requirement.unit ?? 'items'}`
-                            : null,
-                          requirement.size ?? null,
-                          requirement.notes ?? null,
-                        ]
-                          .filter(Boolean)
-                          .join(' • ') || 'No extra details'}
-                      </td>
-                      <td className="px-4 py-4 text-sm leading-6 text-stone-600 dark:text-stone-300">
-                        <div className="space-y-2">
-                          <RequirementMatchBadge match={match} />
-                          <p>{match?.reason ?? 'No match details yet.'}</p>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                    return (
+                      <tr key={requirement.id}>
+                        <td className="px-4 py-4">
+                          <div className="font-medium text-stone-900 dark:text-stone-100">
+                            {requirement.name}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">
+                          {getCategoryLabel(
+                            requirement.category,
+                            stashCategories,
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-sm leading-6 text-stone-600 dark:text-stone-300">
+                          {[
+                            requirement.weight
+                              ? titleCase(requirement.weight)
+                              : null,
+                            requirement.quantityNeeded
+                              ? `${requirement.quantityNeeded} ${requirement.unit ?? 'items'}`
+                              : null,
+                            requirement.size ?? null,
+                            requirement.notes ?? null,
+                          ]
+                            .filter(Boolean)
+                            .join(' • ') || 'No extra details'}
+                        </td>
+                        <td className="px-4 py-4 text-sm leading-6 text-stone-600 dark:text-stone-300">
+                          <div className="space-y-2">
+                            <RequirementMatchBadge match={match} />
+                            <p>{match?.reason ?? 'No match details yet.'}</p>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="mt-6 rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50/70 p-5 dark:border-stone-700 dark:bg-stone-800/50">
+              <h3 className="font-medium text-stone-900 dark:text-stone-100">
+                No fixed requirements
+              </h3>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600 dark:text-stone-300">
+                This pattern can be worked with flexible supplies, so stash
+                readiness cannot be checked automatically.
+              </p>
+              {permissions.canEditPatterns ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(true)}
+                  className="mt-4 cursor-pointer rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:border-accent-300 hover:text-accent-700 dark:border-stone-700 dark:text-stone-200 dark:hover:border-accent-500 dark:hover:text-accent-300"
+                >
+                  Edit Pattern
+                </button>
+              ) : null}
+            </div>
+          )}
         </section>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">

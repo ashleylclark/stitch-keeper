@@ -85,7 +85,7 @@ type Pattern = {
   instructionSections: PatternInstructionSection[];
 };
 
-type MatchStatus = 'owned' | 'missing' | 'partial';
+type MatchStatus = 'owned' | 'review' | 'missing' | 'partial';
 
 type RequirementMatch = {
   requirementId: string;
