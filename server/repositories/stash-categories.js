@@ -13,7 +13,7 @@ export const builtInStashCategories = [
     showBrand: true,
     showColor: true,
     showSize: false,
-    showMaterial: false,
+    showMaterial: true,
     showUnit: true,
     showNotes: true,
     isConsumable: true,
