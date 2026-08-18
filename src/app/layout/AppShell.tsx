@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   BookMarked,
+  Eye,
+  EyeOff,
   HouseHeart,
   LogIn,
   LogOut,
@@ -111,6 +113,8 @@ function AuthPanel() {
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -142,6 +146,11 @@ function AuthPanel() {
 
     try {
       if (isRegistering) {
+        if (password !== confirmPassword) {
+          setFormError('Passwords do not match.');
+          return;
+        }
+
         await register({ email, displayName, password });
       } else {
         await login({ email, password });
@@ -202,16 +211,48 @@ function AuthPanel() {
 
         <label className="flex flex-col gap-2 text-sm font-medium text-stone-700 dark:text-stone-200">
           Password
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="h-12 rounded-2xl border border-stone-200 bg-white px-4 text-base text-stone-900 outline-none transition focus:border-accent-300 focus:ring-4 focus:ring-accent-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:focus:border-accent-500 dark:focus:ring-accent-950/60"
-            autoComplete={isRegistering ? 'new-password' : 'current-password'}
-            minLength={isRegistering ? 12 : undefined}
-            required
-          />
+          <span className="relative">
+            <input
+              type={isPasswordVisible ? 'text' : 'password'}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 pr-12 text-base text-stone-900 outline-none transition focus:border-accent-300 focus:ring-4 focus:ring-accent-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:focus:border-accent-500 dark:focus:ring-accent-950/60"
+              autoComplete={
+                isRegistering ? 'new-password' : 'current-password'
+              }
+              minLength={isRegistering ? 12 : undefined}
+              required
+            />
+            <button
+              type="button"
+              aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
+              title={isPasswordVisible ? 'Hide password' : 'Show password'}
+              onClick={() => setIsPasswordVisible((current) => !current)}
+              className="absolute right-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-xl text-stone-500 transition hover:bg-stone-100 hover:text-stone-800 focus:outline-none focus:ring-2 focus:ring-accent-300 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100 dark:focus:ring-accent-500"
+            >
+              {isPasswordVisible ? (
+                <EyeOff color="currentColor" size={18} />
+              ) : (
+                <Eye color="currentColor" size={18} />
+              )}
+            </button>
+          </span>
         </label>
+
+        {isRegistering ? (
+          <label className="flex flex-col gap-2 text-sm font-medium text-stone-700 dark:text-stone-200">
+            Confirm password
+            <input
+              type={isPasswordVisible ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              className="h-12 rounded-2xl border border-stone-200 bg-white px-4 text-base text-stone-900 outline-none transition focus:border-accent-300 focus:ring-4 focus:ring-accent-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:focus:border-accent-500 dark:focus:ring-accent-950/60"
+              autoComplete="new-password"
+              minLength={12}
+              required
+            />
+          </label>
+        ) : null}
 
         {formError ? (
           <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-100">
