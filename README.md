@@ -20,7 +20,7 @@ It is designed for fiber artists and households who want to answer questions lik
 ### Patterns
 
 - Save pattern details including source, source URL, image URLs, category, difficulty, notes, and instructions
-- Add optional image URLs for the finished object, the pattern chart, and individual instruction steps
+- Add optional external image URLs or private uploaded images for the finished object, the pattern chart, and individual instruction steps
 - Add requirement lists for each pattern
 - Match requirements against the stash to show whether a pattern is:
   - `ready-to-start`
@@ -32,6 +32,7 @@ It is designed for fiber artists and households who want to answer questions lik
 - Create projects from patterns or as standalone work
 - Link stash items to a project
 - Keep projects personal to the signed-in household member
+- Add an optional finished project photo without using a public image host
 - Track project status: `planned`, `in-progress`, `need-supplies`, `paused`, `completed`
 - Record stash usage quantities for consumable items
 - Automatically decrement linked consumable household stash quantities the first time a project is marked `completed`
@@ -99,8 +100,13 @@ npm run format:check
 ## Persistence
 
 - SQLite database path: `data/stitch-keeper.db`
+- Private uploaded images path: `data/uploads`
 - API entrypoint: `server/index.js`
 - Database schema and seed data are created automatically on first startup
+
+For Docker Compose and Helm deployments, uploaded images live in the same
+persistent `/data` volume as SQLite by default. Backups should include both the
+database file and the `uploads/` directory.
 
 ## Authentication
 

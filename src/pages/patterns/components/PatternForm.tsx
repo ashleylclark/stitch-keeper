@@ -10,6 +10,7 @@ import type {
 import { FormActions } from '../../../components/forms/FormActions';
 import { FormField } from '../../../components/forms/FormField';
 import { FormSection } from '../../../components/forms/FormSection';
+import { ImageReferenceInput } from '../../../components/forms/ImageReferenceInput';
 import { SelectInput } from '../../../components/forms/SelectInput';
 import { TextArea } from '../../../components/forms/TextArea';
 import { TextInput } from '../../../components/forms/TextInput';
@@ -401,12 +402,10 @@ export function PatternForm({
             />
           </FormField>
 
-          <FormField label="Cover Image URL">
-            <TextInput
-              type="url"
+          <FormField label="Cover Image">
+            <ImageReferenceInput
               value={values.coverImageUrl}
-              onChange={(event) => update('coverImageUrl', event.target.value)}
-              placeholder="https://"
+              onChange={(nextValue) => update('coverImageUrl', nextValue)}
             />
           </FormField>
         </div>
@@ -589,14 +588,10 @@ export function PatternForm({
             in a section becomes a trackable step inside linked projects.
           </p>
 
-          <FormField label="Pattern Chart URL">
-            <TextInput
-              type="url"
+          <FormField label="Pattern Chart">
+            <ImageReferenceInput
               value={values.patternChartUrl}
-              onChange={(event) =>
-                update('patternChartUrl', event.target.value)
-              }
-              placeholder="https://"
+              onChange={(nextValue) => update('patternChartUrl', nextValue)}
             />
           </FormField>
 
@@ -713,18 +708,16 @@ export function PatternForm({
                           {step.text || 'Empty step'}
                         </p>
                       </div>
-                      <FormField label="Step Image URL">
-                        <TextInput
-                          type="url"
+                      <FormField label="Step Image">
+                        <ImageReferenceInput
                           value={step.imageUrl ?? ''}
-                          onChange={(event) =>
+                          onChange={(nextValue) =>
                             updateInstructionStepImageUrl(
                               section.id,
                               stepIndex,
-                              event.target.value,
+                              nextValue,
                             )
                           }
-                          placeholder="https://"
                         />
                       </FormField>
                     </div>

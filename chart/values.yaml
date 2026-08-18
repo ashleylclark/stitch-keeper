@@ -62,7 +62,8 @@ resources: {}
 # -- Environment variables for the container
 env: []
 
-# The image defaults to PORT=3001 and SQLITE_PATH=/data/stitch-keeper.db.
+# The image defaults to PORT=3001, SQLITE_PATH=/data/stitch-keeper.db, and
+# private uploaded images stored at /data/uploads.
 # SESSION_SECRET is required at runtime. Provide it directly here or through
 # envFrom with a Secret/ConfigMap.
 # env:

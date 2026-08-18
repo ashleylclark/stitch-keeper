@@ -127,6 +127,7 @@ type Project = {
   completedInstructionSteps: string[];
   status: ProjectStatus;
   notes?: string;
+  finishedImageUrl?: string;
 };
 
 type ProjectStashUsage = {

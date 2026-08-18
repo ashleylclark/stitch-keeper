@@ -107,6 +107,7 @@ function seedDatabaseIfEmpty() {
           endDate: project.endDate ?? null,
           status: project.status,
           notes: project.notes ?? null,
+          finishedImageUrl: project.finishedImageUrl ?? null,
           completedInstructionSteps: JSON.stringify(
             project.completedInstructionSteps ?? [],
           ),

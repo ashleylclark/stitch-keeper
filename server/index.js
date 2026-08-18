@@ -41,6 +41,13 @@ import {
   listStashCategories,
   updateStashCategory,
 } from './repositories/stash-categories.js';
+import {
+  allowedImageMimeTypes,
+  createMediaAsset,
+  deleteMediaAsset,
+  findMediaAsset,
+  maxImageUploadBytes,
+} from './repositories/media.js';
 import { hasHouseholdRole } from './roles.js';
 
 const authConfig = readAuthConfig();
@@ -162,6 +169,49 @@ app.put('/api/me/settings', (request, response) => {
   });
 
   response.json(user);
+});
+
+app.get('/api/media/:id', (request, response) => {
+  const asset = findMediaAsset(getOwnerContext(request), request.params.id);
+
+  if (!asset) {
+    response.status(404).send('Media not found.');
+    return;
+  }
+
+  response.type(asset.mimeType);
+  response.sendFile(asset.absolutePath, (error) => {
+    if (error && !response.headersSent) {
+      response.status(error.status ?? 404).send('Media file not found.');
+    }
+  });
+});
+
+app.post('/api/media', async (request, response, next) => {
+  if (!ensurePermission(request, response, ['owner', 'member'])) {
+    return;
+  }
+
+  try {
+    const file = await readMultipartImage(request);
+    const asset = createMediaAsset(getOwnerContext(request), file);
+    response.status(201).json(asset);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete('/api/media/:id', (request, response) => {
+  if (!ensurePermission(request, response, ['owner', 'member'])) {
+    return;
+  }
+
+  if (!deleteMediaAsset(getOwnerContext(request), request.params.id)) {
+    response.status(404).send('Media not found.');
+    return;
+  }
+
+  response.status(204).end();
 });
 
 app.get('/api/stash', (request, response) => {
@@ -332,6 +382,16 @@ if (hasBuiltFrontend) {
   });
 }
 
+app.use('/api', (error, _request, response, _next) => {
+  void _next;
+
+  const status = error?.status ?? 500;
+  const message =
+    status === 500 ? 'Something went wrong.' : error?.message ?? 'Error.';
+
+  response.status(status).send(message);
+});
+
 app.listen(port, () => {
   console.log(`Stitch Keeper server listening on http://localhost:${port}`);
 });
@@ -501,10 +561,152 @@ function normalizeProject(input) {
     endDate: emptyToUndefined(input.endDate),
     status: String(input.status),
     notes: emptyToUndefined(input.notes),
+    finishedImageUrl: emptyToUndefined(input.finishedImageUrl),
     stashItemIds: normalizedStashUsages.map((usage) => usage.stashItemId),
     stashUsages: normalizedStashUsages,
     completedInstructionSteps,
   };
+}
+
+async function readMultipartImage(request) {
+  const contentType = String(request.headers['content-type'] ?? '');
+  const boundaryMatch = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/);
+
+  if (!contentType.startsWith('multipart/form-data') || !boundaryMatch) {
+    throwHttpError(400, 'Expected a multipart form upload.');
+  }
+
+  const body = await readRequestBody(request, maxImageUploadBytes);
+  const file = extractMultipartFile(
+    body,
+    boundaryMatch[1] ?? boundaryMatch[2],
+  );
+
+  if (!file) {
+    throwHttpError(400, 'Upload must include one image file.');
+  }
+
+  if (!allowedImageMimeTypes.has(file.mimeType)) {
+    throwHttpError(400, 'Upload must be a JPEG, PNG, WebP, or GIF image.');
+  }
+
+  if (file.buffer.length === 0) {
+    throwHttpError(400, 'Uploaded image cannot be empty.');
+  }
+
+  return file;
+}
+
+async function readRequestBody(request, maxBytes) {
+  const chunks = [];
+  let totalBytes = 0;
+
+  for await (const chunk of request) {
+    totalBytes += chunk.length;
+
+    if (totalBytes > maxBytes) {
+      throwHttpError(413, 'Uploaded image must be 8 MB or smaller.');
+    }
+
+    chunks.push(chunk);
+  }
+
+  return Buffer.concat(chunks);
+}
+
+function extractMultipartFile(body, boundary) {
+  const boundaryBuffer = Buffer.from(`--${boundary}`);
+  let cursor = 0;
+
+  while (cursor < body.length) {
+    const boundaryStart = body.indexOf(boundaryBuffer, cursor);
+
+    if (boundaryStart === -1) {
+      return null;
+    }
+
+    let partStart = boundaryStart + boundaryBuffer.length;
+
+    if (body[partStart] === 45 && body[partStart + 1] === 45) {
+      return null;
+    }
+
+    if (body[partStart] === 13 && body[partStart + 1] === 10) {
+      partStart += 2;
+    }
+
+    const nextBoundary = body.indexOf(boundaryBuffer, partStart);
+
+    if (nextBoundary === -1) {
+      return null;
+    }
+
+    const part = trimTrailingCrlf(body.subarray(partStart, nextBoundary));
+    const headersEnd = part.indexOf(Buffer.from('\r\n\r\n'));
+
+    if (headersEnd === -1) {
+      cursor = nextBoundary;
+      continue;
+    }
+
+    const rawHeaders = part.subarray(0, headersEnd).toString('utf8');
+    const contentDisposition = getMultipartHeader(
+      rawHeaders,
+      'content-disposition',
+    );
+
+    if (
+      !contentDisposition?.includes('name="file"') ||
+      !contentDisposition.includes('filename=')
+    ) {
+      cursor = nextBoundary;
+      continue;
+    }
+
+    return {
+      fileName: getMultipartFileName(contentDisposition),
+      mimeType:
+        getMultipartHeader(rawHeaders, 'content-type') ??
+        'application/octet-stream',
+      buffer: part.subarray(headersEnd + 4),
+    };
+  }
+
+  return null;
+}
+
+function trimTrailingCrlf(buffer) {
+  if (
+    buffer.length >= 2 &&
+    buffer[buffer.length - 2] === 13 &&
+    buffer[buffer.length - 1] === 10
+  ) {
+    return buffer.subarray(0, buffer.length - 2);
+  }
+
+  return buffer;
+}
+
+function getMultipartHeader(rawHeaders, headerName) {
+  const lowerHeaderName = headerName.toLowerCase();
+  const line = rawHeaders
+    .split('\r\n')
+    .find((header) => header.toLowerCase().startsWith(`${lowerHeaderName}:`));
+
+  return line ? line.slice(line.indexOf(':') + 1).trim() : undefined;
+}
+
+function getMultipartFileName(contentDisposition) {
+  const fileNameMatch = contentDisposition.match(/filename="([^"]*)"/);
+  const fileName = path.basename(fileNameMatch?.[1] ?? 'upload');
+
+  return fileName || 'upload';
+}
+
+function throwHttpError(status, message) {
+  const error = new Error(message);
+  error.status = status;
+  throw error;
 }
 
 function emptyToUndefined(value) {
