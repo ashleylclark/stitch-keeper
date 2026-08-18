@@ -170,10 +170,26 @@ export const projects = sqliteTable('projects', {
   endDate: text('end_date'),
   status: text('status').notNull(),
   notes: text('notes'),
+  finishedImageUrl: text('finished_image_url'),
   completedInstructionSteps: text('completed_instruction_steps')
     .notNull()
     .default('[]'),
   stashUsageAppliedAt: text('stash_usage_applied_at'),
+});
+
+export const mediaAssets = sqliteTable('media_assets', {
+  id: text('id').primaryKey(),
+  householdId: text('household_id')
+    .notNull()
+    .references(() => households.id, { onDelete: 'cascade' }),
+  ownerUserId: text('owner_user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  fileName: text('file_name').notNull(),
+  mimeType: text('mime_type').notNull(),
+  sizeBytes: integer('size_bytes').notNull(),
+  storagePath: text('storage_path').notNull(),
+  createdAt: text('created_at').notNull(),
 });
 
 export const projectStashItems = sqliteTable(

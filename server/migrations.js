@@ -115,6 +115,7 @@ function adoptLegacyDatabase(db, existingAppTables, migrationFiles) {
     );
     ensureColumn(db, 'patterns', 'instruction_sections', 'TEXT');
     ensureColumn(db, 'project_stash_items', 'quantity_used', 'INTEGER');
+    ensureColumn(db, 'projects', 'finished_image_url', 'TEXT');
     recordMigration(db, initialMigration);
   })();
 }

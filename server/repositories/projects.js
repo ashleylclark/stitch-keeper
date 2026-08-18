@@ -59,6 +59,7 @@ export function listProjects(ownerContext) {
       startDate: project.startDate ?? undefined,
       endDate: project.endDate ?? undefined,
       notes: project.notes ?? undefined,
+      finishedImageUrl: project.finishedImageUrl ?? undefined,
       completedInstructionSteps: parseCompletedInstructionSteps(
         project.completedInstructionSteps,
       ),
@@ -154,6 +155,7 @@ function toProjectRow(ownerContext, project, stashUsageAppliedAt) {
     endDate: project.endDate ?? null,
     status: project.status,
     notes: project.notes ?? null,
+    finishedImageUrl: project.finishedImageUrl ?? null,
     completedInstructionSteps: JSON.stringify(
       project.completedInstructionSteps,
     ),
