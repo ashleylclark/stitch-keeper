@@ -9,6 +9,8 @@ It is designed for fiber artists and households who want to answer questions lik
 - Which projects are active, paused, or finished?
 - How much of my stash was actually used when a project was completed?
 
+See the [screenshot gallery](docs/screenshots.md).
+
 ## What It Does
 
 ### Stash
