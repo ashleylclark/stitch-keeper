@@ -8,6 +8,7 @@ import type {
 import { FormActions } from '../../../components/forms/FormActions';
 import { FormField } from '../../../components/forms/FormField';
 import { FormSection } from '../../../components/forms/FormSection';
+import { ImageReferenceInput } from '../../../components/forms/ImageReferenceInput';
 import { SelectInput } from '../../../components/forms/SelectInput';
 import { TextArea } from '../../../components/forms/TextArea';
 import { TextInput } from '../../../components/forms/TextInput';
@@ -22,6 +23,7 @@ export type ProjectFormValues = {
   startDate: string;
   endDate: string;
   notes: string;
+  finishedImageUrl: string;
 };
 
 type PatternOption = {
@@ -72,6 +74,7 @@ export function ProjectForm({
     startDate: initialValues?.startDate ?? '',
     endDate: initialValues?.endDate ?? '',
     notes: initialValues?.notes ?? '',
+    finishedImageUrl: initialValues?.finishedImageUrl ?? '',
   });
 
   function update<K extends keyof ProjectFormValues>(
@@ -293,6 +296,15 @@ export function ProjectForm({
             value={values.notes}
             onChange={(event) => update('notes', event.target.value)}
             placeholder="Optional project notes"
+          />
+        </FormField>
+      </FormSection>
+
+      <FormSection title="Finished Photo">
+        <FormField label="Finished Photo">
+          <ImageReferenceInput
+            value={values.finishedImageUrl}
+            onChange={(nextValue) => update('finishedImageUrl', nextValue)}
           />
         </FormField>
       </FormSection>

@@ -213,6 +213,7 @@ export default function ProjectDetail() {
   const completedStepCount = instructionSteps.filter((step) =>
     completedInstructionSteps.has(step.id),
   ).length;
+  const finishedImageUrl = currentProject.finishedImageUrl?.trim();
 
   async function handleSubmit(values: ProjectFormValues) {
     setSubmitError(null);
@@ -234,6 +235,7 @@ export default function ProjectDetail() {
         startDate: values.startDate || undefined,
         endDate: values.endDate || undefined,
         notes: values.notes.trim() || undefined,
+        finishedImageUrl: values.finishedImageUrl.trim() || undefined,
       };
 
       await updateProject(nextProject);
@@ -293,36 +295,54 @@ export default function ProjectDetail() {
         </Link>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800/80 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)] sm:p-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-3">
-              <h1 className="font-serif text-3xl tracking-tight text-stone-900 dark:text-stone-50 sm:text-4xl">
-                {currentProject.name}
-              </h1>
-              <p className="max-w-3xl text-base leading-7 text-stone-600 dark:text-stone-300">
-                {currentProject.notes ??
-                  'No notes have been added for this project yet.'}
-              </p>
+          <div
+            className={[
+              'grid gap-6',
+              finishedImageUrl
+                ? 'lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)] lg:items-start'
+                : '',
+            ].join(' ')}
+          >
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-3">
+                <h1 className="font-serif text-3xl tracking-tight text-stone-900 dark:text-stone-50 sm:text-4xl">
+                  {currentProject.name}
+                </h1>
+                <p className="max-w-3xl text-base leading-7 text-stone-600 dark:text-stone-300">
+                  {currentProject.notes ??
+                    'No notes have been added for this project yet.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <StatusBadge status={currentProject.status} />
+                {permissions.canManageOwnProjects ? (
+                  <ActionButton
+                    label={`Edit ${currentProject.name}`}
+                    onClick={() => setIsEditOpen(true)}
+                  >
+                    <Pencil size={16} />
+                  </ActionButton>
+                ) : null}
+                {permissions.canManageOwnProjects ? (
+                  <ActionButton
+                    label={`Delete ${currentProject.name}`}
+                    tone="danger"
+                    onClick={() => setIsDeleteOpen(true)}
+                  >
+                    <Trash2 size={16} />
+                  </ActionButton>
+                ) : null}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <StatusBadge status={currentProject.status} />
-              {permissions.canManageOwnProjects ? (
-                <ActionButton
-                  label={`Edit ${currentProject.name}`}
-                  onClick={() => setIsEditOpen(true)}
-                >
-                  <Pencil size={16} />
-                </ActionButton>
-              ) : null}
-              {permissions.canManageOwnProjects ? (
-                <ActionButton
-                  label={`Delete ${currentProject.name}`}
-                  tone="danger"
-                  onClick={() => setIsDeleteOpen(true)}
-                >
-                  <Trash2 size={16} />
-                </ActionButton>
-              ) : null}
-            </div>
+            {finishedImageUrl ? (
+              <div className="overflow-hidden rounded-[1.5rem] border border-stone-200/70 bg-stone-100 dark:border-stone-700 dark:bg-stone-800">
+                <img
+                  src={finishedImageUrl}
+                  alt={`${currentProject.name} finished project`}
+                  className="aspect-[4/3] w-full object-cover"
+                />
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -578,6 +598,7 @@ export default function ProjectDetail() {
             startDate: currentProject.startDate ?? '',
             endDate: currentProject.endDate ?? '',
             notes: currentProject.notes ?? '',
+            finishedImageUrl: currentProject.finishedImageUrl ?? '',
           }}
           submitLabel="Save Changes"
           onSubmit={(values) => {

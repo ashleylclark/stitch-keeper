@@ -310,6 +310,7 @@ export default function Projects() {
         startDate: values.startDate || undefined,
         endDate: values.endDate || undefined,
         notes: values.notes.trim() || undefined,
+        finishedImageUrl: values.finishedImageUrl.trim() || undefined,
       };
 
       if (editingProject) {
@@ -447,6 +448,7 @@ export default function Projects() {
                   startDate: editingProject.startDate ?? '',
                   endDate: editingProject.endDate ?? '',
                   notes: editingProject.notes ?? '',
+                  finishedImageUrl: editingProject.finishedImageUrl ?? '',
                 }
               : undefined
           }
