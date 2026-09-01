@@ -49,6 +49,12 @@ import {
   maxImageUploadBytes,
 } from './repositories/media.js';
 import { hasHouseholdRole } from './roles.js';
+import {
+  createApiToken,
+  findSessionUserForApiToken,
+  listApiTokens,
+  revokeApiToken,
+} from './repositories/api-tokens.js';
 
 const authConfig = readAuthConfig();
 
@@ -154,6 +160,24 @@ app.post('/auth/logout', (_request, response) => {
 app.get('/auth/logout', (_request, response) => {
   clearSessionCookie(response, authConfig);
   response.redirect('/');
+});
+
+app.get('/api/me/tokens', requireSessionUser, (request, response) => {
+  response.json(listApiTokens(getOwnerContext(request)));
+});
+
+app.post('/api/me/tokens', requireSessionUser, (request, response) => {
+  const name = normalizeApiTokenName(request.body?.name);
+  response.status(201).json(createApiToken(getOwnerContext(request), name));
+});
+
+app.delete('/api/me/tokens/:id', requireSessionUser, (request, response) => {
+  if (!revokeApiToken(getOwnerContext(request), request.params.id)) {
+    response.status(404).send('API token not found.');
+    return;
+  }
+
+  response.status(204).end();
 });
 
 app.use('/api', requireAuthenticatedUser);
@@ -387,7 +411,7 @@ app.use('/api', (error, _request, response, _next) => {
 
   const status = error?.status ?? 500;
   const message =
-    status === 500 ? 'Something went wrong.' : error?.message ?? 'Error.';
+    status === 500 ? 'Something went wrong.' : (error?.message ?? 'Error.');
 
   response.status(status).send(message);
 });
@@ -397,6 +421,30 @@ app.listen(port, () => {
 });
 
 function requireAuthenticatedUser(request, response, next) {
+  const bearerToken = readBearerToken(request);
+
+  if (bearerToken) {
+    const sessionUser = findSessionUserForApiToken(bearerToken);
+
+    if (!sessionUser) {
+      response.status(401).send('Invalid API token.');
+      return;
+    }
+
+    if (!['GET', 'HEAD'].includes(request.method)) {
+      response.status(403).send('API tokens are read-only.');
+      return;
+    }
+
+    request.sessionUser = sessionUser;
+    next();
+    return;
+  }
+
+  requireSessionUser(request, response, next);
+}
+
+function requireSessionUser(request, response, next) {
   const session = readSessionCookie(request, authConfig);
 
   if (!session) {
@@ -414,6 +462,26 @@ function requireAuthenticatedUser(request, response, next) {
 
   request.sessionUser = sessionUser;
   next();
+}
+
+function readBearerToken(request) {
+  const authorization = String(request.headers.authorization ?? '');
+  const match = authorization.match(/^Bearer ([^\s]+)$/i);
+  return match?.[1] ?? null;
+}
+
+function normalizeApiTokenName(input) {
+  const name = String(input ?? '').trim();
+
+  if (!name || name.length > 80) {
+    const error = new Error(
+      'API token name must be between 1 and 80 characters.',
+    );
+    error.status = 400;
+    throw error;
+  }
+
+  return name;
 }
 
 function ensurePermission(request, response, allowedRoles) {
@@ -577,10 +645,7 @@ async function readMultipartImage(request) {
   }
 
   const body = await readRequestBody(request, maxImageUploadBytes);
-  const file = extractMultipartFile(
-    body,
-    boundaryMatch[1] ?? boundaryMatch[2],
-  );
+  const file = extractMultipartFile(body, boundaryMatch[1] ?? boundaryMatch[2]);
 
   if (!file) {
     throwHttpError(400, 'Upload must include one image file.');

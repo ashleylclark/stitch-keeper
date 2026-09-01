@@ -1,5 +1,6 @@
 import {
   check,
+  index,
   integer,
   primaryKey,
   sqliteTable,
@@ -50,6 +51,27 @@ export const localCredentials = sqliteTable('local_credentials', {
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });
+
+export const apiTokens = sqliteTable(
+  'api_tokens',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    householdId: text('household_id')
+      .notNull()
+      .references(() => households.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    tokenHash: text('token_hash').notNull().unique(),
+    tokenPrefix: text('token_prefix').notNull(),
+    createdAt: text('created_at').notNull(),
+    lastUsedAt: text('last_used_at'),
+  },
+  (table) => [
+    index('api_tokens_user_household_idx').on(table.userId, table.householdId),
+  ],
+);
 
 export const households = sqliteTable('households', {
   id: text('id').primaryKey(),

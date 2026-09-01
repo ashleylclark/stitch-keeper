@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Copy, KeyRound, Pencil, Plus, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Modal } from '../../components/Modal';
 import { FormActions } from '../../components/forms/FormActions';
@@ -8,11 +8,17 @@ import { FormSection } from '../../components/forms/FormSection';
 import { TextInput } from '../../components/forms/TextInput';
 import { useAppData } from '../../app/state/app-data';
 import type {
+  ApiToken,
   ColorTheme,
   StashCategory,
   Theme,
   UserSettings,
 } from '../../types/models';
+import {
+  createApiToken,
+  fetchApiTokens,
+  revokeApiToken,
+} from '../../app/auth/api';
 import type { StashCategoryInput } from '../stash/api';
 import { otherLikeCategoryDefaults } from '../stash/lib/categories';
 
@@ -94,6 +100,35 @@ export default function Settings() {
   const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
+  const [apiTokens, setApiTokens] = useState<ApiToken[]>([]);
+  const [tokenName, setTokenName] = useState('Stitch Keeper MCP');
+  const [createdToken, setCreatedToken] = useState<string | null>(null);
+  const [tokenError, setTokenError] = useState<string | null>(null);
+  const [isLoadingTokens, setIsLoadingTokens] = useState(true);
+  const [isCreatingToken, setIsCreatingToken] = useState(false);
+  const [tokenPendingRevoke, setTokenPendingRevoke] = useState<ApiToken | null>(
+    null,
+  );
+  const [isRevokingToken, setIsRevokingToken] = useState(false);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    void fetchApiTokens()
+      .then((tokens) => {
+        if (isCurrent) setApiTokens(tokens);
+      })
+      .catch((error) => {
+        if (isCurrent) setTokenError(getErrorMessage(error));
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoadingTokens(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
 
   const activeCategories = stashCategories.filter(
     (category) => !category.archivedAt,
@@ -189,6 +224,49 @@ export default function Settings() {
     }
   }
 
+  async function handleCreateToken(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setTokenError(null);
+    setCreatedToken(null);
+
+    if (!tokenName.trim()) {
+      setTokenError('Token name is required.');
+      return;
+    }
+
+    setIsCreatingToken(true);
+
+    try {
+      const created = await createApiToken(tokenName.trim());
+      setApiTokens((current) => [created.apiToken, ...current]);
+      setCreatedToken(created.token);
+      setTokenName('Stitch Keeper MCP');
+    } catch (error) {
+      setTokenError(getErrorMessage(error));
+    } finally {
+      setIsCreatingToken(false);
+    }
+  }
+
+  async function handleRevokeToken() {
+    if (!tokenPendingRevoke) return;
+
+    setTokenError(null);
+    setIsRevokingToken(true);
+
+    try {
+      await revokeApiToken(tokenPendingRevoke.id);
+      setApiTokens((current) =>
+        current.filter((token) => token.id !== tokenPendingRevoke.id),
+      );
+      setTokenPendingRevoke(null);
+    } catch (error) {
+      setTokenError(getErrorMessage(error));
+    } finally {
+      setIsRevokingToken(false);
+    }
+  }
+
   return (
     <>
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-8">
@@ -233,6 +311,110 @@ export default function Settings() {
               {settingsError}
             </p>
           ) : null}
+        </section>
+
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
+          <div className="flex items-start gap-3">
+            <KeyRound className="mt-1 text-accent-600 dark:text-accent-300" />
+            <div>
+              <h2 className="font-serif text-2xl text-stone-900 dark:text-stone-100">
+                API Tokens
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-stone-600 dark:text-stone-400">
+                Create a token for integrations such as Stitch Keeper MCP. A
+                token has read-only access to your current household and is
+                shown only once.
+              </p>
+            </div>
+          </div>
+
+          <form
+            className="mt-6 flex flex-col gap-3 sm:flex-row"
+            onSubmit={(event) => void handleCreateToken(event)}
+          >
+            <label className="flex-1">
+              <span className="sr-only">Token name</span>
+              <input
+                value={tokenName}
+                maxLength={80}
+                onChange={(event) => setTokenName(event.target.value)}
+                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-accent-400 focus:ring-2 focus:ring-accent-200 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:focus:border-accent-400 dark:focus:ring-accent-900"
+                placeholder="Stitch Keeper MCP"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={isCreatingToken}
+              className="rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-accent-400 dark:text-stone-950 dark:hover:bg-accent-300"
+            >
+              {isCreatingToken ? 'Creating…' : 'Create Token'}
+            </button>
+          </form>
+
+          {createdToken ? (
+            <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/40">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                Copy this token now. It will not be shown again.
+              </p>
+              <div className="mt-3 flex items-center gap-2">
+                <code className="min-w-0 flex-1 overflow-x-auto rounded-xl bg-white px-3 py-2 text-xs text-stone-800 dark:bg-stone-950 dark:text-stone-200">
+                  {createdToken}
+                </code>
+                <button
+                  type="button"
+                  aria-label="Copy API token"
+                  onClick={() =>
+                    void navigator.clipboard.writeText(createdToken)
+                  }
+                  className="rounded-xl border border-amber-300 p-2 text-amber-900 hover:bg-amber-100 dark:border-amber-800 dark:text-amber-100 dark:hover:bg-amber-900"
+                >
+                  <Copy size={18} />
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {tokenError ? (
+            <p className="mt-4 text-sm text-rose-600 dark:text-rose-300">
+              {tokenError}
+            </p>
+          ) : null}
+
+          <div className="mt-6 grid gap-3">
+            {isLoadingTokens ? (
+              <p className="text-sm text-stone-500">Loading tokens…</p>
+            ) : apiTokens.length === 0 ? (
+              <p className="text-sm text-stone-500">No API tokens yet.</p>
+            ) : (
+              apiTokens.map((token) => (
+                <div
+                  key={token.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-stone-200 p-4 dark:border-stone-700 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="font-semibold text-stone-900 dark:text-stone-100">
+                      {token.name}
+                    </p>
+                    <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+                      {token.tokenPrefix}… · Created{' '}
+                      {new Date(token.createdAt).toLocaleDateString()}
+                      {token.lastUsedAt
+                        ? ` · Last used ${new Date(token.lastUsedAt).toLocaleString()}`
+                        : ' · Never used'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setTokenPendingRevoke(token)}
+                    className="inline-flex items-center gap-2 self-start rounded-xl px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/50 sm:self-auto"
+                  >
+                    <Trash2 size={16} />
+                    Revoke
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         </section>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-[0_20px_60px_-35px_rgba(41,37,36,0.35)] backdrop-blur dark:border-stone-800 dark:bg-stone-900/85 dark:shadow-[0_20px_60px_-35px_rgba(0,0,0,0.7)]">
@@ -316,6 +498,21 @@ export default function Settings() {
           isSubmitting={isSubmitting}
         />
       </Modal>
+
+      <ConfirmDialog
+        isOpen={Boolean(tokenPendingRevoke)}
+        title="Revoke API Token"
+        description={
+          tokenPendingRevoke
+            ? `Revoke “${tokenPendingRevoke.name}”? Any integration using it will immediately lose access.`
+            : ''
+        }
+        confirmLabel="Revoke Token"
+        onConfirm={() => void handleRevokeToken()}
+        onCancel={() => setTokenPendingRevoke(null)}
+        error={tokenError}
+        isConfirming={isRevokingToken}
+      />
 
       <ConfirmDialog
         isOpen={Boolean(categoryPendingArchive)}

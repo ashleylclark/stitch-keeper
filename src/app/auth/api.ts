@@ -1,12 +1,30 @@
 import { fetchJson } from '../../shared/api/fetchJson';
 import type {
+  ApiToken,
   AuthSession,
   AuthSettings,
   AuthUser,
+  CreatedApiToken,
   LoginCredentials,
   RegistrationCredentials,
   UserSettings,
 } from '../../types/models';
+
+export function fetchApiTokens() {
+  return fetchJson<ApiToken[]>('/api/me/tokens');
+}
+
+export function createApiToken(name: string) {
+  return fetchJson<CreatedApiToken>('/api/me/tokens', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function revokeApiToken(id: string) {
+  return fetchJson<void>(`/api/me/tokens/${id}`, { method: 'DELETE' }, true);
+}
 
 export function fetchAuthSettings() {
   return fetchJson<AuthSettings>('/api/auth/config');

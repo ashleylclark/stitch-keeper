@@ -163,6 +163,19 @@ type AuthSettings = {
   registrationEnabled: boolean;
 };
 
+type ApiToken = {
+  id: string;
+  name: string;
+  tokenPrefix: string;
+  createdAt: string;
+  lastUsedAt?: string;
+};
+
+type CreatedApiToken = {
+  token: string;
+  apiToken: ApiToken;
+};
+
 type Theme = 'light' | 'dark';
 type ColorTheme = 'rose' | 'green';
 type UserSettings = {
@@ -180,10 +193,12 @@ type RegistrationCredentials = LoginCredentials & {
 };
 
 export type {
+  ApiToken,
   AuthSettings,
   AuthSession,
   AuthUser,
   ColorTheme,
+  CreatedApiToken,
   Household,
   HouseholdRole,
   ItemCategory,

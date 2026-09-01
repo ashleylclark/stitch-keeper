@@ -178,7 +178,26 @@ Server auth behavior:
 - Signed HTTP-only session cookies store only `userId`, `activeHouseholdId`, and
   expiration metadata.
 - All API routes except `/api/health` and `/api/auth/config` require an
-  authenticated session.
+  authenticated browser session or API token.
+
+### API Tokens
+
+Personal API tokens are available under **Settings → API Tokens** for
+read-only integrations such as Stitch Keeper MCP.
+
+- Tokens are scoped to the household active when they are created.
+- The plaintext token is displayed once; only its SHA-256 hash is stored.
+- API tokens may use `GET` and `HEAD` API routes. Write requests return `403`.
+- Current household membership and role are checked on every request.
+- Revocation takes effect immediately.
+- Token-management endpoints require a browser session, so an API token cannot
+  create or revoke other tokens.
+
+Clients authenticate with:
+
+```text
+Authorization: Bearer sk_your-token
+```
 
 For public deployments, run the app behind HTTPS and use a strong
 `SESSION_SECRET`. HTTPS makes session cookies `Secure` when `APP_BASE_URL` uses
@@ -250,6 +269,9 @@ Manual auth QA checklist:
 - Login succeeds with the registered email and password.
 - Login fails with a bad password.
 - `GET /api/stash` returns `401` without a session.
+- A valid API token can read `/api/stash`; an invalid or revoked token returns
+  `401`.
+- API-token write requests return `403`.
 - Existing default data appears under the first registered account.
 - Later accounts do not see the first account's personal projects.
 
