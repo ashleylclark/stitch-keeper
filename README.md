@@ -371,3 +371,54 @@ dist/        Built frontend output
 ```
 
 Frontend areas are organized around stash, patterns, projects, and app shell/state concerns.
+
+## Built-in MCP (optional)
+
+Stitch Keeper includes a read-only Streamable HTTP MCP endpoint at `/mcp`,
+which is disabled by default. It runs in the same process and on the same port as the
+app. Enable it with `MCP_ENABLED=true`.
+
+`MCP_HTTP_ALLOWED_HOSTS` is a
+comma-separated list of client-facing hostnames (without schemes or ports),
+defaulting to `localhost,127.0.0.1,[::1]`.
+
+For example, when starting the API locally:
+
+```sh
+MCP_ENABLED=true npm run start:server
+```
+
+Create a token under **Settings → API Tokens** and configure your MCP client
+with `http://localhost:3001/mcp` and `Authorization: Bearer <your sk_ token>`.
+
+Use HTTPS for connections outside a trusted machine or private network.
+MCP requires an API token, as browser session cookies do not authenticate it.
+
+The four tools are `list-yarn`, `search-yarn`, `list-projects`, and
+`search-patterns`.
+
+For Docker, add `-e MCP_ENABLED=true` and, for a custom hostname,
+`-e MCP_HTTP_ALLOWED_HOSTS=stitch.example.internal` to your existing app
+container. For Helm, use the chart's existing `env` values:
+
+```yaml
+env:
+  - name: MCP_ENABLED
+    value: 'true'
+  - name: MCP_HTTP_ALLOWED_HOSTS
+    value: 'stitch.example.internal'
+```
+
+Your existing ingress or reverse proxy must forward `/mcp` to the app,
+including POST requests and Authorization headers. No extra service, port,
+MCP API key, or Kubernetes token Secret is needed for this integration.
+
+### Connect an MCP client
+
+An MCP client is the app that connects to Stitch Keeper, such as Codex.
+It authenticates with an API token created under **Settings → API Tokens**.
+
+See the [MCP setup guide](docs/mcp.md) for local testing, Codex plugin
+installation, desktop token setup, and connections to a hosted instance.
+
+Run the MCP regression checks with `npm test`.

@@ -56,7 +56,11 @@ import {
   revokeApiToken,
 } from './repositories/api-tokens.js';
 
+import { mountMcp, readMcpConfig } from './mcp/http.js';
+import { createMcpData } from './mcp/data.js';
+
 const authConfig = readAuthConfig();
+const mcpConfig = readMcpConfig();
 
 initializeDatabase();
 
@@ -70,6 +74,15 @@ const hasBuiltFrontend = fs.existsSync(indexHtmlPath);
 app.set('trust proxy', 1);
 app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
+
+mountMcp(app, {
+  config: mcpConfig,
+  resolveToken: findSessionUserForApiToken,
+  version: JSON.parse(
+    fs.readFileSync(path.resolve(serverDir, '../package.json'), 'utf8'),
+  ).version,
+  createData: createMcpData,
+});
 
 app.get('/api/health', (_request, response) => {
   response.json({ ok: true });

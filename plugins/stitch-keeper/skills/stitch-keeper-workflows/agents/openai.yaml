@@ -1,0 +1,11 @@
+interface:
+  display_name: 'Stitch Keeper Workflows'
+  short_description: 'Explore yarn, projects, and patterns naturally'
+  default_prompt: 'Use $stitch-keeper-workflows to help me explore my Stitch Keeper collection.'
+dependencies:
+  tools:
+    - type: 'mcp'
+      value: 'stitch-keeper'
+      description: "Read-only access to the user's Stitch Keeper collection"
+      transport: 'streamable_http'
+      url: 'http://127.0.0.1:3002/mcp'
