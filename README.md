@@ -37,7 +37,7 @@ See the [screenshot gallery](docs/screenshots.md).
 - Add an optional finished project photo without using a public image host
 - Track project status: `planned`, `in-progress`, `need-supplies`, `paused`, `completed`
 - Record stash usage quantities for consumable items
-- Automatically decrement linked consumable household stash quantities the first time a project is marked `completed`
+- Automatically subtract usage from linked consumable household stash items the first time a project is marked `completed`
 
 ### Dashboard
 
@@ -47,378 +47,70 @@ See the [screenshot gallery](docs/screenshots.md).
   - recently added patterns
   - finished project totals
 
-## Stack
+## Get started
 
-- React 19
-- TypeScript
-- Vite
-- Tailwind CSS
-- Express
-- SQLite via `better-sqlite3`
+Stitch Keeper is self-hosted. You can run it with Docker Compose, deploy the
+Helm chart, or run it locally for development.
 
-## Requirements
+### Docker Compose
 
-- Node.js 22.x recommended
-- npm 10+
-- Docker Engine / Docker Desktop with Docker Compose support for containerized runs
-- A modern browser for the frontend UI
+With Docker and Docker Compose installed, run these commands from the
+repository root:
 
-## Local Development
-
-Install dependencies and start both the frontend and API:
-
-```bash
-npm install
-npm run dev
-```
-
-The API requires a session secret before it will start:
-
-```bash
-export APP_BASE_URL=http://localhost:5173
-export SESSION_SECRET='replace-with-a-long-random-value'
-```
-
-See [Authentication](#authentication) for account setup and optional OIDC
-configuration.
-
-Local URLs:
-
-- Frontend: `http://localhost:5173`
-- API: `http://localhost:3001`
-
-Useful scripts:
-
-```bash
-npm run build
-npm run lint
-npm run typecheck
-npm run chart:lint
-npm run chart:docs
-npm run format
-npm run format:check
-```
-
-## Persistence
-
-- SQLite database path: `data/stitch-keeper.db`
-- Private uploaded images path: `data/uploads`
-- API entrypoint: `server/index.js`
-- Database schema and seed data are created automatically on first startup
-
-For Docker Compose and Helm deployments, uploaded images live in the same
-persistent `/data` volume as SQLite by default. Backups should include both the
-database file and the `uploads/` directory.
-
-## Authentication
-
-Stitch Keeper includes self-hosted auth v1. Local email/password accounts are
-enabled by default, and OIDC can be added as an optional sign-in method.
-
-### Users And Households
-
-The app uses households as shared workspaces:
-
-- A **user** is a person who can sign in.
-- A **household** is a shared workspace for stash and patterns.
-- Household members can share the same stash and pattern library when they
-  belong to the same household.
-- Projects are personal to the signed-in user, but live inside a household so
-  they can reference household patterns and consume household stash.
-- User settings, such as theme mode and accent color, are saved per user.
-  Household settings, such as stash categories, are shared with household
-  members.
-
-Household roles control who can change shared data:
-
-| Role     | Permissions                                                                                                                                                         |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `owner`  | Manage household settings, manage stash categories, add/edit/delete stash, add/edit/delete patterns, and manage their own projects.                                 |
-| `member` | Add/edit stash, add/edit patterns, and manage their own projects. Members cannot delete shared stash or patterns, archive categories, or manage household settings. |
-| `viewer` | Read stash, categories, patterns, and their own projects. Viewers cannot create, edit, or delete app data.                                                          |
-
-Unknown role values are treated as `viewer` for safety. Future household flows
-will let owners invite and remove members, members leave households, users
-delete their own accounts with warnings, and app admins manage all users if an
-app-admin role is added later.
-
-Manual role QA can be done by editing `household_members.role` directly in the
-SQLite database while invite and member-management screens are future work:
-
-```sql
-SELECT household_id, user_id, role FROM household_members;
-
-UPDATE household_members
-SET role = 'member'
-WHERE household_id = 'household-local-default'
-  AND user_id = 'user-local-default';
-```
-
-Valid roles are `owner`, `member`, and `viewer`; invalid values are normalized
-to `viewer` during migration and rejected by the database after migration. Use
-the role matrix above to confirm the visible controls change, and make direct
-write API requests to confirm forbidden actions return `403`.
-
-For a single-user install, the first account owns one household and the model
-mostly feels like a named workspace. For multi-person use, members can share
-stash and patterns without mixing up each person's active projects. Household
-invite and member-management flows are future work; for now, new accounts get
-their own household unless membership is added directly in the database.
-
-Server auth behavior:
-
-- `SESSION_SECRET` is required and must be a long, random value.
-- `APP_BASE_URL` controls callback URLs and secure-cookie behavior; it defaults
-  to `http://localhost:$PORT` when omitted.
-- The first local account can be created from the login screen.
-- The first local or OIDC account claims the default local user and household,
-  so existing seeded or migrated data remains visible after account setup.
-- After the first local account exists, new local registrations are disabled
-  unless `ALLOW_SIGNUPS=true`.
-- Signed HTTP-only session cookies store only `userId`, `activeHouseholdId`, and
-  expiration metadata.
-- All API routes except `/api/health` and `/api/auth/config` require an
-  authenticated browser session or API token.
-
-### API Tokens
-
-Personal API tokens are available under **Settings → API Tokens** for
-read-only integrations such as Stitch Keeper MCP.
-
-- Tokens are scoped to the household active when they are created.
-- The plaintext token is displayed once; only its SHA-256 hash is stored.
-- API tokens may use `GET` and `HEAD` API routes. Write requests return `403`.
-- Current household membership and role are checked on every request.
-- Revocation takes effect immediately.
-- Token-management endpoints require a browser session, so an API token cannot
-  create or revoke other tokens.
-
-Clients authenticate with:
-
-```text
-Authorization: Bearer sk_your-token
-```
-
-For public deployments, run the app behind HTTPS and use a strong
-`SESSION_SECRET`. HTTPS makes session cookies `Secure` when `APP_BASE_URL` uses
-an `https://` URL.
-
-Optional OIDC sign-in is enabled only when all three values are provided:
-
-```bash
-export OIDC_ISSUER_URL=https://your-provider.example
-export OIDC_CLIENT_ID=your-client-id
-export OIDC_CLIENT_SECRET=your-client-secret
-```
-
-Register these redirect URIs with the OIDC provider:
-
-- Local dev: `http://localhost:5173/auth/oidc/callback`
-- Docker Compose default: `http://localhost:8080/auth/oidc/callback`
-
-If any OIDC value is set without the others, the server fails startup so a
-partial provider configuration is not silently ignored.
-
-### Authentik OIDC Example
-
-To use [authentik](https://docs.goauthentik.io/add-secure-apps/providers/oauth2)
-as the optional OIDC provider:
-
-1. In the authentik Admin interface, go to **Applications > Applications** and
-   create a new OAuth2/OIDC application/provider pair.
-2. Use a recognizable application name such as `Stitch Keeper` and a slug such
-   as `stitch-keeper`.
-3. Configure the provider for the Authorization Code flow.
-4. Add the redirect URI for the Stitch Keeper instance:
-   - Local dev: `http://localhost:5173/auth/oidc/callback`
-   - Docker Compose default: `http://localhost:8080/auth/oidc/callback`
-   - Production: `https://stitch-keeper.example.com/auth/oidc/callback`
-5. Include the `openid`, `email`, and `profile` scopes.
-6. Copy the provider's client ID and client secret into Stitch Keeper's
-   environment.
-
-For an authentik application slug of `stitch-keeper`, the issuer URL is usually:
-
-```bash
-OIDC_ISSUER_URL=https://auth.example.com/application/o/stitch-keeper/
-```
-
-The matching OpenID Configuration URL should be reachable at:
-
-```text
-https://auth.example.com/application/o/stitch-keeper/.well-known/openid-configuration
-```
-
-Example local environment:
-
-```bash
-export APP_BASE_URL=http://localhost:5173
-export SESSION_SECRET='replace-with-a-long-random-value'
-export OIDC_ISSUER_URL=https://auth.example.com/application/o/stitch-keeper/
-export OIDC_CLIENT_ID=your-authentik-client-id
-export OIDC_CLIENT_SECRET=your-authentik-client-secret
-```
-
-After restart, `GET /api/auth/config` should report `"oidcEnabled":true`, and
-unauthenticated users should be redirected to the OIDC provider automatically.
-
-Manual auth QA checklist:
-
-- First account can register from a fresh database.
-- Later signup is disabled unless `ALLOW_SIGNUPS=true`.
-- Login succeeds with the registered email and password.
-- Login fails with a bad password.
-- `GET /api/stash` returns `401` without a session.
-- A valid API token can read `/api/stash`; an invalid or revoked token returns
-  `401`.
-- API-token write requests return `403`.
-- Existing default data appears under the first registered account.
-- Later accounts do not see the first account's personal projects.
-
-## Releases
-
-Releases are cut intentionally with `release-it`, not from every push to `main`.
-
-Before releasing, export a GitHub token with permission to create releases:
-
-```bash
-export GITHUB_TOKEN=your_github_token
-```
-
-Then run:
-
-```bash
-npm run release
-```
-
-A release will:
-
-- run the existing lint and build checks
-- bump `package.json`
-- create and push a `vX.Y.Z` git tag
-- create a GitHub Release
-
-Pushing a release tag also starts the GitHub Actions workflows that publish the
-container image and Helm chart to GHCR. `release-it` does not currently update
-the chart metadata, so update `chart/Chart.yaml` separately when the chart
-version or default app image tag should change.
-
-## Helm Chart
-
-The Helm chart lives in `chart/` and has its own generated README:
-[`chart/README.md`](chart/README.md).
-
-Useful chart commands:
-
-```bash
-npm run chart:lint
-npm run chart:docs
-```
-
-## Docker
-
-Run the app with Docker Compose:
-
-```bash
+```sh
+export SESSION_SECRET="$(openssl rand -hex 32)"
 docker compose up --build
 ```
 
-App URL:
+Open `http://localhost:8080` and register your first account. There is no
+default password. If this installation already has accounts, use your
+existing login. Keep a stable session secret for a persistent deployment.
 
-- `http://localhost:8080`
+See [deployment and storage](docs/deployment.md) for Docker, Helm, and backups.
 
-For Docker Compose, set `SESSION_SECRET` in your shell or a local `.env` file.
-Set `APP_BASE_URL=http://localhost:8080` or rely on the Compose default. OIDC is
-optional; see [Authentication](#authentication) for provider setup.
+### Local development
 
-Useful Docker commands:
+With Node.js 22.x and npm 10+, run from the repository root:
 
-```bash
-docker compose logs -f
-docker compose down
-docker compose down -v
+```sh
+npm install
+export APP_BASE_URL=http://localhost:5173
+export SESSION_SECRET="$(openssl rand -hex 32)"
+npm run dev
 ```
 
-Notes:
+Open `http://localhost:5173`. The API runs on port `3001`.
+See the [development guide](docs/development.md) for testing and release steps.
 
-- The container stores SQLite data in a named Docker volume mounted at `/data`
-- `docker compose down -v` removes that volume and resets the app data
+## Accounts and households
 
-## API Overview
+Local email/password login is available by default, with optional OIDC sign-in.
+Stash and patterns belong to a household; projects are personal to each user.
+The first account claims the sample collection. Household invitations and
+member-management screens are future work.
 
-The Express server exposes simple JSON CRUD routes:
-
-- `GET|POST|PUT|DELETE /api/stash`
-- `GET|POST|PUT|DELETE /api/patterns`
-- `GET|POST|PUT|DELETE /api/projects`
-- `GET /api/me`
-- `GET /api/auth/config`
-- `GET /api/health`
-
-All API routes except `/api/health` and `/api/auth/config` require an
-authenticated session. In production-style Docker runs, the same server also
-serves the built frontend from `dist/`.
-
-## Project Structure
-
-High-level layout:
-
-```text
-src/         React frontend
-server/      Express API and SQLite setup
-data/        Local SQLite database file
-dist/        Built frontend output
-```
-
-Frontend areas are organized around stash, patterns, projects, and app shell/state concerns.
+See [authentication](docs/authentication.md) for account setup, household
+roles, API tokens, and OIDC configuration.
 
 ## Built-in MCP (optional)
 
-Stitch Keeper includes a read-only Streamable HTTP MCP endpoint at `/mcp`,
-which is disabled by default. It runs in the same process and on the same port as the
-app. Enable it with `MCP_ENABLED=true`.
+Connect Codex or another MCP client to read your yarn, projects, and patterns.
+MCP is disabled by default and runs on the app's existing port when enabled
+with `MCP_ENABLED=true`. Clients authenticate with a read-only API token from
+**Settings → API Tokens**.
 
-`MCP_HTTP_ALLOWED_HOSTS` is a
-comma-separated list of client-facing hostnames (without schemes or ports),
-defaulting to `localhost,127.0.0.1,[::1]`.
+The [MCP setup guide](docs/mcp.md) covers enabling the endpoint, installing the
+included Codex plugin, supplying a token, and verifying the connection.
 
-For example, when starting the API locally:
+## Documentation
 
-```sh
-MCP_ENABLED=true npm run start:server
-```
+- [Screenshot gallery](docs/screenshots.md)
+- [Deployment and storage](docs/deployment.md)
+- [Authentication and households](docs/authentication.md)
+- [MCP and Codex setup](docs/mcp.md)
+- [Development, testing, and releases](docs/development.md)
+- [Helm chart reference](chart/README.md)
 
-Create a token under **Settings → API Tokens** and configure your MCP client
-with `http://localhost:3001/mcp` and `Authorization: Bearer <your sk_ token>`.
+## Stack
 
-Use HTTPS for connections outside a trusted machine or private network.
-MCP requires an API token, as browser session cookies do not authenticate it.
-
-The four tools are `list-yarn`, `search-yarn`, `list-projects`, and
-`search-patterns`.
-
-For Docker, add `-e MCP_ENABLED=true` and, for a custom hostname,
-`-e MCP_HTTP_ALLOWED_HOSTS=stitch.example.internal` to your existing app
-container. For Helm, use the chart's existing `env` values:
-
-```yaml
-env:
-  - name: MCP_ENABLED
-    value: 'true'
-  - name: MCP_HTTP_ALLOWED_HOSTS
-    value: 'stitch.example.internal'
-```
-
-Your existing ingress or reverse proxy must forward `/mcp` to the app,
-including POST requests and Authorization headers. No extra service, port,
-MCP API key, or Kubernetes token Secret is needed for this integration.
-
-### Connect an MCP client
-
-An MCP client is the app that connects to Stitch Keeper, such as Codex.
-It authenticates with an API token created under **Settings → API Tokens**.
-
-See the [MCP setup guide](docs/mcp.md) for local testing, Codex plugin
-installation, desktop token setup, and connections to a hosted instance.
-
-Run the MCP regression checks with `npm test`.
+React 19, TypeScript, Vite, Tailwind CSS, Express, and SQLite via `better-sqlite3`.
