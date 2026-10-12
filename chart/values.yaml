@@ -91,6 +91,14 @@ env: []
 #       secretKeyRef:
 #         name: stitch-keeper-auth
 #         key: client-secret
+# MCP is optional and disabled by default. Add these entries to env above
+# to enable the read-only /mcp endpoint on the app's existing port.
+# Use client-facing hostnames without schemes or ports.
+#   - name: MCP_ENABLED
+#     value: "true"
+#   - name: MCP_HTTP_ALLOWED_HOSTS
+#     value: stitch.example.internal
+# Create client API tokens in the app under Settings > API Tokens.
 
 # -- Environment sources (ConfigMap/Secret refs)
 envFrom: []
