@@ -1,8 +1,8 @@
 # Stitch Keeper
 
-[![Latest release](https://img.shields.io/github/v/release/ashleylclark/hook-stash?label=Latest%20release)](https://github.com/ashleylclark/hook-stash/releases/latest)
-[![Docker image publishing](https://github.com/ashleylclark/hook-stash/actions/workflows/publish-image.yaml/badge.svg)](https://github.com/ashleylclark/hook-stash/actions/workflows/publish-image.yaml)
-[![Helm chart publishing](https://github.com/ashleylclark/hook-stash/actions/workflows/publish-chart.yaml/badge.svg)](https://github.com/ashleylclark/hook-stash/actions/workflows/publish-chart.yaml)
+[![Latest release](https://img.shields.io/github/v/release/ashleylclark/stitch-keeper?label=Latest%20release)](https://github.com/ashleylclark/stitch-keeper/releases/latest)
+[![Docker image publishing](https://github.com/ashleylclark/stitch-keeper/actions/workflows/publish-image.yaml/badge.svg)](https://github.com/ashleylclark/stitch-keeper/actions/workflows/publish-image.yaml)
+[![Helm chart publishing](https://github.com/ashleylclark/stitch-keeper/actions/workflows/publish-chart.yaml/badge.svg)](https://github.com/ashleylclark/stitch-keeper/actions/workflows/publish-chart.yaml)
 
 Stitch Keeper is a personal crochet and knitting tracker for managing stash items, patterns, and projects in one place.
 

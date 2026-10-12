@@ -6,8 +6,8 @@
     "name": "Ashley Clark",
     "url": "https://github.com/ashleylclark"
   },
-  "homepage": "https://github.com/ashleylclark/hook-stash",
-  "repository": "https://github.com/ashleylclark/hook-stash",
+  "homepage": "https://github.com/ashleylclark/stitch-keeper",
+  "repository": "https://github.com/ashleylclark/stitch-keeper",
   "license": "MIT",
   "keywords": ["stitch-keeper", "yarn", "fiber-arts", "mcp"],
   "interface": {
