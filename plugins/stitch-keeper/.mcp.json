@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "stitch-keeper": {
+      "type": "streamable-http",
+      "url": "http://127.0.0.1:3001/mcp",
+      "bearer_token_env_var": "STITCH_KEEPER_API_TOKEN"
+    }
+  }
+}

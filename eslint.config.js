@@ -30,9 +30,9 @@ export default defineConfig([
     ...reactRefresh.configs.vite,
   },
   {
-    files: ['server/**/*.js'],
+    files: ['server/**/*.js', 'scripts/**/*.mjs'],
     languageOptions: {
-      ecmaVersion: 2020,
+      ecmaVersion: 2022,
       globals: globals.node,
     },
   },

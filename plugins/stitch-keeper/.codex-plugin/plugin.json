@@ -1,0 +1,24 @@
+{
+  "name": "stitch-keeper",
+  "version": "0.8.0",
+  "description": "Connect Codex to a self-hosted Stitch Keeper instance through its read-only MCP tools.",
+  "author": {
+    "name": "Ashley Clark",
+    "url": "https://github.com/ashleylclark"
+  },
+  "homepage": "https://github.com/ashleylclark/hook-stash",
+  "repository": "https://github.com/ashleylclark/hook-stash",
+  "license": "MIT",
+  "keywords": ["stitch-keeper", "yarn", "fiber-arts", "mcp"],
+  "interface": {
+    "displayName": "Stitch Keeper",
+    "shortDescription": "Ask about your yarn, projects, and patterns.",
+    "longDescription": "Connect Codex to a locally hosted Stitch Keeper MCP server and use natural language to search yarn and patterns or list yarn and projects.",
+    "developerName": "Ashley Clark",
+    "category": "Productivity",
+    "capabilities": ["Read"],
+    "defaultPrompt": "Show me what is available in my Stitch Keeper collection."
+  },
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

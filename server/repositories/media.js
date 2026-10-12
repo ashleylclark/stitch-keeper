@@ -9,7 +9,8 @@ const sqlitePath =
   process.env.SQLITE_PATH ??
   path.join(process.cwd(), 'data', 'stitch-keeper.db');
 const uploadRoot =
-  process.env.MEDIA_UPLOAD_DIR ?? path.join(path.dirname(sqlitePath), 'uploads');
+  process.env.MEDIA_UPLOAD_DIR ??
+  path.join(path.dirname(sqlitePath), 'uploads');
 
 const mimeExtensions = {
   'image/gif': '.gif',
