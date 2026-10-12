@@ -110,10 +110,21 @@ A release will:
 - create and push a `vX.Y.Z` git tag
 - create a GitHub Release
 
-Pushing a release tag also starts the GitHub Actions workflows that publish the
-container image and Helm chart to GHCR. `release-it` does not currently update
-the chart metadata, so update `chart/Chart.yaml` separately when the chart
-version or default app image tag should change.
+Pushing a release tag starts the container and chart publishing workflows.
+The image is published for the app release. The chart workflow checks GHCR
+for the version in `chart/Chart.yaml` and skips publication if that version
+already exists. Authentication, network, and registry errors fail the workflow
+instead of being treated as an unpublished version.
+
+`release-it` does not update chart metadata. When changing the chart, bump its
+`version`. When changing its default app image, also update `appVersion` to
+the corresponding app release. Regenerate the chart README with
+`npm run chart:docs` before committing.
+
+For a chart-only release, commit and push the chart changes, then run
+**Publish Helm chart** manually from GitHub Actions on the branch containing
+those changes. An app release is not required. Manual runs use the same
+version check; republishing an existing chart version is skipped.
 
 The Codex plugin version must also match `package.json`. Update
 `plugins/stitch-keeper/.codex-plugin/plugin.json` for the release and run

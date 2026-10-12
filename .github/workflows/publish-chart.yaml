@@ -10,6 +10,11 @@ permissions:
   contents: read
   packages: write
 
+# Serialize publishers so two runs cannot both publish the same new version.
+concurrency:
+  group: publish-stitch-keeper-chart
+  cancel-in-progress: false
+
 jobs:
   push-chart-to-ghcr:
     runs-on: ubuntu-latest
@@ -33,10 +38,55 @@ jobs:
           version=$(sed -n 's/^version: "\(.*\)"/\1/p' chart/Chart.yaml)
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      - name: Check whether chart version is already published
+        id: published
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHART_VERSION: ${{ steps.chart.outputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$CHART_VERSION" ]]; then
+            echo "Could not read chart version from Chart.yaml." >&2
+            exit 1
+          fi
+
+          # Use an authenticated OCI manifest lookup. Only 404 means unpublished;
+          # authentication, network, and registry errors must fail the release.
+          token_json=$(curl --fail --silent --show-error \
+            --user "$GITHUB_ACTOR:$GHCR_TOKEN" \
+            'https://ghcr.io/token?service=ghcr.io&scope=repository:ashleylclark/charts/stitch-keeper:pull')
+          registry_token=$(printf '%s' "$token_json" | python3 -c 'import json, sys; print(json.load(sys.stdin)["token"])')
+          if [[ -z "$registry_token" ]]; then
+            echo "GHCR returned an empty registry token." >&2
+            exit 1
+          fi
+          echo "::add-mask::$registry_token"
+          status=$(curl --silent --show-error --head --output /dev/null \
+            --write-out '%{http_code}' \
+            --header "Authorization: Bearer $registry_token" \
+            --header 'Accept: application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json' \
+            "https://ghcr.io/v2/ashleylclark/charts/stitch-keeper/manifests/$CHART_VERSION")
+
+          case "$status" in
+            200)
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              echo "Chart $CHART_VERSION is already published; skipping." >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            404)
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "GHCR manifest lookup failed with HTTP $status." >&2
+              exit 1
+              ;;
+          esac
+
       - name: Package chart
+        if: steps.published.outputs.exists == 'false'
         run: |
           mkdir -p .artifacts/chart
           helm package ./chart --destination .artifacts/chart
 
       - name: Push chart to GHCR
+        if: steps.published.outputs.exists == 'false'
         run: helm push ".artifacts/chart/stitch-keeper-${{ steps.chart.outputs.version }}.tgz" oci://ghcr.io/ashleylclark/charts
