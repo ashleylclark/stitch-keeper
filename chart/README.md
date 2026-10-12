@@ -1,7 +1,7 @@
 # Stitch-Keeper Helm Chart
 
-[![Version: 0.1.6](https://img.shields.io/badge/Version-0.1.6-informational?style=flat-square)](Chart.yaml)
-[![AppVersion: v0.8.0](https://img.shields.io/badge/AppVersion-v0.8.0-informational?style=flat-square)](Chart.yaml)
+[![Version: 0.1.7](https://img.shields.io/badge/Version-0.1.7-informational?style=flat-square)](Chart.yaml)
+[![AppVersion: v0.9.0](https://img.shields.io/badge/AppVersion-v0.9.0-informational?style=flat-square)](Chart.yaml)
 
 A simple web app to manage your fiber arts stash.
 
@@ -14,14 +14,14 @@ This chart deploys Stitch Keeper as a single-replica web application backed by S
 ### From GHCR (OCI)
 
 ```bash
-helm install stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper --version 0.1.6
+helm install stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper --version 0.1.7
 ```
 
 To override values during install:
 
 ```bash
 helm install stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper \
-  --version 0.1.6 \
+  --version 0.1.7 \
   --set ingress.enabled=true
 ```
 
@@ -34,7 +34,7 @@ helm install stitch-keeper ./chart
 ## Upgrading
 
 ```bash
-helm upgrade stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper --version 0.1.6
+helm upgrade stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper --version 0.1.7
 ```
 
 ## Uninstalling
@@ -42,6 +42,29 @@ helm upgrade stitch-keeper oci://ghcr.io/ashleylclark/charts/stitch-keeper --ver
 ```bash
 helm uninstall stitch-keeper
 ```
+
+## Optional MCP
+
+MCP is disabled by default. To enable it, add these entries to your existing
+`env` values:
+
+```yaml
+env:
+  - name: MCP_ENABLED
+    value: "true"
+  - name: MCP_HTTP_ALLOWED_HOSTS
+    value: "stitch.example.internal"
+```
+
+Replace the example hostname with the hostname clients use to reach the app,
+without a scheme or port. MCP uses the app's existing service and port at
+`/mcp`; no additional service or token Secret is needed. Your ingress or reverse
+proxy must forward `/mcp`, including POST requests and Authorization headers.
+Use an image release that includes the built-in MCP endpoint.
+
+Create a read-only API token under **Settings → API Tokens** and give it to
+your MCP client. See the [MCP setup guide](../docs/mcp.md) for connection and
+Codex plugin instructions.
 
 ## Configuration
 
