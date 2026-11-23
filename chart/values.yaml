@@ -110,7 +110,7 @@ persistence:
   # -- Storage class for PVC
   # Set to "-" to disable dynamic provisioning and use default storage class
   # Set to "" to use cluster default storage class
-  storageClass: ""
+  storageClass: longhorn
   # -- Requested PVC size
   size: 1Gi
   # -- Access modes for the PVC
@@ -123,6 +123,8 @@ persistence:
   existingClaim: ""
   # -- Annotations for PVC
   annotations: {}
+  # -- Additional labels for PVCs created by this chart.
+  extraLabels: {}
 
 
 # -- Deployment update strategy (default: Recreate when persistence enabled and non-RWX or single replica)
